@@ -60,7 +60,7 @@ Each layer is a discrete "alcove" (the Cartier pattern) with its own lighting mo
 
 | Layer | Choice | Reason |
 |---|---|---|
-| Build | **Vite 6** + TypeScript | Fastest HMR for shader iteration; trivial static output for Pages |
+| Build | **Vite 8** + TypeScript 6 | Fastest HMR for shader iteration; trivial static output for Pages. (Landed as 8.x — create-vite's current default — rather than the 6.x this document first assumed.) |
 | UI | **React 19** | Component model for DOM overlay; matches existing React 18 experience |
 | 3D | **three.js** (latest r1xx) | Industry standard; WebGPU path available later |
 | 3D binding | **@react-three/fiber v9** | Declarative scene graph, no imperative render loop to maintain |
@@ -70,6 +70,7 @@ Each layer is a discrete "alcove" (the Cartier pattern) with its own lighting mo
 | Scroll | **Lenis** | Smooth inertial scroll; every benchmark site uses it |
 | State | **Zustand** | Tiny; shares scroll progress and quality tier between R3F and DOM without prop drilling |
 | Styling | **Tailwind CSS v4** | DOM overlay only; the 3D layer is not styled by CSS |
+| Linting | **oxlint** | create-vite's current default; ~50× faster than ESLint and adequate for this codebase |
 | Shaders | Raw GLSL via `glslify`-free inline strings | No extra toolchain; Vite handles `?raw` imports |
 | Models | **CC0 kits** (Poly Haven, Quaternius, Kenney) + **procedural geometry in code** | Decision D7 — no Blender modelling skill required. Blender used only for placement, scale fixes and export |
 | Compression | **gltf-transform** (Draco + Meshopt), **KTX2/Basis** textures | 5–10× asset size reduction |
