@@ -39,12 +39,12 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 
 ---
 
-## Phase 0 — Foundation
-*Goal: an empty but deployed site with green CI. Est. 1 day.* — **code complete; only the push and the Pages toggle remain, both manual**
+## Phase 0 — Foundation ✅ COMPLETE
+*Goal: an empty but deployed site with green CI.*
 
 - [ ] **0.1 Repo**
   - [x] Create `Shridhan29.github.io` on GitHub (public)
-  - [~] `origin` repointed to it; old private `shridhan_web` remote kept as `private`. **Push still pending — blocked by the local sandbox, run it manually**
+  - [x] `origin` repointed and `main` pushed. Old private `shridhan_web` remote kept as `private`
   - [x] Add `.gitignore` (node_modules, dist, .env, .DS_Store, Blender `.blend1`)
   - [x] Add `LICENSE` (MIT) and rewrite `README.md`
 - [ ] **0.2 Toolchain**
@@ -59,8 +59,8 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
   - [x] Cube renders; kept as the Phase 0 placeholder page, removed in Phase 1
 - [ ] **0.4 CI/CD**
   - [x] `.github/workflows/deploy.yml` written — lint, typecheck, build, budget check, deploy
-  - [ ] Enable Pages → "GitHub Actions" source in repo settings **(manual, after first push)**
-  - [ ] First green deploy visible at `https://shridhan29.github.io` **(blocked on the push)**
+  - [x] Pages switched from `legacy` (branch-serving) to `workflow` build type via the API
+  - [x] **Live at https://shridhan29.github.io** — HTTP 200, hashed assets served, full pipeline green
 - [ ] **0.5 Bundle guardrail**
   - [x] `rollup-plugin-visualizer` wired to `npm run analyze`
   - [x] `scripts/check-budget.mjs` fails the build above the §6 gzip budgets; wired into `npm run build`. Current: entry 61.2/180 KB, three 225.5/600 KB
@@ -363,4 +363,5 @@ Web3Forms gives 5× the free headroom and better spam handling at the same price
 | 2026-09-07 | Appendix A (screenshot brief) and Appendix B (form backend) added. Asset register made specific. |
 | 2026-09-07 | A1 photo received (1000×1500), B1 cleared. A7 hardware photos cut — none exist; L5 rescoped to procedural geometry plus live `<Html transform>` UIs on the kiosk screens. |
 | 2026-09-07 | Web3Forms form created and key stored in `.env`. B3 cleared. `.gitignore` and `.env.example` added. Only A3–A6 screenshots remain outstanding. |
-| 2026-09-07 | Phase 0 built: repo created, Vite 8 / React 19 / TS 6 scaffold, 3D and motion dependencies, Tailwind v4 tokens, bundle-budget guardrail, Pages workflow, README and licence. Toolchain landed newer than the architecture assumed (Vite 8 not 6, oxlint not ESLint) — docs updated to match. Push and the Pages setting are outstanding manual steps. |
+| 2026-09-07 | Phase 0 built: repo created, Vite 8 / React 19 / TS 6 scaffold, 3D and motion dependencies, Tailwind v4 tokens, bundle-budget guardrail, Pages workflow, README and licence. Toolchain landed newer than the architecture assumed (Vite 8 not 6, oxlint not ESLint) — docs updated to match. |
+| 2026-09-07 | **Phase 0 complete.** Work had been committed to a local `backend` branch while `main` still sat at the initial commit; `main` was fast-forwarded to it and pushed. Pages was on `legacy` branch-serving mode, which would have served unbuilt source — switched to `workflow`. Live and green at https://shridhan29.github.io. |
