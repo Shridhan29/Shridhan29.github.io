@@ -4,7 +4,12 @@ import { Section } from '@/dom/ui/Section'
 
 type Status = 'idle' | 'sending' | 'sent' | 'error'
 
-const ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_KEY as string | undefined
+// Web3Forms access keys are public by design — they are embedded in the client
+// bundle, are not credentials, and grant no account access. Keeping this in a CI
+// secret bought nothing while adding a way for the deployed form to silently
+// break, so the working key is the default and the env var is only an override.
+const ACCESS_KEY =
+  (import.meta.env.VITE_WEB3FORMS_KEY as string | undefined) ?? 'fa34bbbf-a4f2-420b-9060-66827ccf859c'
 
 export function Contact() {
   const [status, setStatus] = useState<Status>('idle')

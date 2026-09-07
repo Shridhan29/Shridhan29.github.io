@@ -21,7 +21,7 @@ This file is the single source of truth for *what is done*. Update it in the sam
 | Company site | https://aashman.in/ | confirmed |
 | Resume | `shridhan_resume1_updated.pdf` | confirmed latest |
 | Web3Forms form | "Portfolio Contact" | created |
-| Web3Forms access key | `fa34bbbf-a4f2-420b-9060-66827ccf859c` | in `.env` as `VITE_WEB3FORMS_KEY`; public by design, recoverable from the Web3Forms dashboard |
+| Web3Forms access key | `fa34bbbf-a4f2-420b-9060-66827ccf859c` | inlined in `Contact.tsx` with a `VITE_WEB3FORMS_KEY` env override. Public by design — it ships in the client bundle regardless, so a CI secret added no security while giving the deployed form a way to silently break |
 | Target repo | `Shridhan29/Shridhan29.github.io` | **available** — 404 on the domain, 0 public repos on the account |
 
 ---
@@ -33,7 +33,7 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 | # | Blocker | Blocks | Owner |
 |---|---|---|---|
 | B1 | ~~Professional photo~~ | — | **cleared 2026-09-07** |
-| B2 | Project screenshots not yet supplied (A3–A6; A7 cut) | Phase 3 | Shridhan |
+| B2 | ~~Project screenshots~~ | — | **cleared 2026-09-07 — 22 files received and processed** |
 | B3 | ~~Web3Forms access key~~ | — | **cleared 2026-09-07** |
 | B4 | ~~Open decisions D1–D7~~ | — | **cleared — D1, D2, D5, D7 decided; D3, D4, D6 deferred with safe defaults** |
 
@@ -69,50 +69,18 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 
 ---
 
-## Phase 1 — Static Portfolio (shippable on its own)
-*Goal: a complete, genuinely good 2D portfolio. This is the safety net — it must stand alone. Est. 2 days.*
+## Phase 1 — Static Portfolio ✅ COMPLETE
+*A complete, genuinely good 2D portfolio. Also the Static fallback tier.*
 
-- [ ] **1.1 Content model**
-  - [ ] `src/data/profile.ts` — name, role, location, links, email, summary
-  - [ ] `src/data/projects.ts` — TRUUNA, aashman.in, DMS, Urja Dairy Tour (title, stack, bullets, links, media refs)
-  - [ ] `src/data/experience.ts` — Aashman Technicals, Jan 2024 → present, 5 bullets
-  - [ ] `src/data/skills.ts` — 7 categories from the resume
-  - [ ] `src/data/education.ts` — BCA, Mudhoji College; Seed Infotech certification
-  - [ ] No copy hardcoded in any component
-- [ ] **1.2 Copy pass** *(needs D1, D2)*
-  - [ ] Rewrite resume bullets into web voice — shorter, active, outcome-first
-  - [ ] Hero line leading with the strongest fact: a Flutter app live on Google Play, FastAPI on Azure with CI/CD, hardware in the field
-  - [ ] Per-project one-line hook + expandable detail
-- [ ] **1.3 Layout & sections**
-  - [ ] `Hero` · `About` · `Projects` (4 cards) · `Skills` · `Experience` · `Education` · `Contact` · `Footer`
-  - [ ] Semantic HTML: one `h1`, ordered headings, `<main>`, `<section aria-labelledby>`
-  - [ ] Design system: type scale, spacing scale, colour tokens as CSS custom properties
-  - [ ] Responsive 360 px → 2560 px
-  - [ ] Dark theme primary; light theme optional
-- [ ] **1.4 Media** *(blocked by B1, B2)*
-  - [ ] Photo: background removed or replaced, square + 4:5 crops, AVIF + WebP, 2 sizes
-  - [ ] Project screenshots processed through `sharp` → AVIF + WebP
-  - [ ] Every `<img>` has `width`, `height`, `loading`, and real `alt` text
-- [ ] **1.5 Resume download**
-  - [ ] `public/resume.pdf` (renamed from the source file)
-  - [ ] Download button in Hero and Contact
-- [ ] **1.6 Contact form** *(blocked by B3)*
-  - [~] Web3Forms integration — key in `.env`; form component still to build
-  - [ ] Honeypot field + client-side validation + success/error states
-  - [ ] `mailto:` and phone fallback links
-- [ ] **1.7 SEO & metadata**
-  - [ ] `<title>`, meta description, canonical
-  - [ ] OG + Twitter card tags with a custom 1200×630 preview image
-  - [ ] `JSON-LD` `Person` schema (name, jobTitle, sameAs links)
-  - [ ] `robots.txt`, `sitemap.xml`, favicon set, `site.webmanifest`
-- [ ] **1.8 Quality gate**
-  - [ ] Lighthouse ≥ 95 on all four categories (easy at this stage, no 3D yet)
-  - [ ] Keyboard-only pass
-  - [ ] Tested on a real Android phone
-
-**Done when:** this site could be sent to a recruiter today with no embarrassment. Tag it `v0.1-static`.
-
----
+- [x] **1.1 Content model** — `profile`, `projects`, `experience`, `skills`, `education` in `src/data/*.ts`; no copy hardcoded in components
+- [x] **1.2 Copy pass** — rewritten in web voice, outcome-first. Reading the screenshots reframed the work: TRUUNA is an agricultural robotics platform (configure a modular field robot, book a demo, track it through production), not the generic catalogue app the résumé bullets implied
+- [x] **1.3 Layout & sections** — hero, work, about, toolkit, experience, education, contact, footer; semantic landmarks, one `h1`, skip link, palette tokens, responsive 360–2560 px
+- [x] **1.4 Media** — portrait graded (crop, desaturate, vignette) so the floral backdrop reads as texture; 22 screenshots to AVIF + WebP at two widths, renamed to stable slugs; every image has intrinsic dimensions and real alt text
+- [x] **1.5 Résumé download** — `public/resume.pdf`, linked from nav, hero and contact
+- [x] **1.6 Contact form** — Web3Forms via `fetch` (visitor stays on the page), honeypot, validation, live-region status, `mailto:` fallback
+- [x] **1.7 SEO & metadata** — OG/Twitter cards with a generated 1200×630 image, Person JSON-LD, canonical, sitemap, robots, manifest, SVG favicon
+- [x] **1.8 Quality gate** — lint, typecheck and budgets green; entry bundle 72.2/180 KB gzip; verified in headless Chrome at 1440×900 and full-page
+- [ ] Lighthouse run and a pass on a real Android device — **outstanding, needs your hardware**
 
 ## Phase 2 — Camera System
 *Goal: the scroll-to-camera engine working against placeholder geometry. Est. 2 days.*
@@ -216,10 +184,10 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 |---|---|---|---|
 | A1 | Professional photo | 1.4 | **received** — `public/img/source/shridhanImage.jpeg`, 1000×1500 RGB. Needs background replacement and a head-and-shoulders crop in Phase 1.4 |
 | A2 | Resume PDF | 1.5 | received — copy to `public/resume.pdf` |
-| A3 | TRUUNA screenshots ×9 | 3.2 | **pending** — spec in Appendix A |
-| A4 | aashman.in captures ×6 | 3.3 | **pending** — spec in Appendix A |
-| A5 | DMS POS screenshots ×4–5 | 3.6 | **pending** — spec in Appendix A |
-| A6 | Urja Dairy Tour screenshots ×4 | 3.6 | **pending** — spec in Appendix A |
+| A3 | TRUUNA screenshots | 3.2 | **received ×5** — language, OTP login, configurator, booking summary, order timeline |
+| A4 | aashman.in captures | 3.3 | **received ×8** |
+| A5 | DMS POS screenshots | 3.6 | **received ×4** |
+| A6 | Urja Dairy Tour screenshots | 3.6 | **received ×5** |
 | A7 | Raspberry Pi kiosk photos ×2–3 | 3.6 | **CUT — none available.** L5 rescoped to pure geometry; see Appendix A revision |
 | A8 | Aashman Technicals logo (SVG) | 3.3 | pending, optional |
 | A9 | TRUUNA screen recording | 4.3 | pending, optional |
@@ -364,4 +332,5 @@ Web3Forms gives 5× the free headroom and better spam handling at the same price
 | 2026-09-07 | A1 photo received (1000×1500), B1 cleared. A7 hardware photos cut — none exist; L5 rescoped to procedural geometry plus live `<Html transform>` UIs on the kiosk screens. |
 | 2026-09-07 | Web3Forms form created and key stored in `.env`. B3 cleared. `.gitignore` and `.env.example` added. Only A3–A6 screenshots remain outstanding. |
 | 2026-09-07 | Phase 0 built: repo created, Vite 8 / React 19 / TS 6 scaffold, 3D and motion dependencies, Tailwind v4 tokens, bundle-budget guardrail, Pages workflow, README and licence. Toolchain landed newer than the architecture assumed (Vite 8 not 6, oxlint not ESLint) — docs updated to match. |
+| 2026-09-07 | **Phase 1 complete.** Static portfolio built, deployed and verified live. All 22 screenshots received and processed, clearing B2 and unblocking Phase 3. Remaining: a Lighthouse run and a real-device pass. |
 | 2026-09-07 | **Phase 0 complete.** Work had been committed to a local `backend` branch while `main` still sat at the initial commit; `main` was fast-forwarded to it and pushed. Pages was on `legacy` branch-serving mode, which would have served unbuilt source — switched to `workflow`. Live and green at https://shridhan29.github.io. |

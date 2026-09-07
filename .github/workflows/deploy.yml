@@ -37,8 +37,6 @@ jobs:
       # Also runs the bundle-budget check (ARCHITECTURE.md §6).
       - name: Build
         run: npm run build
-        env:
-          VITE_WEB3FORMS_KEY: ${{ secrets.VITE_WEB3FORMS_KEY }}
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
