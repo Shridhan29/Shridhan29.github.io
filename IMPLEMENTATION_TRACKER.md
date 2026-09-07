@@ -82,36 +82,21 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 - [x] **1.8 Quality gate** — lint, typecheck and budgets green; entry bundle 72.2/180 KB gzip; verified in headless Chrome at 1440×900 and full-page
 - [ ] Lighthouse run and a pass on a real Android device — **outstanding, needs your hardware**
 
-## Phase 2 — Camera System
-*Goal: the scroll-to-camera engine working against placeholder geometry. Est. 2 days.*
+## Phase 2 — Camera System ✅ COMPLETE
+*The scroll-to-camera engine, running against placeholder geometry.*
 
-- [ ] **2.1 Scroll infrastructure**
-  - [ ] `useLenis` hook; Lenis ↔ ScrollTrigger `scrollerProxy` wired
-  - [ ] `useScrollStore` (Zustand): `progress`, `activeLayer`, `direction`
-  - [ ] `prefers-reduced-motion` disables Lenis entirely
-- [ ] **2.2 Canvas shell**
-  - [ ] Single `<Canvas>`, `position: fixed`, `inset: 0`, `z-index: 0`, DPR clamped `[1, 2]`
-  - [ ] DOM overlay above at `z-index: 10`, `pointer-events: none` except on controls
-  - [ ] Canvas lazy-loaded via `React.lazy` after first paint
-  - [ ] `aria-hidden="true"` on the canvas
-- [ ] **2.3 Camera rig**
-  - [ ] `CatmullRomCurve3` path with 6 authored control regions
-  - [ ] `progress` → `curve.getPointAt()`, damped with `MathUtils.damp`
-  - [ ] Tangent look-at with per-layer look-target overrides
-  - [ ] `ScrollTrigger` with `scrub: 1` (never `true`)
-- [ ] **2.4 Camera language per layer**
-  - [ ] L0 wide orbit · L1 tight dolly · L2 lateral truck · L3 forward push · L4 slow crane · L5 grounded eye-level
-- [ ] **2.5 Dev tooling**
-  - [ ] Leva panel (dev-only, tree-shaken from prod) for curve points, FOV, damping
-  - [ ] `?debug=1` overlay: FPS, draw calls, triangles, progress, active layer
-  - [ ] Six labelled placeholder boxes standing in for the layers
-- [ ] **2.6 Section sync**
-  - [ ] DOM sections fade/translate in as their layer becomes active
-  - [ ] Nav dots jump the scroll to any layer
+- [x] **2.1 Scroll infrastructure** — `useLenis` drives `ScrollTrigger.update` and is stepped from the GSAP ticker so both share one clock (no `scrollerProxy` needed, since Lenis scrolls the window). `useScrollStore` publishes `progress`, `layer`, `direction`, and renderer stats. `prefers-reduced-motion` skips Lenis entirely and falls back to native scroll with identical progress values, so nothing downstream special-cases it
+- [x] **2.2 Canvas shell** — one `<Canvas>`, fixed, `inset-0`, `z-0`, `aria-hidden`, DPR clamped `[1, 2]`, never remounted. DOM overlay sits above at `z-10`. Lazy-loaded via `React.lazy` behind a WebGL2 + reduced-motion guard
+- [x] **2.3 Camera rig** — `CatmullRomCurve3` through six control points, progress damped with `MathUtils.damp` (the frame-rate-independent equivalent of `scrub: 1`), look target sampled from a parallel curve
+- [x] **2.4 Camera language per layer** — fov blends between layers (42° wide orbit → 34° tight dolly → 40° lateral truck → 30° forward push → 46° slow crane → 38° eye level), with each camera placed at the distance that keeps the subject a constant share of frame, so the variation reads as intent rather than drift
+- [x] **2.5 Dev tooling** — `?debug=1` overlay (layer, progress, direction, fps, draw calls, triangles) and `?p=0.42` to pin progress for inspection or headless capture. Six labelled placeholder layers stand in for the real geometry
+- [x] **2.6 Section sync** — layer-dot nav down the right edge, `aria-current` on the active layer, each dot linking to its paired section. Section reveal runs on a CSS `view()` timeline: no bundle weight, no fight with Lenis, and content simply shows where the timeline is unsupported
+- [x] **2.7 Automated verification** — `npm run verify:phase2` runs 29 checks: bundle-graph invariants, source invariants, and a driven Chrome that measures the render loop, layer selection, draw-call bounds, real scrolling, and the no-WebGL Static path. All green
+  - The earlier zeroed fps / draw-call readings were a headless virtual-time artifact, not a defect. Driven properly the loop reports ~40–50 fps with 60–78 draw calls and ~1,700–2,200 triangles
 
-**Done when:** scrolling flies the camera smoothly through six boxes and the DOM keeps pace.
+**Verify with:** `npm run verify:phase2` (needs `npm run build` first, and Chrome on the system).
 
----
+**Not built here, deliberately:** Leva. A `?debug=1` overlay plus `?p=` covers path authoring without adding a dependency that would then need tree-shaking out of production.
 
 ## Phase 3 — The Six Layers
 *Goal: real geometry, textured, baked, compressed, placed. Est. 5–7 days. Blocked by B2.*
@@ -332,6 +317,8 @@ Web3Forms gives 5× the free headroom and better spam handling at the same price
 | 2026-09-07 | A1 photo received (1000×1500), B1 cleared. A7 hardware photos cut — none exist; L5 rescoped to procedural geometry plus live `<Html transform>` UIs on the kiosk screens. |
 | 2026-09-07 | Web3Forms form created and key stored in `.env`. B3 cleared. `.gitignore` and `.env.example` added. Only A3–A6 screenshots remain outstanding. |
 | 2026-09-07 | Phase 0 built: repo created, Vite 8 / React 19 / TS 6 scaffold, 3D and motion dependencies, Tailwind v4 tokens, bundle-budget guardrail, Pages workflow, README and licence. Toolchain landed newer than the architecture assumed (Vite 8 not 6, oxlint not ESLint) — docs updated to match. |
+| 2026-09-07 | Added `scripts/verify-phase2.mjs` and `npm run verify:phase2` — 29 automated checks across the bundle graph, source invariants and a driven browser. Two failures on first run were the harness's own fault (the layer-nav renders every label as sr-only text, so scraping `body.innerText` always matched the first layer); the overlay now carries `data-debug` hooks. Confirmed the render loop reports ~40–50 fps and 60–78 draw calls, closing the one item Phase 2 could not verify. |
+| 2026-09-07 | **Phase 2 complete.** Scroll-to-camera engine live against six placeholder layers. Two bugs caught: `three` was being pulled into the entry graph by `path.ts` (the store and the DOM layer-nav imported it for layer data), split into three-free `layers.ts` and `curve.ts`; and Vite was emitting a `modulepreload` for the lazy 3D chunk, downloading 231 KB on first paint and defeating the deferral — filtered via `build.modulePreload.resolveDependencies`. The budget script classified chunks by filename, which hid both; it now reads `dist/index.html` to see what actually loads eagerly and fails if `three` is ever in it. Entry 75.4/180 KB gzip, lazy 280.8/600 KB. |
 | 2026-09-07 | Post-Phase-1 audit. Three real defects found and fixed: 7.6 MB of raw originals were being published (sources sat inside `public/`, which ships verbatim — moved to `assets-source/`, dist 9.9 MB to 2.4 MB); six text tints failed WCAG AA (`mist/50` 2.39:1, `/60` 2.97:1, `/70` 3.69:1 — floor raised to `/80`); and mobile had no navigation at all. Removed unused `profile.openToRemote`; synced README and the architecture folder diagram. |
 | 2026-09-07 | Responsive rework. Fixed 1024 px container replaced with a fluid `.shell` (max 2200 px, `clamp()` padding), fluid type scale, and reading measures capped so wide screens gain space rather than line length. Project shot rows promoted to full block width; highlights split to two columns at xl. Verified 390 / 768 / 1280 / 1440 / 1920 / 2560. |
 | 2026-09-07 | **Phase 1 complete.** Static portfolio built, deployed and verified live. All 22 screenshots received and processed, clearing B2 and unblocking Phase 3. Remaining: a Lighthouse run and a real-device pass. |

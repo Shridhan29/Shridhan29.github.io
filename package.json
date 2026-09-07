@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Personal 3D portfolio — a scroll-driven descent through the stack.",
+  "description": "Personal 3D portfolio \u2014 a scroll-driven descent through the stack.",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
@@ -16,7 +16,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"*.{json,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
     "analyze": "ANALYZE=1 vite build",
-    "budget": "node scripts/check-budget.mjs"
+    "budget": "node scripts/check-budget.mjs",
+    "verify:phase2": "node scripts/verify-phase2.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.6",
@@ -38,6 +39,7 @@
     "@vitejs/plugin-react": "^6.1.0",
     "oxlint": "^1.79.0",
     "prettier": "^3.6.2",
+    "puppeteer-core": "^24.43.1",
     "rollup-plugin-visualizer": "^6.0.4",
     "sharp": "^0.35.4",
     "tailwindcss": "^4.1.18",

@@ -29,6 +29,7 @@ npm run build      # typecheck, build, and enforce bundle budgets
 npm run preview    # serve the production build
 npm run lint
 npm run typecheck
+npm run verify:phase2   # 29 checks incl. a driven browser; needs a build first
 npm run analyze    # bundle treemap at dist/stats.html
 node scripts/process-images.mjs       # portrait crops, grade, OG card
 node scripts/process-screenshots.mjs  # project screenshots -> AVIF + WebP
