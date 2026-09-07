@@ -1,0 +1,9 @@
+{
+  "name": "Shridhan Vidhate — Software Developer",
+  "short_name": "Shridhan",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }],
+  "theme_color": "#05060a",
+  "background_color": "#05060a",
+  "display": "standalone",
+  "start_url": "/"
+}
