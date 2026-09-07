@@ -1,28 +1,32 @@
 // Fails the build when a bundle exceeds the budgets in ARCHITECTURE.md §6.
 // Runs in CI after `vite build`, against the gzipped size of each emitted chunk.
-import { readdir, readFile, stat } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 import { join } from 'node:path'
 
 const DIST = 'dist/assets'
 
-// Budgets in KB (gzip). `three` is the lazy 3D payload; everything else is the
-// initial download and must stay under the 180 KB entry budget combined.
-const BUDGETS = { three: 600, entry: 180 }
+// Budgets in KB (gzip). "entry" is what index.html actually pulls on first
+// paint; everything else is lazy. Classifying by filename was wrong — it hid a
+// `three` modulepreload in the entry graph and miscounted lazy chunks as eager.
+const BUDGETS = { lazy: 600, entry: 180 }
+
+const html = await readFile('dist/index.html', 'utf8')
+const eager = new Set([...html.matchAll(/\/assets\/([^"']+)/g)].map((m) => m[1]))
 
 const files = await readdir(DIST)
 let entryTotal = 0
-let threeTotal = 0
+let lazyTotal = 0
 const rows = []
 
 for (const f of files) {
   if (!f.endsWith('.js') && !f.endsWith('.css')) continue
   const buf = await readFile(join(DIST, f))
   const kb = gzipSync(buf).length / 1024
-  const isThree = f.startsWith('three-')
-  if (isThree) threeTotal += kb
-  else entryTotal += kb
-  rows.push([f, kb, isThree ? 'three' : 'entry'])
+  const isEager = eager.has(f)
+  if (isEager) entryTotal += kb
+  else lazyTotal += kb
+  rows.push([f, kb, isEager ? 'entry' : 'lazy'])
 }
 
 rows.sort((a, b) => b[1] - a[1])
@@ -31,12 +35,16 @@ for (const [name, kb, group] of rows) {
 }
 
 const fails = []
-if (threeTotal > BUDGETS.three) fails.push(`three chunk ${threeTotal.toFixed(1)} KB > ${BUDGETS.three} KB`)
+if (lazyTotal > BUDGETS.lazy) fails.push(`lazy chunks ${lazyTotal.toFixed(1)} KB > ${BUDGETS.lazy} KB`)
 if (entryTotal > BUDGETS.entry) fails.push(`entry bundle ${entryTotal.toFixed(1)} KB > ${BUDGETS.entry} KB`)
+
+// three must never be eager: it is the whole point of the lazy Canvas.
+const eagerThree = rows.find(([n, , g]) => n.startsWith('three-') && g === 'entry')
+if (eagerThree) fails.push(`three is in the entry graph (${eagerThree[0]}) — something imports it eagerly`)
 
 console.log(
   `\n  entry ${entryTotal.toFixed(1)}/${BUDGETS.entry} KB gz` +
-    `   three ${threeTotal.toFixed(1)}/${BUDGETS.three} KB gz`,
+    `   lazy ${lazyTotal.toFixed(1)}/${BUDGETS.lazy} KB gz`,
 )
 
 if (fails.length) {

@@ -42,7 +42,7 @@ function ProjectBlock({ project }: { project: Project }) {
   return (
     <article
       id={project.id}
-      className="scroll-mt-24 border-t border-slate/60 py-12 first:border-t-0 first:pt-0 md:py-16 xl:py-24"
+      className="reveal scroll-mt-24 border-t border-slate/60 py-12 first:border-t-0 first:pt-0 md:py-16 xl:py-24"
     >
       <div className="grid gap-8 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.5fr)] md:gap-14 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,2fr)] xl:gap-20">
         <div className="md:sticky md:top-24 md:self-start">

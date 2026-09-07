@@ -21,6 +21,13 @@ export default defineConfig({
   },
   build: {
     target: 'es2022',
+    // Vite hints the lazily-imported Canvas's dependencies with modulepreload,
+    // which downloads the whole 3D payload on first paint and undoes the point
+    // of deferring it. Keep preload for the eager graph only.
+    modulePreload: {
+      resolveDependencies: (_file: string, deps: string[]) =>
+        deps.filter((d) => !/\/(three|motion)-/.test(d)),
+    },
     // Fail loudly well before the 600 KB 3D-chunk budget is at risk.
     chunkSizeWarningLimit: 700,
     rollupOptions: {
