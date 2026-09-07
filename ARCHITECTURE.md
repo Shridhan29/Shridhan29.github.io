@@ -158,11 +158,13 @@ Positions per layer are precomputed at build time from sampled mesh surfaces and
 ```
 shridhan_web/
 ├── .github/workflows/deploy.yml
-├── public/
+├── assets-source/         raw originals — NEVER inside public/, or the
+│   └── img/               unprocessed multi-MB files get published as-is
+├── public/                everything here ships to the live site verbatim
 │   ├── models/            *.glb  (Draco + Meshopt compressed)
 │   ├── textures/          *.ktx2 (Basis compressed)
 │   ├── env/               *.hdr  (or baked to .ktx2 env map)
-│   ├── img/               project screenshots (AVIF + WebP fallback)
+│   ├── img/               processed screenshots (AVIF + WebP fallback)
 │   ├── data/              particle position buffers (.bin)
 │   └── resume.pdf
 ├── src/
@@ -241,7 +243,7 @@ The Static tier is a real deliverable, not an afterthought. It is also what sear
 - All content readable in the DOM overlay; the 3D is enhancement, never the sole carrier of information.
 - Full keyboard navigation: `Tab` through sections, `↑/↓`/`PageUp`/`PageDown` drive scroll, `Esc` jumps to a plain-text view.
 - `prefers-reduced-motion` respected at every level — Lenis disabled, GSAP `duration: 0`, camera cuts instead of glides.
-- Contrast ≥ 4.5:1 on all overlay text; text sits on scrims, never directly on a busy 3D background.
+- Contrast ≥ 4.5:1 on all overlay text; text sits on scrims, never directly on a busy 3D background. Against the `--color-void` ground this rules out `mist` below 80% opacity — measured 2.97:1 at `/60` and 2.39:1 at `/50`, so the palette's dim tints stop at `/80` (4.52:1).
 - ARIA landmarks; canvas is `aria-hidden="true"`.
 
 ---

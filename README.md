@@ -30,12 +30,19 @@ npm run preview    # serve the production build
 npm run lint
 npm run typecheck
 npm run analyze    # bundle treemap at dist/stats.html
+node scripts/process-images.mjs       # portrait crops, grade, OG card
+node scripts/process-screenshots.mjs  # project screenshots -> AVIF + WebP
 ```
 
 Node `^20.19.0 || >=22.12.0` (see `.nvmrc`).
 
-Copy `.env.example` to `.env` and fill in `VITE_WEB3FORMS_KEY` — the contact-form
-access key. It is public by design and ships in the client bundle.
+No `.env` is required. The Web3Forms contact key is public by design — it ships
+in the client bundle either way — so it lives in `src/dom/sections/Contact.tsx`
+with `VITE_WEB3FORMS_KEY` available as an override if you ever rotate it.
+
+Raw originals live in `assets-source/` and are deliberately outside `public/`:
+anything under `public/` is published verbatim, so unprocessed multi-megabyte
+photos would go live alongside the compressed versions.
 
 ## Deployment
 

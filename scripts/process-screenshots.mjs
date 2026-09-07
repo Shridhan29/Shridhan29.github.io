@@ -4,7 +4,7 @@ import sharp from 'sharp'
 import { mkdir, readdir, rename, access } from 'node:fs/promises'
 import { join } from 'node:path'
 
-const SRC_ROOT = 'public/img/source'
+const SRC_ROOT = 'assets-source/img'
 const OUT_ROOT = 'public/img'
 
 // Raw filenames sort chronologically; this maps that order onto slugs that
@@ -43,9 +43,12 @@ for (const [project, cfg] of Object.entries(MAP)) {
   await mkdir(srcDir, { recursive: true })
   await mkdir(outDir, { recursive: true })
 
-  // First run: move the raw drops out of the output directory into source/.
-  for (const f of await readdir(join(OUT_ROOT, project))) {
-    if (/\.(png|jpe?g)$/i.test(f)) await rename(join(OUT_ROOT, project, f), join(srcDir, f))
+  // New raw drops may land in the output directory; move them to the source
+  // tree so nothing unprocessed is ever published.
+  if (await exists(join(OUT_ROOT, project))) {
+    for (const f of await readdir(join(OUT_ROOT, project))) {
+      if (/\.(png|jpe?g)$/i.test(f)) await rename(join(OUT_ROOT, project, f), join(srcDir, f))
+    }
   }
 
   const raw = (await readdir(srcDir)).filter((f) => /\.(png|jpe?g)$/i.test(f)).sort()

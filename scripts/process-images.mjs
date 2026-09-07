@@ -8,7 +8,7 @@
 import sharp from 'sharp'
 import { mkdir } from 'node:fs/promises'
 
-const SRC = 'public/img/source/shridhanImage.jpeg'
+const SRC = 'assets-source/img/shridhanImage.jpeg'
 const OUT = 'public/img'
 
 await mkdir(OUT, { recursive: true })
