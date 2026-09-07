@@ -7,13 +7,18 @@ function Shots({ project }: { project: Project }) {
   return (
     <ul
       className={
+        // Phone shots scroll horizontally where they do not fit and lay out as a
+        // plain row once the shell is wide enough to hold all five.
         phone
-          ? 'mt-8 -mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-3'
-          : 'mt-8 grid gap-4 sm:grid-cols-2'
+          ? 'mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 lg:grid lg:grid-cols-5 lg:gap-6 lg:overflow-visible'
+          : 'mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:gap-6'
       }
     >
       {project.shots.map((shot, i) => (
-        <li key={shot.slug} className={phone ? 'w-[168px] shrink-0 snap-start' : ''}>
+        <li
+          key={shot.slug}
+          className={phone ? 'w-[168px] shrink-0 snap-start lg:w-auto' : ''}
+        >
           <figure>
             <Picture
               base={`/img/${project.dir}/${shot.slug}`}
@@ -22,7 +27,7 @@ function Shots({ project }: { project: Project }) {
               height={phone ? 1920 : 954}
               alt={shot.alt}
               priority={i === 0 && project.featured}
-              sizes={phone ? '168px' : '(max-width: 640px) 90vw, 44vw'}
+              sizes={phone ? '(max-width: 1024px) 168px, 19vw' : '(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw'}
               className={`w-full rounded-md border border-slate/70 bg-ink ${phone ? '' : 'aspect-[1843/954] object-cover object-top'}`}
             />
             <figcaption className="sr-only">{shot.alt}</figcaption>
@@ -37,12 +42,12 @@ function ProjectBlock({ project }: { project: Project }) {
   return (
     <article
       id={project.id}
-      className="scroll-mt-24 border-t border-slate/60 py-12 first:border-t-0 first:pt-0 md:py-16"
+      className="scroll-mt-24 border-t border-slate/60 py-12 first:border-t-0 first:pt-0 md:py-16 xl:py-24"
     >
-      <div className="grid gap-8 md:grid-cols-[1fr_1.15fr] md:gap-14">
+      <div className="grid gap-8 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.5fr)] md:gap-14 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,2fr)] xl:gap-20">
         <div className="md:sticky md:top-24 md:self-start">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h3 className="text-2xl font-semibold tracking-tight md:text-3xl">{project.name}</h3>
+            <h3 className="t-project font-semibold">{project.name}</h3>
             {project.featured && (
               <span className="rounded-full border border-ember/50 px-2 py-0.5 font-mono text-[0.65rem] tracking-wider text-ember uppercase">
                 Live on Google Play
@@ -54,11 +59,11 @@ function ProjectBlock({ project }: { project: Project }) {
 
           <dl className="mt-6 space-y-2 font-mono text-xs text-mist/80">
             <div className="flex gap-3">
-              <dt className="w-14 shrink-0 text-mist/50">Period</dt>
+              <dt className="w-14 shrink-0 text-mist/80">Period</dt>
               <dd>{project.period}</dd>
             </div>
             <div className="flex gap-3">
-              <dt className="w-14 shrink-0 text-mist/50">Role</dt>
+              <dt className="w-14 shrink-0 text-mist/80">Role</dt>
               <dd>{project.role}</dd>
             </div>
           </dl>
@@ -93,9 +98,9 @@ function ProjectBlock({ project }: { project: Project }) {
             without this its min-content width forces the grid open and starves
             the left column. */}
         <div className="min-w-0">
-          <ul className="space-y-3">
+          <ul className="space-y-3 xl:grid xl:grid-cols-2 xl:gap-x-12 xl:gap-y-3 xl:space-y-0">
             {project.highlights.map((h) => (
-              <li key={h.slice(0, 24)} className="flex gap-3 text-[0.92rem] leading-relaxed text-mist">
+              <li key={h.slice(0, 24)} className="flex gap-3 text-[0.92rem] leading-relaxed text-mist xl:text-[0.98rem]">
                 <span aria-hidden className="mt-2.5 size-1 shrink-0 rounded-full bg-accent" />
                 {h}
               </li>
@@ -106,7 +111,7 @@ function ProjectBlock({ project }: { project: Project }) {
             <summary className="cursor-pointer list-none font-mono text-xs tracking-[0.14em] text-mist uppercase transition-colors hover:text-bone">
               <span className="inline-block transition-transform group-open:rotate-90">›</span> Engineering detail
             </summary>
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-4 space-y-3 xl:grid xl:grid-cols-2 xl:gap-x-12 xl:gap-y-3 xl:space-y-0">
               {project.depth.map((d) => (
                 <li key={d.slice(0, 24)} className="flex gap-3 text-[0.88rem] leading-relaxed text-mist/85">
                   <span aria-hidden className="mt-2.5 size-1 shrink-0 rounded-full bg-slate" />
@@ -115,10 +120,10 @@ function ProjectBlock({ project }: { project: Project }) {
               ))}
             </ul>
           </details>
-
-          <Shots project={project} />
         </div>
       </div>
+
+      <Shots project={project} />
     </article>
   )
 }

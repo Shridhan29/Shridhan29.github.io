@@ -22,7 +22,7 @@ export default function App() {
         Skip to content
       </a>
       <Nav />
-      <main className="mx-auto max-w-5xl px-6">
+      <main className="shell">
         <Hero />
         <Projects />
         <About />
@@ -30,7 +30,7 @@ export default function App() {
         <Experience />
         <Contact />
       </main>
-      <div className="mx-auto max-w-5xl px-6">
+      <div className="shell">
         <Footer />
       </div>
     </>

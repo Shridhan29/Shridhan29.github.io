@@ -4,8 +4,8 @@ import { Section } from '@/dom/ui/Section'
 export function About() {
   return (
     <Section id="about" label="About" title="Software that has to survive contact with the real world.">
-      <div className="grid gap-10 md:grid-cols-2 md:gap-14">
-        <div className="space-y-5 text-[0.95rem] leading-relaxed text-mist">
+      <div className="grid gap-10 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] md:gap-16 xl:gap-24">
+        <div className="measure space-y-5 text-[0.95rem] leading-relaxed text-mist xl:text-base">
           {profile.about.map((p) => (
             <p key={p.slice(0, 24)}>{p}</p>
           ))}

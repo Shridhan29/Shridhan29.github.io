@@ -50,26 +50,26 @@ export function Contact() {
   }
 
   const field =
-    'w-full rounded-md border border-slate bg-ink px-3.5 py-2.5 text-sm text-bone placeholder:text-mist/50 focus:border-accent focus:outline-none'
+    'w-full rounded-md border border-slate bg-ink px-3.5 py-2.5 text-sm text-bone placeholder:text-mist/80 focus:border-accent focus:outline-none'
 
   return (
     <Section id="contact" label="Contact" title="Building something that has to work in the field?">
-      <div className="grid gap-12 md:grid-cols-2 md:gap-16">
+      <div className="grid gap-12 md:grid-cols-2 md:gap-16 xl:max-w-6xl xl:gap-24">
         <div>
-          <p className="text-[0.95rem] leading-relaxed text-mist">
+          <p className="measure text-[0.95rem] leading-relaxed text-mist">
             I'm open to software development roles — in Pune, or remote. The fastest way to reach me is the form, or
             email if you'd rather skip it.
           </p>
 
           <ul className="mt-8 space-y-4 text-sm">
             <li>
-              <span className="block font-mono text-xs tracking-[0.16em] text-mist/60 uppercase">Email</span>
+              <span className="block font-mono text-xs tracking-[0.16em] text-mist/80 uppercase">Email</span>
               <a href={`mailto:${profile.email}`} className="text-bone underline decoration-slate underline-offset-4 hover:decoration-accent">
                 {profile.email}
               </a>
             </li>
             <li>
-              <span className="block font-mono text-xs tracking-[0.16em] text-mist/60 uppercase">Elsewhere</span>
+              <span className="block font-mono text-xs tracking-[0.16em] text-mist/80 uppercase">Elsewhere</span>
               <span className="flex flex-wrap gap-4">
                 <a href={profile.links.github} target="_blank" rel="noreferrer noopener" className="text-bone underline decoration-slate underline-offset-4 hover:decoration-accent">
                   GitHub ↗
@@ -83,7 +83,7 @@ export function Contact() {
               </span>
             </li>
             <li>
-              <span className="block font-mono text-xs tracking-[0.16em] text-mist/60 uppercase">Based in</span>
+              <span className="block font-mono text-xs tracking-[0.16em] text-mist/80 uppercase">Based in</span>
               <span className="text-mist">{profile.location}</span>
             </li>
           </ul>

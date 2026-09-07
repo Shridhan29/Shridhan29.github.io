@@ -33,5 +33,4 @@ export const profile = {
     { value: '100%', label: 'Play review pass rate', detail: 'every submission cleared first time' },
   ],
 
-  openToRemote: true,
 } as const

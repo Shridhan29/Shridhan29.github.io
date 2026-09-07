@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { profile } from '@/data/profile'
 
+// `always` links stay visible on phones, where there is no room for the full
+// set — without them a mobile visitor has no navigation at all.
 const LINKS = [
-  { href: '#work', label: 'Work' },
-  { href: '#about', label: 'About' },
-  { href: '#experience', label: 'Experience' },
-  { href: '#contact', label: 'Contact' },
+  { href: '#work', label: 'Work', always: true },
+  { href: '#about', label: 'About', always: false },
+  { href: '#experience', label: 'Experience', always: false },
+  { href: '#contact', label: 'Contact', always: true },
 ]
 
 export function Nav() {
@@ -24,13 +26,13 @@ export function Nav() {
         scrolled ? 'border-b border-slate/70 bg-void/85 backdrop-blur-md' : 'border-b border-transparent'
       }`}
     >
-      <nav aria-label="Primary" className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+      <nav aria-label="Primary" className="shell flex items-center justify-between py-4">
         <a href="#top" className="font-mono text-sm tracking-tight text-bone">
           shridhan<span className="text-accent">.</span>
         </a>
         <ul className="flex items-center gap-5 text-sm text-mist md:gap-7">
           {LINKS.map((l) => (
-            <li key={l.href} className="hidden sm:block">
+            <li key={l.href} className={l.always ? '' : 'hidden sm:block'}>
               <a href={l.href} className="transition-colors hover:text-bone">
                 {l.label}
               </a>
