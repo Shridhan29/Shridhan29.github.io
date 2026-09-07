@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+dist-ssr/
+.vite/
+
+# env — key is public, but keep the file out of git; .env.example documents it
+.env
+.env.local
+.env.*.local
+
+# editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+
+# blender
+*.blend1
+*.blend2
+
+# logs
+*.log
+npm-debug.log*
