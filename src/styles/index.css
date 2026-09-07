@@ -1,0 +1,47 @@
+@import 'tailwindcss';
+
+/* Cinematic-serious direction (decision D1): dark ground, restrained accent,
+   one warm highlight reserved for the L5 Ground layer. Tokens live here so the
+   3D layers and the DOM overlay can read the same palette. */
+@theme {
+  --color-void: #05060a;
+  --color-ink: #0b0d14;
+  --color-slate: #151925;
+  --color-mist: #8b93a7;
+  --color-bone: #e8eaf0;
+  --color-accent: #4d7cfe;
+  --color-ember: #ff8a3d;
+
+  --font-display: 'Satoshi', system-ui, -apple-system, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+}
+
+html {
+  background-color: var(--color-void);
+  color: var(--color-bone);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+/* Lenis is disabled for reduced-motion users; this kills the CSS side too. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
