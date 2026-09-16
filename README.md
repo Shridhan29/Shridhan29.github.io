@@ -24,7 +24,7 @@ postprocessing · GSAP + ScrollTrigger · Lenis · Zustand · Tailwind CSS v4
 
 ```bash
 npm install
-npm run verify     # EVERYTHING: format, lint, typecheck, build + budgets, both suites
+npm run verify     # EVERYTHING: format, lint, typecheck, build + budgets, all suites
 npm run verify -- --live   # ...and confirm the live site serves this build
 npm run dev        # dev server
 npm run build      # typecheck, build, and enforce bundle budgets
@@ -34,6 +34,7 @@ npm run format:check   # Prettier over src/ and scripts/ (CI runs this)
 npm run typecheck
 npm run verify:phase2   # 31 checks incl. a driven browser; needs a build first and Chrome (or CHROME_PATH)
 npm run verify:models   # model pipeline self-test (CI runs this)
+npm run verify:phase3   # built layers: gating, first frame, placement, text contrast over the scene
 npm run models     # assets-source/models/ -> public/models/ (Meshopt + WebP)
 npm run analyze    # bundle treemap at dist/stats.html
 node scripts/process-images.mjs       # portrait crops, grade, OG card

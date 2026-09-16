@@ -100,7 +100,7 @@ Remounting a canvas per section is the single most common cause of jank in amate
 ├── <ScrollProvider>                 Zustand store: progress 0..1, active layer, quality tier
 ├── <Canvas>                         fixed, full viewport, single WebGL context
 │   ├── <CameraRig>                  reads progress → position on CatmullRomCurve3
-│   ├── <Environment />              lighting environment (≤ 200 KB — see D9)
+│   ├── <Lighting />                 procedural light panels → 64 px env map (D9)
 │   ├── <Suspense>
 │   │   ├── <LayerOrbit />           L0
 │   │   ├── <LayerDevice />          L1   each layer: frustum-culled + visibility-gated
@@ -163,7 +163,6 @@ shridhan_web/
 │   └── models/            source .glb/.gltf → npm run models
 ├── public/                everything here ships to the live site verbatim
 │   ├── models/            *.glb  (Meshopt compressed, WebP textures)
-│   ├── env/               environment lighting, if D9 picks a file-based option
 │   ├── img/               processed screenshots (AVIF + WebP fallback)
 │   ├── data/              particle position buffers (.bin)
 │   └── resume.pdf
@@ -274,7 +273,7 @@ Roughly half the scene never touches Blender at all. Tubes (L3), glass panes (L2
 
 Screenshots: source PNG → `sharp` → AVIF (primary) + WebP (fallback) at 2 sizes each.
 
-Environment lighting: ≤ 200 KB total. **Open — decision D9.** A 1k Poly Haven HDRI is 1.3–1.6 MB (measured 2026-09-16), eight times the budget, and one per layer would be ~9 MB, so a raw HDRI per layer is not viable.
+Environment lighting (decision D9): no image files. Emissive panels — a key softbox, a fill behind the camera, and accent and cool rim strips — are rendered once into a 64 px prefiltered environment map (`src/canvas/Lighting.tsx`). A 1k Poly Haven HDRI measured 1.3–1.6 MB, eight times the 200 KB budget, and one per layer would have been ~9 MB. The map is kept at 64 px because the default 256 px with a blur pass stalled the first frame for 6–15 s under software GL.
 
 ## 9. Deployment
 
