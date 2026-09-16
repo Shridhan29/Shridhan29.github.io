@@ -131,7 +131,7 @@ try {
   const mid = await cameraAt(0.5)
   const bottom = await cameraAt(1)
   check('progress 0 selects the first layer', top.label === 'L0 · Orbit', top.label ?? 'none')
-  check('progress 1 selects the last layer', bottom.label === 'L5 · Ground', bottom.label ?? 'none')
+  check('progress 1 selects the last layer', bottom.label === 'L5 · Cloud', bottom.label ?? 'none')
   check(
     'mid progress selects an interior layer',
     mid.label !== top.label && mid.label !== bottom.label,
@@ -164,6 +164,38 @@ try {
   await new Promise((r) => setTimeout(r, 1500))
   const after = (await readOverlay()).progress
   check('scrolling advances progress', (after ?? 0) > (before ?? 0) + 0.05, `${before} → ${after}`)
+
+  // Each layer arrives with its content: scrolled to an article, the camera is
+  // at that article's layer. Pairs come from layers.ts, so this follows the data.
+  const layerSrc = await readFile('src/canvas/layers.ts', 'utf8')
+  const pairs = [...layerSrc.matchAll(/label: '([^']+)'[\s\S]*?section: '([^']+)'/g)].map((m) => ({
+    label: m[1],
+    section: m[2],
+  }))
+  for (const [name, viewport] of [
+    ['1440 px', { width: 1440, height: 900 }],
+    ['phone', PHONE],
+  ]) {
+    const synced = await browser.newPage()
+    await synced.setViewport(viewport)
+    await synced.goto(`${BASE}/?debug=1`, NAV)
+    const misses = []
+    for (const { label, section: id } of pairs) {
+      await synced.evaluate((id) => {
+        const el = document.getElementById(id)
+        const top = el.getBoundingClientRect().top + scrollY
+        // Where stops.ts places the arrival, a little past it to be inside the range.
+        window.scrollTo(0, Math.max(0, top - innerHeight * 0.25 + 2))
+      }, id)
+      await new Promise((r) => setTimeout(r, 900))
+      const shown = await synced.evaluate(
+        () => document.querySelector('[data-debug-layer]')?.textContent ?? '',
+      )
+      if (shown !== label) misses.push(`#${id} showed ${shown || 'nothing'}, expected ${label}`)
+    }
+    check(`${name}: each layer arrives with its content`, !misses.length, misses.join('; '))
+    await synced.close()
+  }
 
   // The Static tier: no WebGL means no canvas, and the content is still there.
   const plain = await browser.newPage()

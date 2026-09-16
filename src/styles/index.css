@@ -6,7 +6,7 @@
 @source '../../index.html';
 
 /* Cinematic-serious direction (decision D1): dark ground, restrained accent,
-   one warm highlight reserved for the L5 Ground layer. Tokens live here so the
+   one warm highlight reserved for the Ground layer (L3). Tokens live here so the
    3D layers and the DOM overlay can read the same palette. */
 @theme {
   --color-void: #05060a;

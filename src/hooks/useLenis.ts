@@ -5,11 +5,14 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useScrollStore } from '@/store/useScrollStore'
 import { usePrefersReducedMotion } from './usePrefersReducedMotion'
 import { FORCED_PROGRESS } from '@/debug'
+import { measureStops, toJourney } from '@/store/stops'
 
 gsap.registerPlugin(ScrollTrigger)
 
 /**
- * Smooth scroll plus the single ScrollTrigger that publishes document progress.
+ * Smooth scroll plus the single ScrollTrigger that publishes camera progress.
+ * Scroll is mapped through measured stops, so each layer arrives with its
+ * article rather than at an even fraction of the page.
  *
  * Lenis scrolls the window itself, so no `scrollerProxy` is needed — it only has
  * to drive `ScrollTrigger.update` and be stepped from GSAP's ticker so both share
@@ -38,20 +41,34 @@ export function useLenis() {
       gsap.ticker.lagSmoothing(0)
     }
 
+    let stops = measureStops()
     let last = 0
+    const publish = (scroll: number) => {
+      const p = toJourney(scroll, stops)
+      setProgress(p, p >= last ? 1 : -1)
+      last = p
+    }
+
     const trigger = ScrollTrigger.create({
       trigger: document.documentElement,
       start: 'top top',
       end: 'bottom bottom',
-      // `scrub: 1` lives on the camera tween, not here; this only reports.
-      onUpdate: (self) => {
-        const p = self.progress
-        setProgress(p, p >= last ? 1 : -1)
-        last = p
-      },
+      // Damping lives in the camera rig, not here; this only reports.
+      onUpdate: (self) => publish(self.scroll()),
     })
 
+    // Images load, fonts settle and the viewport resizes: the articles move, so
+    // the stops are measured again and the camera re-placed without a scroll.
+    const remeasure = () => {
+      stops = measureStops()
+      publish(window.scrollY)
+    }
+    const observer = new ResizeObserver(remeasure)
+    observer.observe(document.body)
+    publish(window.scrollY)
+
     return () => {
+      observer.disconnect()
       trigger.kill()
       if (raf) gsap.ticker.remove(raf)
       lenis?.destroy()

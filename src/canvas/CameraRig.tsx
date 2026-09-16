@@ -24,8 +24,11 @@ export function CameraRig() {
     damped.current = MathUtils.damp(damped.current, target, 4, delta)
     const t = MathUtils.clamp(damped.current, 0, 1)
 
-    CAMERA_CURVE.getPointAt(t, position)
-    LOOK_CURVE.getPointAt(t, look)
+    // getPoint, not getPointAt: by parameter, control point i sits at exactly
+    // i / (n - 1), which is where the journey places layer i. Arc-length sampling
+    // would shift every stop by the unequal lengths of the segments.
+    CAMERA_CURVE.getPoint(t, position)
+    LOOK_CURVE.getPoint(t, look)
     camera.position.copy(position)
     camera.lookAt(look)
 

@@ -2,7 +2,11 @@ import { create } from 'zustand'
 import { LAYERS } from '@/canvas/layers'
 
 type ScrollState = {
-  /** Document scroll, 0 at the top and 1 at the bottom. */
+  /**
+   * Camera journey, 0 at the first layer and 1 at the last, with layer i at
+   * i / (n - 1). Mapped from scroll through measured stops (`stops.ts`), so it is
+   * not the document's scroll fraction.
+   */
   progress: number
   /** Index of the layer the camera is currently nearest. */
   layer: number

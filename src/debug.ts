@@ -1,7 +1,7 @@
 /**
  * Development affordances, read once from the URL.
  *
- * `?debug=1` shows the stats overlay. `?p=0.42` pins scroll progress so a
+ * `?debug=1` shows the stats overlay. `?p=0.42` pins camera progress (layer i at i / 5) so a
  * specific point on the camera path can be inspected — or screenshotted in a
  * headless browser — without having to scroll there.
  */

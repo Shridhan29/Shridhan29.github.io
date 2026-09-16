@@ -6,6 +6,10 @@
  * unbroken curve; each layer contributes one control point plus the camera
  * language used while passing through it.
  *
+ * They follow the page, not an idealised stack: each layer arrives when its
+ * content does (see `src/store/stops.ts`), so the order matches the reading
+ * order — the shipped products first, then the foundations under them.
+ *
  * `lookOffset` is added to the layer anchor to build the look target, which is
  * what makes each stop feel shot differently rather than merely lower down.
  */
@@ -19,7 +23,7 @@ export type Layer = {
   lookOffset: [number, number, number]
   fov: number
   color: string
-  /** DOM section this layer is paired with. */
+  /** Id of the element this layer arrives with: its article or section. */
   section: string
 }
 
@@ -42,7 +46,7 @@ export const LAYERS: Layer[] = [
     lookOffset: [-0.4, 0, 0],
     fov: 34, // tight dolly — the phone fills frame
     color: '#5ee0a0',
-    section: 'work',
+    section: 'truuna',
   },
   {
     id: 'surface',
@@ -52,13 +56,23 @@ export const LAYERS: Layer[] = [
     lookOffset: [-1.6, 0.2, 0],
     fov: 40, // lateral truck — panes slide past
     color: '#8ab4ff',
-    section: 'work',
+    section: 'aashman',
+  },
+  {
+    id: 'ground',
+    label: 'L3 · Ground',
+    anchor: [0, -42, 0],
+    camera: [0.76, -41.68, 6.34],
+    lookOffset: [-0.3, 0.1, 0],
+    fov: 38, // grounded eye level — standing in front of it
+    color: '#ff8a3d',
+    section: 'dms',
   },
   {
     id: 'core',
-    label: 'L3 · Core',
-    anchor: [-1.8, -42, 0],
-    camera: [-1.39, -41.18, 8.16],
+    label: 'L4 · Core',
+    anchor: [-1.8, -56, 0],
+    camera: [-1.39, -55.18, 8.16],
     lookOffset: [0, 0, -3],
     fov: 30, // forward push — down the pipe
     color: '#c084fc',
@@ -66,22 +80,12 @@ export const LAYERS: Layer[] = [
   },
   {
     id: 'cloud',
-    label: 'L4 · Cloud',
-    anchor: [2.2, -56, 0],
-    camera: [3.22, -52.95, 4.07],
+    label: 'L5 · Cloud',
+    anchor: [2.2, -70, 0],
+    camera: [3.22, -66.95, 4.07],
     lookOffset: [-0.8, -1.4, 0],
     fov: 46, // slow crane — looking down over the fleet
     color: '#67e8f9',
     section: 'experience',
-  },
-  {
-    id: 'ground',
-    label: 'L5 · Ground',
-    anchor: [0, -70, 0],
-    camera: [0.76, -69.68, 6.34],
-    lookOffset: [-0.3, 0.1, 0],
-    fov: 38, // grounded eye level — standing in front of it
-    color: '#ff8a3d',
-    section: 'contact',
   },
 ]
