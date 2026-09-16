@@ -24,13 +24,17 @@ postprocessing · GSAP + ScrollTrigger · Lenis · Zustand · Tailwind CSS v4
 
 ```bash
 npm install
+npm run verify     # EVERYTHING: format, lint, typecheck, build + budgets, both suites
+npm run verify -- --live   # ...and confirm the live site serves this build
 npm run dev        # dev server
 npm run build      # typecheck, build, and enforce bundle budgets
 npm run preview    # serve the production build
 npm run lint
 npm run format:check   # Prettier over src/ and scripts/ (CI runs this)
 npm run typecheck
-npm run verify:phase2   # 29 checks incl. a driven browser; needs a build first and Chrome (or CHROME_PATH)
+npm run verify:phase2   # 31 checks incl. a driven browser; needs a build first and Chrome (or CHROME_PATH)
+npm run verify:models   # model pipeline self-test (CI runs this)
+npm run models     # assets-source/models/ -> public/models/ (Meshopt + WebP)
 npm run analyze    # bundle treemap at dist/stats.html
 node scripts/process-images.mjs       # portrait crops, grade, OG card
 node scripts/process-screenshots.mjs  # project screenshots -> AVIF + WebP
@@ -55,5 +59,5 @@ stays `/`.
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE). Third-party CC0 3D assets will be credited in
-`public/models/CREDITS.md` once Phase 3 adds them.
+MIT — see [LICENSE](LICENSE). Third-party CC0 3D assets are credited in
+`public/models/CREDITS.md`; `npm run models` refuses any source not listed there.

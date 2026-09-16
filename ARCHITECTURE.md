@@ -64,7 +64,7 @@ Each layer is a discrete "alcove" (the Cartier pattern) with its own lighting mo
 | UI | **React 19** | Component model for DOM overlay; matches existing React 18 experience |
 | 3D | **three.js** (latest r1xx) | Industry standard; WebGPU path available later |
 | 3D binding | **@react-three/fiber v9** | Declarative scene graph, no imperative render loop to maintain |
-| 3D helpers | **@react-three/drei** | Environment, useGLTF, Instances, Html, PerformanceMonitor, KTX2 loader |
+| 3D helpers | **@react-three/drei** | Environment, useGLTF (via `useModel`), Instances, Html, PerformanceMonitor |
 | Post FX | **@react-three/postprocessing** | Bloom, selective DoF, vignette — the "expensive" look |
 | Motion | **GSAP 3 + ScrollTrigger** | Scroll timeline authority; already known from aashman.in |
 | Scroll | **Lenis** | Smooth inertial scroll; every benchmark site uses it |
@@ -73,7 +73,7 @@ Each layer is a discrete "alcove" (the Cartier pattern) with its own lighting mo
 | Linting | **oxlint** | create-vite's current default; ~50× faster than ESLint and adequate for this codebase |
 | Shaders | Raw GLSL via `glslify`-free inline strings | No extra toolchain; Vite handles `?raw` imports |
 | Models | **CC0 kits** (Poly Haven, Quaternius, Kenney) + **procedural geometry in code** | Decision D7 — no Blender modelling skill required. Blender used only for placement, scale fixes and export |
-| Compression | **gltf-transform** (Draco + Meshopt), **KTX2/Basis** textures | 5–10× asset size reduction |
+| Compression | **gltf-transform** (Meshopt geometry, WebP textures — see §8) | 5–10× asset size reduction |
 | Forms | **Web3Forms** or **Formspree** | GitHub Pages has no server; PHP contact API from aashman.in cannot be reused |
 | Analytics | **Plausible** or GoatCounter | Privacy-safe, tiny script |
 | CI/CD | **GitHub Actions → GitHub Pages** | Mirrors the Azure CI/CD experience already on the resume |
@@ -100,7 +100,7 @@ Remounting a canvas per section is the single most common cause of jank in amate
 ├── <ScrollProvider>                 Zustand store: progress 0..1, active layer, quality tier
 ├── <Canvas>                         fixed, full viewport, single WebGL context
 │   ├── <CameraRig>                  reads progress → position on CatmullRomCurve3
-│   ├── <Environment />              baked HDRI (compressed, <200 KB)
+│   ├── <Environment />              lighting environment (≤ 200 KB — see D9)
 │   ├── <Suspense>
 │   │   ├── <LayerOrbit />           L0
 │   │   ├── <LayerDevice />          L1   each layer: frustum-culled + visibility-gated
@@ -159,11 +159,11 @@ Positions per layer are precomputed at build time from sampled mesh surfaces and
 shridhan_web/
 ├── .github/workflows/deploy.yml
 ├── assets-source/         raw originals — NEVER inside public/, or the
-│   └── img/               unprocessed multi-MB files get published as-is
+│   ├── img/               unprocessed multi-MB files get published as-is
+│   └── models/            source .glb/.gltf → npm run models
 ├── public/                everything here ships to the live site verbatim
-│   ├── models/            *.glb  (Draco + Meshopt compressed)
-│   ├── textures/          *.ktx2 (Basis compressed)
-│   ├── env/               *.hdr  (or baked to .ktx2 env map)
+│   ├── models/            *.glb  (Meshopt compressed, WebP textures)
+│   ├── env/               environment lighting, if D9 picks a file-based option
 │   ├── img/               processed screenshots (AVIF + WebP fallback)
 │   ├── data/              particle position buffers (.bin)
 │   └── resume.pdf
@@ -204,7 +204,7 @@ Non-negotiable. Every award-winning site in the research passes Core Web Vitals;
 | Initial JS (gzip, before 3D chunk) | ≤ 180 KB |
 | 3D chunk (lazy, after first paint) | ≤ 600 KB gzip |
 | Total model payload | ≤ 3.5 MB |
-| Largest single texture | 1024², KTX2 |
+| Largest single texture | 1024² |
 | Time to first meaningful paint | < 1.5 s on 4G |
 | Time to interactive 3D | < 4 s on 4G |
 | Desktop FPS | 60 sustained |
@@ -216,7 +216,7 @@ Non-negotiable. Every award-winning site in the research passes Core Web Vitals;
 
 - **Instancing** for every repeated object (containers, packets, stars, grass).
 - **Baked lighting** into textures in Blender; at most 2 real-time lights per layer.
-- **Draco + Meshopt** on all geometry; **KTX2/Basis** on all textures (GPU-native, no decode stall).
+- **Meshopt** on all geometry; textures WebP ≤ 1024 px (§8 — KTX2 deferred until GPU memory is the constraint).
 - **Deferred 3D bundle** — HTML and hero copy render first, `Canvas` lazy-imported behind `React.lazy`.
 - **Visibility gating** per layer (§4.3).
 - **`PerformanceMonitor`** auto-downgrades: post-FX off → particle count halved → shadow maps off → DPR clamped to 1.
@@ -258,9 +258,9 @@ Source geometry
   └─ Procedural  generated in code — tubes, panes, containers, starfield, particle targets
       └─ Blender 4.x  (assembly only: place, scale, apply transforms, join, export)
           └─ export glTF 2.0 (.glb), Y-up
-              └─ npm run compress-models
+              └─ npm run models   (scripts/compress-models.mjs)
                   gltf-transform: dedup → prune → weld → simplify(0.75)
-                                → draco → resize(1024) → ktx2(etc1s|uastc)
+                                → webp resize(1024) → meshopt
                   └─ public/models/*.glb    ← target ≤ 500 KB per layer
 ```
 
@@ -268,11 +268,13 @@ Roughly half the scene never touches Blender at all. Tubes (L3), glass panes (L2
 
 **Lighting:** real baked lightmaps require Blender skill, so instead each layer uses a single low-cost HDRI environment plus two real-time lights, with ambient occlusion faked in the material. Visually close to baked at this scene complexity, at a fraction of the authoring effort.
 
+**As built (Phase 3.0):** Meshopt rather than Draco, because its decoder already ships inside the three chunk while Draco's ~300 KB decoder is fetched from a CDN; WebP rather than KTX2, because KTX2 encoding needs the `toktx` binary that npm cannot install. Models load only through `src/canvas/useModel.ts`.
+
 **Licensing:** every CC0 source must be recorded in `public/models/CREDITS.md` with its URL, even where the licence does not require attribution.
 
 Screenshots: source PNG → `sharp` → AVIF (primary) + WebP (fallback) at 2 sizes each.
 
-HDRI: single 1k studio HDRI from Poly Haven → `RGBM`/KTX2 env map, ≤ 200 KB.
+Environment lighting: ≤ 200 KB total. **Open — decision D9.** A 1k Poly Haven HDRI is 1.3–1.6 MB (measured 2026-09-16), eight times the budget, and one per layer would be ~9 MB, so a raw HDRI per layer is not viable.
 
 ## 9. Deployment
 
