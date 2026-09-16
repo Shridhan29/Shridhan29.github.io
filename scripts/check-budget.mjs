@@ -1,15 +1,15 @@
-// Fails the build when a bundle exceeds the budgets in ARCHITECTURE.md §6.
+// Fails the build when a bundle or a model exceeds the budgets in ARCHITECTURE.md §6.
 // Runs in CI after `vite build`, against the gzipped size of each emitted chunk.
-import { readdir, readFile } from 'node:fs/promises'
+import { readdir, readFile, stat } from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 import { join } from 'node:path'
+import { BUNDLE_KB as BUDGETS, MODEL_KB } from './budgets.mjs'
 
 const DIST = 'dist/assets'
 
-// Budgets in KB (gzip). "entry" is what index.html actually pulls on first
-// paint; everything else is lazy. Classifying by filename was wrong — it hid a
-// `three` modulepreload in the entry graph and miscounted lazy chunks as eager.
-const BUDGETS = { lazy: 600, entry: 180 }
+// "entry" is what index.html actually pulls on first paint; everything else is
+// lazy. Classifying by filename was wrong — it hid a `three` modulepreload in
+// the entry graph and miscounted lazy chunks as eager.
 
 const html = await readFile('dist/index.html', 'utf8')
 const eager = new Set([...html.matchAll(/\/assets\/([^"']+)/g)].map((m) => m[1]))
@@ -45,9 +45,22 @@ const eagerThree = rows.find(([n, , g]) => n.startsWith('three-') && g === 'entr
 if (eagerThree)
   fails.push(`three is in the entry graph (${eagerThree[0]}) — something imports it eagerly`)
 
+// Models ship from public/models/ verbatim, so measure what landed in dist/.
+const models = (await readdir('dist/models').catch(() => [])).filter((f) => f.endsWith('.glb'))
+let modelTotal = 0
+for (const f of models) {
+  const kb = (await stat(join('dist/models', f))).size / 1024
+  modelTotal += kb
+  console.log(`  ${kb.toFixed(1).padStart(7)} KB     model  ${f}`)
+  if (kb > MODEL_KB.each) fails.push(`model ${f} ${kb.toFixed(0)} KB > ${MODEL_KB.each} KB`)
+}
+if (modelTotal > MODEL_KB.total)
+  fails.push(`models ${modelTotal.toFixed(0)} KB > ${MODEL_KB.total} KB total`)
+
 console.log(
   `\n  entry ${entryTotal.toFixed(1)}/${BUDGETS.entry} KB gz` +
-    `   lazy ${lazyTotal.toFixed(1)}/${BUDGETS.lazy} KB gz`,
+    `   lazy ${lazyTotal.toFixed(1)}/${BUDGETS.lazy} KB gz` +
+    `   models ${modelTotal.toFixed(0)}/${MODEL_KB.total} KB (${models.length})`,
 )
 
 if (fails.length) {
