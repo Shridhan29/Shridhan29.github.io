@@ -117,9 +117,9 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
   - `npm run verify:phase3` (16 checks): gating and lighting source rules; best-of-3 first frame ≤ 5 s; no errors or third-party requests; monolith drawn at 1440 px and not at 1024 px or on a phone; and contrast ≥ 4.5:1 for all hero and header text that sits over the canvas — outline buttons and text links included, filled buttons and the aria-hidden logo dot (a logotype, exempt under WCAG) excluded — measured from rendered pixels at all three sizes. Worst case 4.52:1 — exactly the documented `mist/80` floor, so the scene costs no contrast. Reintroducing the old placeholder behind the hero fails it at 1024 px and on phones
 - [ ] **3.2 L1 Device** — phone slab, screen planes, TRUUNA screenshots as textures, screen-glow light
 - [ ] **3.3 L2 Surface** — layered glass panes, aashman.in captures, ribbon curve geometry
-- [ ] **3.4 L3 Core** — service nodes, tube geometry between them, instanced packet mesh
-- [ ] **3.5 L4 Cloud** — instanced wireframe containers, fog volume, CI/CD pipeline stage markers
-- [ ] **3.6 L5 Ground** — low-poly dairy kiosk + Raspberry Pi board, warm bake, `<Html transform>` mini React UI on the kiosk screen
+- [ ] **3.4 L3 Ground** — low-poly dairy kiosk + Raspberry Pi board, warm bake, `<Html transform>` mini React UI on the kiosk screen
+- [ ] **3.5 L4 Core** — service nodes, tube geometry between them, instanced packet mesh
+- [ ] **3.6 L5 Cloud** — instanced wireframe containers, fog volume, CI/CD pipeline stage markers
 - [x] **3.7 Visibility gating** — `src/canvas/useLayerFrame.ts`: every layer, placeholders included, hides and skips its frame work when more than one layer from the camera; `verify:phase3` fails any layer that bypasses it
 - [ ] **3.8 Perf checkpoint** — ≤ 120 draw calls, 60 fps desktop, first mobile profile run
 
@@ -134,9 +134,9 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 - [ ] **4.2 L0** — fresnel/iridescence shader on the monolith; name text disperses into particles on scroll-out
 - [ ] **4.3 L1** — screens advance through the real app flow as `progress` moves; glow spill onto the slab
 - [ ] **4.4 L2** — GSAP-drawn ribbons weaving between panes; transmission material on glass (High tier only)
-- [ ] **4.5 L3** — instanced packets flowing along tubes, count scaled by quality tier
-- [ ] **4.6 L4** — volumetric fog; pipeline stages light green sequentially with scroll
-- [ ] **4.7 L5** — working miniature React UI on the kiosk screen; warm practical lights
+- [ ] **4.5 L3 Ground** — working miniature React UI on the kiosk screen; warm practical lights
+- [ ] **4.6 L4 Core** — instanced packets flowing along tubes, count scaled by quality tier
+- [ ] **4.7 L5 Cloud** — volumetric fog; pipeline stages light green sequentially with scroll
 - [ ] **4.8 Post-processing** — Bloom, selective DoF, vignette, subtle chromatic aberration; all tier-gated
 - [ ] **4.9 Palette** *(needs D3)* — distinct lighting mood + colour grade per layer, coherent as one journey
 
@@ -201,6 +201,7 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 | D7 | 3D asset source | 3.1–3.6 | **DECIDED: CC0 kits + procedural geometry.** Poly Haven / Quaternius assets plus code-generated shapes. No Blender modelling required; bakes come from the kits or are faked with baked-look materials. |
 | D8 | Collectibles: five or six? | 5.5 | Open — the plan says "five hidden objects, one per layer", but there are six layers. Either one per layer (six) or skip one layer (five; L0 is the natural candidate, since it is the hero). Defer to Phase 5. |
 | D9 | Environment lighting within 200 KB | 3.1–3.6 | **DECIDED 2026-09-17: (a) procedural light panels** rendered into a 64 px environment map — 0 KB, art-directable per layer. A 1k Poly Haven HDRI measured 1.3–1.6 MB, and one per layer would have been ~9 MB. |
+| D10 | How the 3D journey lines up with the page | 2.6, 3.2–3.6 | **DECIDED 2026-09-17: follow the page order.** Each layer arrives with its article; layer order is Orbit, Device (TRUUNA), Surface (aashman.in), Ground (DMS + Urja), Core (About/Skills), Cloud (Experience). The page is unchanged; the descent no longer ends at hardware. |
 
 ---
 
@@ -342,3 +343,4 @@ Web3Forms gives 5× the free headroom and better spam handling at the same price
 | 2026-09-16 | Added `npm run verify` (`scripts/verify-all.mjs`): every check in one command, dependent steps skipped rather than run on stale output, exit code non-zero on any failure or skip; checked by injecting a type error. Running it with `--live` exposed two defects already on the live site. **Mobile overflow:** on a phone the page laid out 756 px wide on a 390 px screen, so browsers zoomed the whole site out. Cause: the sr-only captions (`position: absolute`) inside the TRUUNA screenshot scroller had no positioned ancestor within it, so they escaped `overflow-x`; the Phase 1 checks at 390 px used a desktop window, where `body { overflow-x: hidden }` hides it. Fixed with `relative` on each item, and `verify:phase2` now checks both tiers on an emulated phone (31 checks; confirmed failing without the fix). **Stray CSS:** Tailwind v4 scanned the whole repo, so words in docs and scripts ("table", "shadow", "container", "collapse") shipped unused utilities; sources are now limited to `src/` and `index.html`, CSS 29.5 → 27.1 KB, and a full-page comparison against the live site showed no layout change. |
 | 2026-09-17 | **3.1 L0 Orbit and 3.7 gating complete.** D9 decided (a). Found and fixed on the way: 3D geometry drew straight through the hero headline on the live site (text now on a scrim, and the monolith is placed from measured layout); a 6–15 s first-frame stall from the environment map; a near-black metal material that rendered as a flat cut-out. Extracted `scripts/lib/harness.mjs` so the three suites share reporting, browser and server code. Added `verify:phase3` to `npm run verify`. |
 | 2026-09-17 | Review before commit. The contrast check skipped every link on the assumption they had solid backgrounds; two of the three hero links and the whole header sit directly on the canvas. Widened it, which surfaced the logo's accent-blue dot at 4.07:1 — marked `aria-hidden` as decorative (screen readers now say "shridhan", not "shridhan dot"). Noted, not yet fixed: `--font-display: 'Satoshi'` is declared but no font is ever loaded, so headings render in the system font. Pre-dates Phase 3; belongs to 5.3 or a typography pass. |
+| 2026-09-17 | **D10: layers follow the page.** Building L1 exposed that the camera ran on an even split of the scroll while the articles do not: at 1440 px the TRUUNA phone would have shown over the aashman.in article, and the Raspberry Pi layer was last although its projects sit mid-page. Reordered to Orbit, Device, Surface, Ground, Core, Cloud; `src/store/stops.ts` maps scroll through measured article positions, re-measured on resize; the camera curve is sampled by parameter so each stop lands on its layer. `verify:phase2` now scrolls to every article at 1440 px and on a phone and checks the camera is at its layer (33 checks) — reverting to the even split fails it on 4 and 5 layers. |

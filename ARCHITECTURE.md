@@ -39,20 +39,22 @@ The concept here comes directly from the resume: the work spans **mobile → web
   ├─────────────────────────────────────┤
   │  L2  SURFACE    aashman.in · React  │  glass panes, GSAP ribbons
   ├─────────────────────────────────────┤
-  │  L3  CORE       FastAPI · Postgres  │  data pipes, packet particles
+  │  L3  GROUND     Raspberry Pi · DMS  │  physical kiosk diorama, warm light
   ├─────────────────────────────────────┤
-  │  L4  CLOUD      Azure · CI/CD       │  volumetric container nodes
+  │  L4  CORE       FastAPI · Postgres  │  data pipes, packet particles
   ├─────────────────────────────────────┤
-  │  L5  GROUND     Raspberry Pi · DMS  │  physical kiosk diorama, warm light
+  │  L5  CLOUD      Azure · CI/CD       │  volumetric container nodes
   └─────────────────────────────────────┘
      ▼  scroll down = descend
 ```
+
+**Order follows the page (decision D10).** The layers were first ordered as an idealised stack ending at hardware, but the page puts the four projects together — the Raspberry Pi products third and fourth — before About, Skills and Experience. Each layer now arrives when its content does (`src/store/stops.ts` measures the articles), so the order is the reading order: the shipped products first, then the foundations under them.
 
 Each layer is a discrete "alcove" (the Cartier pattern) with its own lighting mood, palette, and one signature effect. The visitor never loses the sense of a single continuous space — the camera path is one unbroken curve.
 
 **Why this concept wins:** it is not decoration. The 3D *is* the information architecture. A recruiter scrolling it learns the range of the work without reading a word.
 
-**Secondary hook (the "collectible"):** five hidden interactive objects, one per layer (a scannable QR on the Pi, a running `git log` terminal in L4, etc.). Finding all five unlocks a resume download. Rewards exploration the way Introvigne's spaceman does, at near-zero build cost.
+**Secondary hook (the "collectible"):** five hidden interactive objects, one per layer (a scannable QR on the Pi, a running `git log` terminal in L5 Cloud, etc.). Finding all five unlocks a resume download. Rewards exploration the way Introvigne's spaceman does, at near-zero build cost.
 
 ---
 
@@ -119,9 +121,9 @@ Remounting a canvas per section is the single most common cause of jank in amate
 The camera is not animated per section. It rides a single spline.
 
 1. A `CatmullRomCurve3` through six control points, one per layer, defined in code (`src/canvas/curve.ts`).
-2. `ScrollTrigger` on the document body produces `progress: 0 → 1`.
+2. `ScrollTrigger` on the document body reports scroll, mapped through measured article positions (`src/store/stops.ts`) into `progress: 0 → 1`, with layer *i* at exactly *i* / 5 (D10).
 3. Lenis smooths the raw scroll; the progress value is additionally damped (`MathUtils.damp`) so a mouse-wheel notch never snaps the camera.
-4. `camera.position = curve.getPointAt(progress)`; `camera.lookAt(lookCurve.getPointAt(progress))`, where the look target rides a parallel curve so each layer can face its own subject instead of following the tangent.
+4. `camera.position = curve.getPoint(progress)`; `camera.lookAt(lookCurve.getPoint(progress))` — by parameter, not arc length, so each control point lands exactly on its layer's progress, where the look target rides a parallel curve so each layer can face its own subject instead of following the tangent.
 5. Camera **language** changes per layer (the Lempens lesson): wide orbit at L0, tight dolly at L1, lateral truck at L2, forward push at L3, slow crane at L4, grounded eye-level at L5.
 
 Never snap the camera to raw scroll — the short catch-up is what makes it feel cinematic rather than mechanical. As built, `MathUtils.damp` in the render loop does this instead of ScrollTrigger's `scrub: 1`: same feel, but frame-rate independent and with no second smoothing stage to fight Lenis.
@@ -139,11 +141,11 @@ Each layer gets **one** memorable effect. Not five. Restraint is the Oryzo lesso
 | L0 Orbit | Instanced starfield + a slowly rotating monolith with a custom fresnel/iridescence shader; name text disperses into particles on scroll-out |
 | L1 Device | Phone slab with real TRUUNA screenshots on planes; screens flip through the app flow as scroll progresses; soft screen-glow light source |
 | L2 Surface | Layered glass panes (transmission material) holding aashman.in screenshots; GSAP-drawn ribbon curves weaving between them |
-| L3 Core | GPU-instanced "packets" flowing along tube geometry between a FastAPI node and a Postgres node; count scales with quality tier |
-| L4 Cloud | Wireframe container cubes rising through volumetric fog; a CI/CD pipeline lights up green stage by stage on scroll |
-| L5 Ground | Warm-lit low-poly dairy-kiosk diorama with a Raspberry Pi board; the kiosk screen is a live `<Html transform>` running a miniature real React UI |
+| L3 Ground | Warm-lit low-poly dairy-kiosk diorama with a Raspberry Pi board; the kiosk screen is a live `<Html transform>` running a miniature real React UI |
+| L4 Core | GPU-instanced "packets" flowing along tube geometry between a FastAPI node and a Postgres node; count scales with quality tier |
+| L5 Cloud | Wireframe container cubes rising through volumetric fog; a CI/CD pipeline lights up green stage by stage on scroll |
 
-The L5 `<Html transform>` trick — a genuinely working mini-app rendered inside the 3D scene — is the kind of detail that gets an Awwwards nomination, and it costs almost nothing because that UI already exists in the Urja Dairy Tour project.
+The L3 `<Html transform>` trick — a genuinely working mini-app rendered inside the 3D scene — is the kind of detail that gets an Awwwards nomination, and it costs almost nothing because that UI already exists in the Urja Dairy Tour project.
 
 ### 4.5 Particle system
 
