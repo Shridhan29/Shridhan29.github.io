@@ -14,46 +14,11 @@
  * Set CHROME_PATH to use a browser outside the usual install locations.
  */
 import { readFile, readdir } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
 import { gzipSync } from 'node:zlib'
 import { join } from 'node:path'
-import { spawn } from 'node:child_process'
-import puppeteer from 'puppeteer-core'
+import { PHONE, createReport, launchBrowser, startPreview } from './lib/harness.mjs'
 
-// Checked synchronously: an async predicate passed to .find() returns a Promise,
-// which is always truthy, so the first candidate would win whether or not it exists.
-const CHROME_CANDIDATES = [
-  '/usr/bin/google-chrome',
-  '/usr/bin/chromium',
-  '/usr/bin/chromium-browser',
-  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-  'C:/Program Files/Google/Chrome/Application/chrome.exe',
-  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
-  process.env.LOCALAPPDATA &&
-    join(process.env.LOCALAPPDATA, 'Google/Chrome/Application/chrome.exe'),
-].filter(Boolean)
-
-const CHROME = process.env.CHROME_PATH ?? CHROME_CANDIDATES.find((p) => existsSync(p))
-
-const PORT = 4199
-const BASE = `http://localhost:${PORT}`
-
-let passed = 0
-const failures = []
-
-function check(name, ok, detail = '') {
-  if (ok) {
-    passed++
-    console.log(`  \x1b[32mPASS\x1b[0m  ${name}${detail ? `  ${detail}` : ''}`)
-  } else {
-    failures.push(name)
-    console.log(`  \x1b[31mFAIL\x1b[0m  ${name}${detail ? `  ${detail}` : ''}`)
-  }
-}
-
-function section(title) {
-  console.log(`\n\x1b[1m${title}\x1b[0m`)
-}
+const { check, section, finish } = createReport()
 
 // ---------------------------------------------------------------- static ----
 
@@ -111,45 +76,12 @@ check('camera progress is damped, not snapped', /MathUtils\.damp/.test(rig))
 
 section('Runtime (real browser)')
 
-// Vite's CLI run through this Node binary rather than `npx`: spawning `npx`
-// fails with ENOENT on Windows (it is `npx.cmd` there), and a shell wrapper
-// would leave server.kill() stopping the shell instead of the server.
-const server = spawn(
-  process.execPath,
-  ['node_modules/vite/bin/vite.js', 'preview', '--port', String(PORT), '--strictPort'],
-  { stdio: 'ignore' },
-)
-
-async function waitForServer() {
-  for (let i = 0; i < 60; i++) {
-    try {
-      const res = await fetch(BASE)
-      if (res.ok) return true
-    } catch {
-      /* not up yet */
-    }
-    await new Promise((r) => setTimeout(r, 250))
-  }
-  return false
-}
-
 let browser
+let preview
 try {
-  if (!CHROME) {
-    throw new Error(`no Chrome found; set CHROME_PATH (looked in: ${CHROME_CANDIDATES.join(', ')})`)
-  }
-  if (!(await waitForServer())) throw new Error(`preview server never came up on ${BASE}`)
-
-  browser = await puppeteer.launch({
-    executablePath: CHROME,
-    headless: true,
-    args: [
-      '--no-sandbox',
-      // Software WebGL, so this runs the same on a CI box with no GPU.
-      '--enable-unsafe-swiftshader',
-      '--use-angle=swiftshader',
-    ],
-  })
+  preview = await startPreview(4199)
+  const BASE = preview.base
+  browser = await launchBrowser()
 
   const page = await browser.newPage()
   await page.setViewport({ width: 1280, height: 800 })
@@ -262,13 +194,7 @@ try {
   ]) {
     const phone = await browser.newPage()
     await phone.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: motion }])
-    await phone.setViewport({
-      width: 390,
-      height: 844,
-      isMobile: true,
-      hasTouch: true,
-      deviceScaleFactor: 2,
-    })
+    await phone.setViewport(PHONE)
     await phone.goto(BASE, { waitUntil: 'networkidle0' })
     await new Promise((r) => setTimeout(r, 600))
     const width = await phone.evaluate(() => document.documentElement.scrollWidth)
@@ -279,15 +205,7 @@ try {
   check('runtime suite ran', false, err instanceof Error ? err.message : String(err))
 } finally {
   await browser?.close()
-  server.kill()
+  preview?.stop()
 }
 
-// ----------------------------------------------------------------- report ---
-
-console.log(`\n${passed} passed, ${failures.length} failed`)
-if (failures.length) {
-  console.log('\nFailed:')
-  for (const f of failures) console.log(`  - ${f}`)
-  process.exit(1)
-}
-console.log('\x1b[32mPhase 2 verified.\x1b[0m')
+finish('Phase 2 verified.')

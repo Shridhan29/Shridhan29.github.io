@@ -18,23 +18,9 @@ import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { MAX_TEXTURE_PX, MODEL_KB, SIMPLIFY } from './budgets.mjs'
+import { createReport } from './lib/harness.mjs'
 
-let passed = 0
-const failures = []
-
-function check(name, ok, detail = '') {
-  if (ok) {
-    passed++
-    console.log(`  \x1b[32mPASS\x1b[0m  ${name}${detail ? `  ${detail}` : ''}`)
-  } else {
-    failures.push(name)
-    console.log(`  \x1b[31mFAIL\x1b[0m  ${name}${detail ? `  ${detail}` : ''}`)
-  }
-}
-
-function section(title) {
-  console.log(`\n\x1b[1m${title}\x1b[0m`)
-}
+const { check, section, finish } = createReport()
 
 const tmp = await mkdtemp(join(tmpdir(), 'verify-models-'))
 const src = join(tmp, 'src')
@@ -240,10 +226,4 @@ try {
   await rm(tmp, { recursive: true, force: true })
 }
 
-console.log(`\n${passed} passed, ${failures.length} failed`)
-if (failures.length) {
-  console.log('\nFailed:')
-  for (const f of failures) console.log(`  - ${f}`)
-  process.exit(1)
-}
-console.log('\x1b[32mModel pipeline verified.\x1b[0m')
+finish('Model pipeline verified.')
