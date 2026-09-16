@@ -108,3 +108,11 @@ export async function startPreview(port) {
 }
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+/**
+ * Navigation options for pages that render the 3D scene. Waits for the network
+ * to go quiet so the lazy Canvas chunk has arrived. The timeout is doubled from
+ * Puppeteer's 30 s: under software GL the first frame can hold the main thread
+ * for seconds, and one slow load on a busy machine failed a whole suite.
+ */
+export const NAV = { waitUntil: 'networkidle0', timeout: 60_000 }

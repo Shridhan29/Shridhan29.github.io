@@ -16,7 +16,7 @@
 import { readFile, readdir } from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 import { join } from 'node:path'
-import { PHONE, createReport, launchBrowser, startPreview } from './lib/harness.mjs'
+import { NAV, PHONE, createReport, launchBrowser, startPreview } from './lib/harness.mjs'
 
 const { check, section, finish } = createReport()
 
@@ -85,7 +85,7 @@ try {
 
   const page = await browser.newPage()
   await page.setViewport({ width: 1280, height: 800 })
-  await page.goto(`${BASE}/?debug=1`, { waitUntil: 'networkidle0' })
+  await page.goto(`${BASE}/?debug=1`, NAV)
 
   const hasWebGL = await page.evaluate(
     () => !!document.createElement('canvas').getContext('webgl2'),
@@ -119,7 +119,7 @@ try {
 
   // Scroll changes progress, and progress moves the camera.
   const cameraAt = async (p) => {
-    await page.goto(`${BASE}/?debug=1&p=${p}`, { waitUntil: 'networkidle0' })
+    await page.goto(`${BASE}/?debug=1&p=${p}`, NAV)
     await new Promise((r) => setTimeout(r, 1200))
     return page.evaluate(() => ({
       label: document.querySelector('[data-debug-layer]')?.textContent ?? null,
@@ -143,10 +143,10 @@ try {
   // nothing is in view), so it must not count as "within budget". Both samples
   // sit exactly on a layer (p = i / 5): halfway between two layers the camera
   // is ~7 units from either, so everything is frustum-culled and 0 is correct.
-  await page.goto(`${BASE}/?debug=1&p=0`, { waitUntil: 'networkidle0' })
+  await page.goto(`${BASE}/?debug=1&p=0`, NAV)
   await new Promise((r) => setTimeout(r, 1200))
   const atTop = await readOverlay()
-  await page.goto(`${BASE}/?debug=1&p=0.6`, { waitUntil: 'networkidle0' })
+  await page.goto(`${BASE}/?debug=1&p=0.6`, NAV)
   await new Promise((r) => setTimeout(r, 1200))
   const atMid = await readOverlay()
   const inBudget = (calls) => (calls ?? 0) > 0 && calls <= 120
@@ -157,7 +157,7 @@ try {
   )
 
   // Real scrolling must drive progress, not just the ?p= override.
-  await page.goto(`${BASE}/?debug=1`, { waitUntil: 'networkidle0' })
+  await page.goto(`${BASE}/?debug=1`, NAV)
   await new Promise((r) => setTimeout(r, 800))
   const before = (await readOverlay()).progress
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.6))
@@ -174,7 +174,7 @@ try {
       return original.call(this, type, ...rest)
     }
   })
-  await plain.goto(BASE, { waitUntil: 'networkidle0' })
+  await plain.goto(BASE, NAV)
   await new Promise((r) => setTimeout(r, 600))
   check('no WebGL: canvas is not mounted', (await plain.$$('canvas')).length === 0)
   const staticText = await plain.evaluate(() => document.body.innerText)
@@ -195,7 +195,7 @@ try {
     const phone = await browser.newPage()
     await phone.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: motion }])
     await phone.setViewport(PHONE)
-    await phone.goto(BASE, { waitUntil: 'networkidle0' })
+    await phone.goto(BASE, NAV)
     await new Promise((r) => setTimeout(r, 600))
     const width = await phone.evaluate(() => document.documentElement.scrollWidth)
     check(`phone (390 px, ${tier}): no horizontal overflow`, width <= 390, `page width ${width}`)

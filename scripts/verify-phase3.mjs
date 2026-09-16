@@ -78,7 +78,7 @@ async function openTop(browser, base, viewport) {
   page.on('request', (r) => !r.url().startsWith(base) && external.push(r.url()))
   await page.setViewport(viewport)
   const started = Date.now()
-  await page.goto(`${base}/?p=0&debug=1`, { waitUntil: 'domcontentloaded' })
+  await page.goto(`${base}/?p=0&debug=1`, { waitUntil: 'domcontentloaded', timeout: 60_000 })
   let firstFrame = null
   while (Date.now() - started < 25_000) {
     if ((await overlay(page)).fps > 0) {
