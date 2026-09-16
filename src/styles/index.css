@@ -1,4 +1,9 @@
-@import 'tailwindcss';
+/* Scan only the app for class names. By default Tailwind v4 scans every file in
+   the project, so a word like "collapse" in a script comment or a doc shipped a
+   stray utility. */
+@import 'tailwindcss' source(none);
+@source '../';
+@source '../../index.html';
 
 /* Cinematic-serious direction (decision D1): dark ground, restrained accent,
    one warm highlight reserved for the L5 Ground layer. Tokens live here so the
