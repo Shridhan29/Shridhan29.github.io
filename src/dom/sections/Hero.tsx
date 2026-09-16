@@ -11,11 +11,11 @@ export function Hero() {
             {profile.role} · {profile.location}
           </p>
 
-          <h1 className="t-hero font-semibold text-balance">
-            {profile.headline}
-          </h1>
+          <h1 className="t-hero font-semibold text-balance">{profile.headline}</h1>
 
-          <p className="measure-tight mt-6 text-base leading-relaxed text-mist md:text-lg xl:text-xl">{profile.subhead}</p>
+          <p className="measure-tight mt-6 text-base leading-relaxed text-mist md:text-lg xl:text-xl">
+            {profile.subhead}
+          </p>
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <a
@@ -32,7 +32,10 @@ export function Hero() {
             >
               TRUUNA on Google Play ↗
             </a>
-            <a href={profile.resume} className="px-2 py-2.5 text-sm text-mist underline underline-offset-4 transition-colors hover:text-bone">
+            <a
+              href={profile.resume}
+              className="px-2 py-2.5 text-sm text-mist underline underline-offset-4 transition-colors hover:text-bone"
+            >
               Résumé (PDF)
             </a>
           </div>

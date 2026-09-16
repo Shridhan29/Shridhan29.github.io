@@ -28,8 +28,9 @@ npm run dev        # dev server
 npm run build      # typecheck, build, and enforce bundle budgets
 npm run preview    # serve the production build
 npm run lint
+npm run format:check   # Prettier over src/ and scripts/ (CI runs this)
 npm run typecheck
-npm run verify:phase2   # 29 checks incl. a driven browser; needs a build first
+npm run verify:phase2   # 29 checks incl. a driven browser; needs a build first and Chrome (or CHROME_PATH)
 npm run analyze    # bundle treemap at dist/stats.html
 node scripts/process-images.mjs       # portrait crops, grade, OG card
 node scripts/process-screenshots.mjs  # project screenshots -> AVIF + WebP
@@ -48,11 +49,11 @@ photos would go live alongside the compressed versions.
 ## Deployment
 
 Pushing to `main` triggers `.github/workflows/deploy.yml`, which lints,
-typechecks, builds, enforces the bundle budgets, and publishes `dist/` to GitHub
+typechecks, checks formatting, builds, enforces the bundle budgets, and publishes `dist/` to GitHub
 Pages. This is a user site, so it serves from the domain root and Vite's `base`
 stays `/`.
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE). Third-party CC0 3D assets are credited in
-`public/models/CREDITS.md`.
+MIT — see [LICENSE](LICENSE). Third-party CC0 3D assets will be credited in
+`public/models/CREDITS.md` once Phase 3 adds them.

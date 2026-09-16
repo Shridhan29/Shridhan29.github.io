@@ -23,7 +23,16 @@ const MAP = {
   },
   'aashman.in': {
     widths: [800, 1600],
-    order: ['01-loader', '02-home', '03-about', '04-services', '05-products', '06-help', '07-contact', '08-footer'],
+    order: [
+      '01-loader',
+      '02-home',
+      '03-about',
+      '04-services',
+      '05-products',
+      '06-help',
+      '07-contact',
+      '08-footer',
+    ],
   },
   dms: {
     widths: [800, 1600],
@@ -35,7 +44,11 @@ const MAP = {
   },
 }
 
-const exists = (p) => access(p).then(() => true, () => false)
+const exists = (p) =>
+  access(p).then(
+    () => true,
+    () => false,
+  )
 
 for (const [project, cfg] of Object.entries(MAP)) {
   const srcDir = join(SRC_ROOT, project)
@@ -58,8 +71,14 @@ for (const [project, cfg] of Object.entries(MAP)) {
     const slug = slugFor(raw[i], i)
     for (const w of cfg.widths) {
       const base = sharp(join(srcDir, raw[i])).resize(w, null, { withoutEnlargement: true })
-      await base.clone().avif({ quality: 58, effort: 6 }).toFile(join(outDir, `${slug}-${w}.avif`))
-      await base.clone().webp({ quality: 78 }).toFile(join(outDir, `${slug}-${w}.webp`))
+      await base
+        .clone()
+        .avif({ quality: 58, effort: 6 })
+        .toFile(join(outDir, `${slug}-${w}.avif`))
+      await base
+        .clone()
+        .webp({ quality: 78 })
+        .toFile(join(outDir, `${slug}-${w}.webp`))
     }
     const { width, height } = await sharp(join(srcDir, raw[i])).metadata()
     console.log(`  ${project}/${slug}  ${width}x${height}`)

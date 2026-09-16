@@ -23,7 +23,9 @@ export function Nav() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-        scrolled ? 'border-b border-slate/70 bg-void/85 backdrop-blur-md' : 'border-b border-transparent'
+        scrolled
+          ? 'border-b border-slate/70 bg-void/85 backdrop-blur-md'
+          : 'border-b border-transparent'
       }`}
     >
       <nav aria-label="Primary" className="shell flex items-center justify-between py-4">

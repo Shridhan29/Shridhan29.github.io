@@ -17,10 +17,13 @@ export function Stats() {
     frames.current += 1
     elapsed.current += delta
     if (elapsed.current < 0.5) return
+    // The counters accumulate over the whole sample window, so divide by the
+    // frame count: the budgets (≤ 120 draw calls) are per frame, and a raw
+    // total would scale with fps instead of with the scene.
     setStats({
       fps: Math.round(frames.current / elapsed.current),
-      calls: gl.info.render.calls,
-      tris: gl.info.render.triangles,
+      calls: Math.round(gl.info.render.calls / frames.current),
+      tris: Math.round(gl.info.render.triangles / frames.current),
     })
     frames.current = 0
     elapsed.current = 0

@@ -42,28 +42,28 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 ## Phase 0 — Foundation ✅ COMPLETE
 *Goal: an empty but deployed site with green CI.*
 
-- [ ] **0.1 Repo**
+- [x] **0.1 Repo**
   - [x] Create `Shridhan29.github.io` on GitHub (public)
   - [x] `origin` repointed and `main` pushed. Old private `shridhan_web` remote kept as `private`
   - [x] Add `.gitignore` (node_modules, dist, .env, .DS_Store, Blender `.blend1`)
   - [x] Add `LICENSE` (MIT) and rewrite `README.md`
-- [ ] **0.2 Toolchain**
+- [x] **0.2 Toolchain**
   - [x] Scaffolded — Vite 8.2, React 19.2, TypeScript 6.0
   - [x] `.nvmrc` 22; `engines` `^20.19.0 || >=22.12.0` (local Node is 20.20.2, which Vite 8 supports)
   - [x] **oxlint** (create-vite's default now, and far faster than ESLint) + Prettier; `lint`, `typecheck`, `format` scripts
   - [x] Tailwind v4 via `@tailwindcss/vite`; palette tokens in `src/styles/index.css`
   - [x] `vite.config.ts` with `base: '/'`, `@` alias, and manual chunks isolating three/R3F
-- [ ] **0.3 3D dependencies**
+- [x] **0.3 3D dependencies**
   - [x] `three` 0.181, `@react-three/fiber` 9.7, `drei` 10.7, `postprocessing` 3.1
   - [x] `gsap` 3.15, `lenis` 1.3, `zustand` 5.0
   - [x] Cube renders; kept as the Phase 0 placeholder page, removed in Phase 1
-- [ ] **0.4 CI/CD**
+- [x] **0.4 CI/CD**
   - [x] `.github/workflows/deploy.yml` written — lint, typecheck, build, budget check, deploy
   - [x] Pages switched from `legacy` (branch-serving) to `workflow` build type via the API
   - [x] **Live at https://shridhan29.github.io** — HTTP 200, hashed assets served, full pipeline green
-- [ ] **0.5 Bundle guardrail**
+- [x] **0.5 Bundle guardrail**
   - [x] `rollup-plugin-visualizer` wired to `npm run analyze`
-  - [x] `scripts/check-budget.mjs` fails the build above the §6 gzip budgets; wired into `npm run build`. Current: entry 61.2/180 KB, three 225.5/600 KB
+  - [x] `scripts/check-budget.mjs` fails the build above the §6 gzip budgets; wired into `npm run build`. At Phase 0: entry 61.2/180 KB, three 225.5/600 KB
 
 **Done when:** a pushed commit auto-deploys and the live URL serves a page.
 
@@ -92,18 +92,18 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 - [x] **2.5 Dev tooling** — `?debug=1` overlay (layer, progress, direction, fps, draw calls, triangles) and `?p=0.42` to pin progress for inspection or headless capture. Six labelled placeholder layers stand in for the real geometry
 - [x] **2.6 Section sync** — layer-dot nav down the right edge, `aria-current` on the active layer, each dot linking to its paired section. Section reveal runs on a CSS `view()` timeline: no bundle weight, no fight with Lenis, and content simply shows where the timeline is unsupported
 - [x] **2.7 Automated verification** — `npm run verify:phase2` runs 29 checks: bundle-graph invariants, source invariants, and a driven Chrome that measures the render loop, layer selection, draw-call bounds, real scrolling, and the no-WebGL Static path. All green
-  - The earlier zeroed fps / draw-call readings were a headless virtual-time artifact, not a defect. Driven properly the loop reports ~40–50 fps with 60–78 draw calls and ~1,700–2,200 triangles
+  - The earlier zeroed fps / draw-call readings were a headless virtual-time artifact, not a defect. Driven properly the loop runs. The draw-call and triangle figures first recorded here (60–78 calls, ~1,700–2,200 triangles) were totals over a half-second sample window, not per frame — corrected 2026-09-16; per frame the placeholders cost 3 draw calls and 84 triangles for each layer in view
 
-**Verify with:** `npm run verify:phase2` (needs `npm run build` first, and Chrome on the system).
+**Verify with:** `npm run verify:phase2` (needs `npm run build` first, and Chrome on the system — found automatically on Linux, macOS and Windows, or set `CHROME_PATH`).
 
 **Not built here, deliberately:** Leva. A `?debug=1` overlay plus `?p=` covers path authoring without adding a dependency that would then need tree-shaking out of production.
 
 ## Phase 3 — The Six Layers
-*Goal: real geometry, textured, baked, compressed, placed. Est. 5–7 days. Blocked by B2.*
+*Goal: real geometry, textured, baked, compressed, placed. Est. 5–7 days. Unblocked — B2 cleared 2026-09-07.*
 
 - [ ] **3.0 Asset pipeline**
   - [ ] `scripts/compress-models.mjs` — gltf-transform: dedup → prune → weld → simplify → draco → resize 1024 → ktx2
-  - [ ] `scripts/process-images.mjs` — sharp → AVIF + WebP
+  - [x] Screenshots and portrait → AVIF + WebP — built in Phase 1.4 as `scripts/process-screenshots.mjs` and `scripts/process-images.mjs`
   - [ ] KTX2 + Draco loaders registered in a shared `useGLTF` config
   - [ ] Per-model size assertion in CI (≤ 500 KB each, ≤ 3.5 MB total)
 - [ ] **3.1 L0 Orbit** — monolith mesh, instanced starfield, HDRI environment (≤ 200 KB)
@@ -167,8 +167,8 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 
 | ID | Asset | Needed by | Status |
 |---|---|---|---|
-| A1 | Professional photo | 1.4 | **received** — `public/img/source/shridhanImage.jpeg`, 1000×1500 RGB. Needs background replacement and a head-and-shoulders crop in Phase 1.4 |
-| A2 | Resume PDF | 1.5 | received — copy to `public/resume.pdf` |
+| A1 | Professional photo | 1.4 | **received and processed** — `assets-source/img/shridhanImage.jpeg`, 1000×1500 RGB. Graded rather than cut out (Phase 1.4); variants in `public/img/` |
+| A2 | Resume PDF | 1.5 | received — published at `public/resume.pdf` |
 | A3 | TRUUNA screenshots | 3.2 | **received ×5** — language, OTP login, configurator, booking summary, order timeline |
 | A4 | aashman.in captures | 3.3 | **received ×8** |
 | A5 | DMS POS screenshots | 3.6 | **received ×4** |
@@ -176,7 +176,7 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 | A7 | Raspberry Pi kiosk photos ×2–3 | 3.6 | **CUT — none available.** L5 rescoped to pure geometry; see Appendix A revision |
 | A8 | Aashman Technicals logo (SVG) | 3.3 | pending, optional |
 | A9 | TRUUNA screen recording | 4.3 | pending, optional |
-| A10 | Web3Forms access key | 1.6 | **received** — in `.env`. See Appendix B |
+| A10 | Web3Forms access key | 1.6 | **received** — inlined in `src/dom/sections/Contact.tsx`, `VITE_WEB3FORMS_KEY` overrides it. See Confirmed Facts and Appendix B |
 
 ---
 
@@ -191,12 +191,15 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 | D5 | Publish the phone number? | 1.1 | **DECIDED: no.** Email + contact form only. Number stays in the resume PDF. |
 | D6 | Custom domain? | 6.8 | Open — defer to Phase 6; affects DNS only, not the build. |
 | D7 | 3D asset source | 3.1–3.6 | **DECIDED: CC0 kits + procedural geometry.** Poly Haven / Quaternius assets plus code-generated shapes. No Blender modelling required; bakes come from the kits or are faked with baked-look materials. |
+| D8 | Collectibles: five or six? | 5.5 | Open — the plan says "five hidden objects, one per layer", but there are six layers. Either one per layer (six) or skip one layer (five; L0 is the natural candidate, since it is the hero). Defer to Phase 5. |
 
 ---
 
 ## Appendix A — Screenshot Brief (B2)
 
-Exact shots wanted, derived from what each project actually does. Drop everything into `public/img/source/<project>/` with the filenames given; the build pipeline converts to AVIF + WebP at two sizes.
+Exact shots wanted, derived from what each project actually does. The build pipeline converts to AVIF + WebP at two sizes.
+
+> **Historical brief — B2 is cleared.** The 22 files that arrived did not follow these filenames; originals live in `assets-source/img/<project>/` (outside `public/`, so they are never published) and `scripts/process-screenshots.mjs` renames them to stable slugs in `public/img/<project>/`. The tables below record what was asked for, not what is on disk.
 
 **Universal rules**
 - PNG, no compression, native resolution. Never a photo of a screen, never a crop from WhatsApp.
@@ -204,7 +207,7 @@ Exact shots wanted, derived from what each project actually does. Drop everythin
 - Consistent state: same demo account, same theme, same language across a project's set.
 - Full window, no cursor, no browser dev tools, no OS notification bars where avoidable.
 
-### A3 — TRUUNA (Flutter, live on Play Store) → `public/img/source/truuna/`
+### A3 — TRUUNA (Flutter, live on Play Store) → `assets-source/img/truuna/`
 
 The hero project. It carries L1 Device and gets the most screen area on the site.
 
@@ -224,7 +227,7 @@ The hero project. It carries L1 Device and gets the most screen area on the site
 
 Format: portrait, device-native (1080×2400 or whatever your test device is). Screen recording of the full flow (A9) is still welcome — it becomes a video texture on the phone slab.
 
-### A4 — aashman.in (React 18 SPA) → `public/img/source/aashman/`
+### A4 — aashman.in (React 18 SPA) → `assets-source/img/aashman.in/`
 
 | # | Filename | Shot |
 |---|---|---|
@@ -237,7 +240,7 @@ Format: portrait, device-native (1080×2400 or whatever your test device is). Sc
 
 Full-page capture in Chrome: `F12` → `Ctrl+Shift+P` → type "Capture full size screenshot".
 
-### A5 — DMS Dairy POS (Raspberry Pi) → `public/img/source/dms/`
+### A5 — DMS Dairy POS (Raspberry Pi) → `assets-source/img/dms/`
 
 | # | Filename | Shot |
 |---|---|---|
@@ -247,7 +250,7 @@ Full-page capture in Chrome: `F12` → `Ctrl+Shift+P` → type "Capture full siz
 | 4 | `04-invoice.png` | A generated PDF invoice |
 | 5 | `05-audit.png` | Audit history or staff records view — *optional, shows the depth* |
 
-### A6 — Urja Dairy Tour (Raspberry Pi kiosk) → `public/img/source/urja/`
+### A6 — Urja Dairy Tour (Raspberry Pi kiosk) → `assets-source/img/urja/`
 
 | # | Filename | Shot |
 |---|---|---|
@@ -317,9 +320,11 @@ Web3Forms gives 5× the free headroom and better spam handling at the same price
 | 2026-09-07 | A1 photo received (1000×1500), B1 cleared. A7 hardware photos cut — none exist; L5 rescoped to procedural geometry plus live `<Html transform>` UIs on the kiosk screens. |
 | 2026-09-07 | Web3Forms form created and key stored in `.env`. B3 cleared. `.gitignore` and `.env.example` added. Only A3–A6 screenshots remain outstanding. |
 | 2026-09-07 | Phase 0 built: repo created, Vite 8 / React 19 / TS 6 scaffold, 3D and motion dependencies, Tailwind v4 tokens, bundle-budget guardrail, Pages workflow, README and licence. Toolchain landed newer than the architecture assumed (Vite 8 not 6, oxlint not ESLint) — docs updated to match. |
-| 2026-09-07 | Added `scripts/verify-phase2.mjs` and `npm run verify:phase2` — 29 automated checks across the bundle graph, source invariants and a driven browser. Two failures on first run were the harness's own fault (the layer-nav renders every label as sr-only text, so scraping `body.innerText` always matched the first layer); the overlay now carries `data-debug` hooks. Confirmed the render loop reports ~40–50 fps and 60–78 draw calls, closing the one item Phase 2 could not verify. |
-| 2026-09-07 | **Phase 2 complete.** Scroll-to-camera engine live against six placeholder layers. Two bugs caught: `three` was being pulled into the entry graph by `path.ts` (the store and the DOM layer-nav imported it for layer data), split into three-free `layers.ts` and `curve.ts`; and Vite was emitting a `modulepreload` for the lazy 3D chunk, downloading 231 KB on first paint and defeating the deferral — filtered via `build.modulePreload.resolveDependencies`. The budget script classified chunks by filename, which hid both; it now reads `dist/index.html` to see what actually loads eagerly and fails if `three` is ever in it. Entry 75.4/180 KB gzip, lazy 280.8/600 KB. |
+| 2026-09-07 | **Phase 0 complete.** Work had been committed to a local `backend` branch while `main` still sat at the initial commit; `main` was fast-forwarded to it and pushed. Pages was on `legacy` branch-serving mode, which would have served unbuilt source — switched to `workflow`. Live and green at https://shridhan29.github.io. |
+| 2026-09-07 | **Phase 1 complete.** Static portfolio built, deployed and verified live. All 22 screenshots received and processed, clearing B2 and unblocking Phase 3. Remaining: a Lighthouse run and a real-device pass. |
+| 2026-09-07 | Web3Forms key inlined in `Contact.tsx` with a `VITE_WEB3FORMS_KEY` override. As a CI secret it added no security — the key ships in the client bundle regardless — while giving the deployed form a way to silently break. |
 | 2026-09-07 | Post-Phase-1 audit. Three real defects found and fixed: 7.6 MB of raw originals were being published (sources sat inside `public/`, which ships verbatim — moved to `assets-source/`, dist 9.9 MB to 2.4 MB); six text tints failed WCAG AA (`mist/50` 2.39:1, `/60` 2.97:1, `/70` 3.69:1 — floor raised to `/80`); and mobile had no navigation at all. Removed unused `profile.openToRemote`; synced README and the architecture folder diagram. |
 | 2026-09-07 | Responsive rework. Fixed 1024 px container replaced with a fluid `.shell` (max 2200 px, `clamp()` padding), fluid type scale, and reading measures capped so wide screens gain space rather than line length. Project shot rows promoted to full block width; highlights split to two columns at xl. Verified 390 / 768 / 1280 / 1440 / 1920 / 2560. |
-| 2026-09-07 | **Phase 1 complete.** Static portfolio built, deployed and verified live. All 22 screenshots received and processed, clearing B2 and unblocking Phase 3. Remaining: a Lighthouse run and a real-device pass. |
-| 2026-09-07 | **Phase 0 complete.** Work had been committed to a local `backend` branch while `main` still sat at the initial commit; `main` was fast-forwarded to it and pushed. Pages was on `legacy` branch-serving mode, which would have served unbuilt source — switched to `workflow`. Live and green at https://shridhan29.github.io. |
+| 2026-09-07 | **Phase 2 complete.** Scroll-to-camera engine live against six placeholder layers. Two bugs caught: `three` was being pulled into the entry graph by `path.ts` (the store and the DOM layer-nav imported it for layer data), split into three-free `layers.ts` and `curve.ts`; and Vite was emitting a `modulepreload` for the lazy 3D chunk, downloading 231 KB on first paint and defeating the deferral — filtered via `build.modulePreload.resolveDependencies`. The budget script classified chunks by filename, which hid both; it now reads `dist/index.html` to see what actually loads eagerly and fails if `three` is ever in it. Entry 75.4/180 KB gzip, lazy 280.8/600 KB. |
+| 2026-09-07 | Added `scripts/verify-phase2.mjs` and `npm run verify:phase2` — 29 automated checks across the bundle graph, source invariants and a driven browser. Two failures on first run were the harness's own fault (the layer-nav renders every label as sr-only text, so scraping `body.innerText` always matched the first layer); the overlay now carries `data-debug` hooks. Confirmed the render loop reports ~40–50 fps, closing the one item Phase 2 could not verify. (The draw-call figure recorded alongside it was a per-window total — see 2026-09-16.) |
+| 2026-09-16 | Post-Phase-2 audit. Lint, typecheck, build and budgets re-verified from a clean install; the live site serves the same asset hashes as a fresh build of `main`. Fixed: `verify:phase2` could not run on Windows (`spawn npx` → `ENOENT`) and its Chrome lookup never checked anything (an async `.find()` predicate is always truthy); `npm run analyze` used an `ANALYZE=1` prefix that `cmd.exe` cannot parse, now `--mode analyze`; 17 files had drifted from Prettier because CI never checked formatting — formatted, `format:check` extended to `scripts/` and added to CI; `.gitattributes` pins LF so Windows checkouts do not flag every file. Removed the unused Vite starter stylesheet `src/index.css`. The debug overlay's `calls` and `tris` were summed over each 0.5 s sample window, so they scaled with fps and the ≤ 120 per-frame budget check compared the wrong number — now divided by the frame count, and the check requires a non-zero reading taken on a layer (p = 0.6) rather than between two, where everything is correctly frustum-culled. Synced this tracker, `ARCHITECTURE.md` and the README with what was built. Added D8. |

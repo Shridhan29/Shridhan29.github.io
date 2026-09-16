@@ -7,12 +7,13 @@ import path from 'node:path'
 // User-site deployment (Shridhan29.github.io) serves from the domain root,
 // so base stays '/'. A project repo would need '/<repo>/' and would break
 // every absolute asset path the 3D loaders resolve at runtime.
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   base: '/',
   plugins: [
     react(),
     tailwindcss(),
-    ...(process.env.ANALYZE
+    // `--mode analyze` rather than an ANALYZE=1 env prefix, which cmd.exe cannot parse.
+    ...(mode === 'analyze'
       ? [visualizer({ open: true, gzipSize: true, brotliSize: true, filename: 'dist/stats.html' })]
       : []),
   ],
@@ -43,4 +44,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))

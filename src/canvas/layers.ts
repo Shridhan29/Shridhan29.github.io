@@ -85,4 +85,3 @@ export const LAYERS: Layer[] = [
     section: 'contact',
   },
 ]
-

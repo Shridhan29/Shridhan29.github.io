@@ -20,7 +20,8 @@ const CROPS = {
 }
 
 /** Radial vignette that collapses the busy backdrop toward the page ground. */
-const vignette = (w, h) => Buffer.from(`
+const vignette = (w, h) =>
+  Buffer.from(`
   <svg width="${w}" height="${h}">
     <defs>
       <radialGradient id="v" cx="50%" cy="38%" r="72%">

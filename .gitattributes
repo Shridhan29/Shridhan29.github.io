@@ -1,0 +1,16 @@
+# Keep LF in every checkout, including Windows with core.autocrlf=true,
+# so Prettier (endOfLine: lf) reports real style drift instead of line endings.
+* text=auto eol=lf
+
+# Never touch line endings in binary assets.
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.glb binary
+*.ktx2 binary
+*.hdr binary
+*.bin binary

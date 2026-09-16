@@ -10,25 +10,30 @@
  *
  *   npm run verify:phase2
  *
- * Requires a production build in dist/ and Chrome on the system.
+ * Requires a production build in dist/ and Chrome or Chromium on the system.
+ * Set CHROME_PATH to use a browser outside the usual install locations.
  */
-import { readFile, readdir, access } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { gzipSync } from 'node:zlib'
 import { join } from 'node:path'
 import { spawn } from 'node:child_process'
 import puppeteer from 'puppeteer-core'
 
-const CHROME =
-  process.env.CHROME_PATH ??
-  ['/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'].find(async (p) => {
-    try {
-      await access(p)
-      return true
-    } catch {
-      return false
-    }
-  }) ??
-  '/usr/bin/google-chrome'
+// Checked synchronously: an async predicate passed to .find() returns a Promise,
+// which is always truthy, so the first candidate would win whether or not it exists.
+const CHROME_CANDIDATES = [
+  '/usr/bin/google-chrome',
+  '/usr/bin/chromium',
+  '/usr/bin/chromium-browser',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  process.env.LOCALAPPDATA &&
+    join(process.env.LOCALAPPDATA, 'Google/Chrome/Application/chrome.exe'),
+].filter(Boolean)
+
+const CHROME = process.env.CHROME_PATH ?? CHROME_CANDIDATES.find((p) => existsSync(p))
 
 const PORT = 4199
 const BASE = `http://localhost:${PORT}`
@@ -106,9 +111,14 @@ check('camera progress is damped, not snapped', /MathUtils\.damp/.test(rig))
 
 section('Runtime (real browser)')
 
-const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
-  stdio: 'ignore',
-})
+// Vite's CLI run through this Node binary rather than `npx`: spawning `npx`
+// fails with ENOENT on Windows (it is `npx.cmd` there), and a shell wrapper
+// would leave server.kill() stopping the shell instead of the server.
+const server = spawn(
+  process.execPath,
+  ['node_modules/vite/bin/vite.js', 'preview', '--port', String(PORT), '--strictPort'],
+  { stdio: 'ignore' },
+)
 
 async function waitForServer() {
   for (let i = 0; i < 60; i++) {
@@ -125,6 +135,9 @@ async function waitForServer() {
 
 let browser
 try {
+  if (!CHROME) {
+    throw new Error(`no Chrome found; set CHROME_PATH (looked in: ${CHROME_CANDIDATES.join(', ')})`)
+  }
   if (!(await waitForServer())) throw new Error(`preview server never came up on ${BASE}`)
 
   browser = await puppeteer.launch({
@@ -142,7 +155,9 @@ try {
   await page.setViewport({ width: 1280, height: 800 })
   await page.goto(`${BASE}/?debug=1`, { waitUntil: 'networkidle0' })
 
-  const hasWebGL = await page.evaluate(() => !!document.createElement('canvas').getContext('webgl2'))
+  const hasWebGL = await page.evaluate(
+    () => !!document.createElement('canvas').getContext('webgl2'),
+  )
   check('browser reports WebGL2', hasWebGL)
 
   await page.waitForSelector('canvas', { timeout: 10_000 }).catch(() => {})
@@ -192,15 +207,20 @@ try {
   )
 
   // Layer gating: at any point on the path, most layers should be culled.
+  // Draw calls are per frame. A zero reading means nothing was measured (or
+  // nothing is in view), so it must not count as "within budget". Both samples
+  // sit exactly on a layer (p = i / 5): halfway between two layers the camera
+  // is ~7 units from either, so everything is frustum-culled and 0 is correct.
   await page.goto(`${BASE}/?debug=1&p=0`, { waitUntil: 'networkidle0' })
   await new Promise((r) => setTimeout(r, 1200))
   const atTop = await readOverlay()
-  await page.goto(`${BASE}/?debug=1&p=0.5`, { waitUntil: 'networkidle0' })
+  await page.goto(`${BASE}/?debug=1&p=0.6`, { waitUntil: 'networkidle0' })
   await new Promise((r) => setTimeout(r, 1200))
   const atMid = await readOverlay()
+  const inBudget = (calls) => (calls ?? 0) > 0 && calls <= 120
   check(
-    'draw calls stay bounded as the camera descends',
-    (atTop.calls ?? 0) <= 120 && (atMid.calls ?? 0) <= 120,
+    'draw calls per frame stay within budget as the camera descends',
+    inBudget(atTop.calls) && inBudget(atMid.calls),
     `top ${atTop.calls}, mid ${atMid.calls}`,
   )
 
@@ -227,7 +247,10 @@ try {
   check('no WebGL: canvas is not mounted', (await plain.$$('canvas')).length === 0)
   const staticText = await plain.evaluate(() => document.body.innerText)
   check('no WebGL: hero copy still present', staticText.includes('I ship software'))
-  check('no WebGL: every project still listed', ['TRUUNA', 'Aashman Technicals', 'DMS', 'Urja'].every((n) => staticText.includes(n)))
+  check(
+    'no WebGL: every project still listed',
+    ['TRUUNA', 'Aashman Technicals', 'DMS', 'Urja'].every((n) => staticText.includes(n)),
+  )
   check('no WebGL: contact form still present', !!(await plain.$('form')))
 } catch (err) {
   check('runtime suite ran', false, err instanceof Error ? err.message : String(err))

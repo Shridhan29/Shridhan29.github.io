@@ -15,10 +15,7 @@ function Shots({ project }: { project: Project }) {
       }
     >
       {project.shots.map((shot, i) => (
-        <li
-          key={shot.slug}
-          className={phone ? 'w-[168px] shrink-0 snap-start lg:w-auto' : ''}
-        >
+        <li key={shot.slug} className={phone ? 'w-[168px] shrink-0 snap-start lg:w-auto' : ''}>
           <figure>
             <Picture
               base={`/img/${project.dir}/${shot.slug}`}
@@ -27,7 +24,11 @@ function Shots({ project }: { project: Project }) {
               height={phone ? 1920 : 954}
               alt={shot.alt}
               priority={i === 0 && project.featured}
-              sizes={phone ? '(max-width: 1024px) 168px, 19vw' : '(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw'}
+              sizes={
+                phone
+                  ? '(max-width: 1024px) 168px, 19vw'
+                  : '(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw'
+              }
               className={`w-full rounded-md border border-slate/70 bg-ink ${phone ? '' : 'aspect-[1843/954] object-cover object-top'}`}
             />
             <figcaption className="sr-only">{shot.alt}</figcaption>
@@ -70,7 +71,10 @@ function ProjectBlock({ project }: { project: Project }) {
 
           <ul className="mt-5 flex flex-wrap gap-1.5">
             {project.stack.map((s) => (
-              <li key={s} className="rounded border border-slate/70 px-2 py-0.5 text-[0.72rem] text-bone/85">
+              <li
+                key={s}
+                className="rounded border border-slate/70 px-2 py-0.5 text-[0.72rem] text-bone/85"
+              >
                 {s}
               </li>
             ))}
@@ -100,7 +104,10 @@ function ProjectBlock({ project }: { project: Project }) {
         <div className="min-w-0">
           <ul className="space-y-3 xl:grid xl:grid-cols-2 xl:gap-x-12 xl:gap-y-3 xl:space-y-0">
             {project.highlights.map((h) => (
-              <li key={h.slice(0, 24)} className="flex gap-3 text-[0.92rem] leading-relaxed text-mist xl:text-[0.98rem]">
+              <li
+                key={h.slice(0, 24)}
+                className="flex gap-3 text-[0.92rem] leading-relaxed text-mist xl:text-[0.98rem]"
+              >
                 <span aria-hidden className="mt-2.5 size-1 shrink-0 rounded-full bg-accent" />
                 {h}
               </li>
@@ -109,11 +116,15 @@ function ProjectBlock({ project }: { project: Project }) {
 
           <details className="group mt-6 border-t border-slate/60 pt-4">
             <summary className="cursor-pointer list-none font-mono text-xs tracking-[0.14em] text-mist uppercase transition-colors hover:text-bone">
-              <span className="inline-block transition-transform group-open:rotate-90">›</span> Engineering detail
+              <span className="inline-block transition-transform group-open:rotate-90">›</span>{' '}
+              Engineering detail
             </summary>
             <ul className="mt-4 space-y-3 xl:grid xl:grid-cols-2 xl:gap-x-12 xl:gap-y-3 xl:space-y-0">
               {project.depth.map((d) => (
-                <li key={d.slice(0, 24)} className="flex gap-3 text-[0.88rem] leading-relaxed text-mist/85">
+                <li
+                  key={d.slice(0, 24)}
+                  className="flex gap-3 text-[0.88rem] leading-relaxed text-mist/85"
+                >
                   <span aria-hidden className="mt-2.5 size-1 shrink-0 rounded-full bg-slate" />
                   {d}
                 </li>

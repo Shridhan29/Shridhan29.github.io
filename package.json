@@ -13,9 +13,9 @@
     "preview": "vite preview",
     "lint": "oxlint",
     "typecheck": "tsc -b --noEmit",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"*.{json,md}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
-    "analyze": "ANALYZE=1 vite build",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.mjs\" \"*.{json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.mjs\"",
+    "analyze": "vite build --mode analyze",
     "budget": "node scripts/check-budget.mjs",
     "verify:phase2": "node scripts/verify-phase2.mjs"
   },

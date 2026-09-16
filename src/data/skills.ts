@@ -5,11 +5,27 @@ export const skills = [
   },
   {
     group: 'Mobile',
-    items: ['Flutter', 'Clean Architecture', 'Firebase Auth', 'FCM', 'Crashlytics', 'Play Release Management'],
+    items: [
+      'Flutter',
+      'Clean Architecture',
+      'Firebase Auth',
+      'FCM',
+      'Crashlytics',
+      'Play Release Management',
+    ],
   },
   {
     group: 'Backend & APIs',
-    items: ['FastAPI', 'Node.js', 'Express', 'REST API design', 'SQLAlchemy 2', 'Alembic', 'Pydantic', 'JWT auth'],
+    items: [
+      'FastAPI',
+      'Node.js',
+      'Express',
+      'REST API design',
+      'SQLAlchemy 2',
+      'Alembic',
+      'Pydantic',
+      'JWT auth',
+    ],
   },
   {
     group: 'Frontend',
@@ -21,10 +37,24 @@ export const skills = [
   },
   {
     group: 'Cloud & DevOps',
-    items: ['Azure App Service', 'Container Registry', 'Key Vault', 'Docker', 'GitHub Actions', 'Apache'],
+    items: [
+      'Azure App Service',
+      'Container Registry',
+      'Key Vault',
+      'Docker',
+      'GitHub Actions',
+      'Apache',
+    ],
   },
   {
     group: 'Practices',
-    items: ['Git', 'Hosting & domain setup', 'Root cause analysis', 'Manual testing', 'Agile delivery', 'ITSM'],
+    items: [
+      'Git',
+      'Hosting & domain setup',
+      'Root cause analysis',
+      'Manual testing',
+      'Agile delivery',
+      'ITSM',
+    ],
   },
 ] as const

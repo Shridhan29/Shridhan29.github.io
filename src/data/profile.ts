@@ -30,7 +30,10 @@ export const profile = {
     { value: '13', label: 'production releases', detail: 'TRUUNA, across 8 delivery phases' },
     { value: '20+', label: 'REST endpoints', detail: 'FastAPI, SQLAlchemy 2, Postgres 16' },
     { value: '2', label: 'Raspberry Pi products', detail: 'deployed and running in the field' },
-    { value: '100%', label: 'Play review pass rate', detail: 'every submission cleared first time' },
+    {
+      value: '100%',
+      label: 'Play review pass rate',
+      detail: 'every submission cleared first time',
+    },
   ],
-
 } as const

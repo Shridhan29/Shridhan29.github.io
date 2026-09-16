@@ -35,12 +35,15 @@ for (const [name, kb, group] of rows) {
 }
 
 const fails = []
-if (lazyTotal > BUDGETS.lazy) fails.push(`lazy chunks ${lazyTotal.toFixed(1)} KB > ${BUDGETS.lazy} KB`)
-if (entryTotal > BUDGETS.entry) fails.push(`entry bundle ${entryTotal.toFixed(1)} KB > ${BUDGETS.entry} KB`)
+if (lazyTotal > BUDGETS.lazy)
+  fails.push(`lazy chunks ${lazyTotal.toFixed(1)} KB > ${BUDGETS.lazy} KB`)
+if (entryTotal > BUDGETS.entry)
+  fails.push(`entry bundle ${entryTotal.toFixed(1)} KB > ${BUDGETS.entry} KB`)
 
 // three must never be eager: it is the whole point of the lazy Canvas.
 const eagerThree = rows.find(([n, , g]) => n.startsWith('three-') && g === 'entry')
-if (eagerThree) fails.push(`three is in the entry graph (${eagerThree[0]}) — something imports it eagerly`)
+if (eagerThree)
+  fails.push(`three is in the entry graph (${eagerThree[0]}) — something imports it eagerly`)
 
 console.log(
   `\n  entry ${entryTotal.toFixed(1)}/${BUDGETS.entry} KB gz` +

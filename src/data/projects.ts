@@ -48,16 +48,35 @@ export const projects: Project[] = [
       'A token-authenticated service-to-service contract lets the company ERP/CRM pull registrations, bookings, payment submissions, and a user activity audit trail — with both databases kept fully isolated.',
     ],
     links: [
-      { label: 'Google Play', href: 'https://play.google.com/store/apps/details?id=in.aashman.truuna' },
+      {
+        label: 'Google Play',
+        href: 'https://play.google.com/store/apps/details?id=in.aashman.truuna',
+      },
     ],
     dir: 'truuna',
     widths: [420, 840],
     shots: [
-      { slug: '01-language', alt: 'TRUUNA language chooser offering English and Marathi', kind: 'phone' },
+      {
+        slug: '01-language',
+        alt: 'TRUUNA language chooser offering English and Marathi',
+        kind: 'phone',
+      },
       { slug: '02-login-otp', alt: 'Passwordless phone-OTP login screen', kind: 'phone' },
-      { slug: '03-configurator', alt: 'Robot configurator showing the base chassis and attachment options', kind: 'phone' },
-      { slug: '04-booking-summary', alt: 'Booking summary listing the chassis and selected attachments with totals', kind: 'phone' },
-      { slug: '05-order-timeline', alt: 'Seven-stage order timeline from demo request to delivery', kind: 'phone' },
+      {
+        slug: '03-configurator',
+        alt: 'Robot configurator showing the base chassis and attachment options',
+        kind: 'phone',
+      },
+      {
+        slug: '04-booking-summary',
+        alt: 'Booking summary listing the chassis and selected attachments with totals',
+        kind: 'phone',
+      },
+      {
+        slug: '05-order-timeline',
+        alt: 'Seven-stage order timeline from demo request to delivery',
+        kind: 'phone',
+      },
     ],
     featured: true,
   },
@@ -85,9 +104,17 @@ export const projects: Project[] = [
     shots: [
       { slug: '02-home', alt: 'Aashman Technicals home page hero', kind: 'web' },
       { slug: '05-products', alt: 'Product page showing the TRUUNA robot render', kind: 'web' },
-      { slug: '04-services', alt: 'Services page: industrial automation, research robotics, custom development', kind: 'web' },
+      {
+        slug: '04-services',
+        alt: 'Services page: industrial automation, research robotics, custom development',
+        kind: 'web',
+      },
       { slug: '07-contact', alt: 'Contact page with the reCAPTCHA-protected form', kind: 'web' },
-      { slug: '06-help', alt: 'Help centre with maintenance, safety and training resources', kind: 'web' },
+      {
+        slug: '06-help',
+        alt: 'Help centre with maintenance, safety and training resources',
+        kind: 'web',
+      },
       { slug: '03-about', alt: 'About page with company history and leadership', kind: 'web' },
     ],
   },
@@ -113,7 +140,11 @@ export const projects: Project[] = [
     dir: 'dms',
     widths: [800, 1600],
     shots: [
-      { slug: '02-point-of-sale', alt: 'Point of sale screen with RFID scanner and customer selection', kind: 'web' },
+      {
+        slug: '02-point-of-sale',
+        alt: 'Point of sale screen with RFID scanner and customer selection',
+        kind: 'web',
+      },
       { slug: '03-dashboard', alt: 'Dairy management dashboard', kind: 'web' },
       { slug: '04-admin', alt: 'Admin view with a notification dialog', kind: 'web' },
       { slug: '01-login', alt: 'Dairy POS login screen', kind: 'web' },
@@ -140,9 +171,17 @@ export const projects: Project[] = [
     dir: 'urja',
     widths: [800, 1600],
     shots: [
-      { slug: '03-language', alt: 'Language chooser offering English, Hindi and Marathi', kind: 'web' },
+      {
+        slug: '03-language',
+        alt: 'Language chooser offering English, Hindi and Marathi',
+        kind: 'web',
+      },
       { slug: '02-category', alt: 'Audience selection: primary, secondary, adult', kind: 'web' },
-      { slug: '05-tour-progress', alt: 'Tour progress showing stops through the dairy plant', kind: 'web' },
+      {
+        slug: '05-tour-progress',
+        alt: 'Tour progress showing stops through the dairy plant',
+        kind: 'web',
+      },
       { slug: '04-tour-options', alt: 'Tour options screen', kind: 'web' },
     ],
   },

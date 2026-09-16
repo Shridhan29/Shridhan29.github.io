@@ -15,7 +15,12 @@ export function Experience() {
             <div>
               <h3 className="text-xl font-semibold tracking-tight">
                 {job.role} ·{' '}
-                <a href={job.href} target="_blank" rel="noreferrer noopener" className="text-accent hover:underline">
+                <a
+                  href={job.href}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="text-accent hover:underline"
+                >
                   {job.company}
                 </a>
               </h3>
@@ -23,7 +28,10 @@ export function Experience() {
               <p className="measure mt-4 text-[0.95rem] text-mist">{job.summary}</p>
               <ul className="mt-5 space-y-3">
                 {job.bullets.map((b) => (
-                  <li key={b.slice(0, 24)} className="measure flex gap-3 text-[0.92rem] leading-relaxed text-mist">
+                  <li
+                    key={b.slice(0, 24)}
+                    className="measure flex gap-3 text-[0.92rem] leading-relaxed text-mist"
+                  >
                     <span aria-hidden className="mt-2.5 size-1 shrink-0 rounded-full bg-accent" />
                     {b}
                   </li>
@@ -36,7 +44,9 @@ export function Experience() {
 
       <div className="mt-14 grid gap-10 border-t border-slate/60 pt-8 md:grid-cols-2 xl:max-w-4xl">
         <div>
-          <h3 className="mb-4 font-mono text-xs tracking-[0.16em] text-mist uppercase">Education</h3>
+          <h3 className="mb-4 font-mono text-xs tracking-[0.16em] text-mist uppercase">
+            Education
+          </h3>
           {education.map((e) => (
             <div key={e.qualification}>
               <p className="font-medium text-bone">{e.qualification}</p>
@@ -48,7 +58,9 @@ export function Experience() {
           ))}
         </div>
         <div>
-          <h3 className="mb-4 font-mono text-xs tracking-[0.16em] text-mist uppercase">Certifications</h3>
+          <h3 className="mb-4 font-mono text-xs tracking-[0.16em] text-mist uppercase">
+            Certifications
+          </h3>
           {certifications.map((c) => (
             <div key={c.name}>
               <p className="font-medium text-bone">{c.name}</p>

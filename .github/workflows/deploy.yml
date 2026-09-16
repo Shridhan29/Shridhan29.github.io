@@ -34,6 +34,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Format
+        run: npm run format:check
+
       # Also runs the bundle-budget check (ARCHITECTURE.md §6).
       - name: Build
         run: npm run build

@@ -1,6 +1,6 @@
 # Shridhan Vidhate — 3D Portfolio: Technical Architecture
 
-> Status: design document (v1). No code written yet.
+> Status: design document (v1). Phases 0–2 are built and live; progress is tracked in `IMPLEMENTATION_TRACKER.md`, and where the build departs from this design the tracker records why.
 > Target host: GitHub Pages (static, no server runtime).
 
 ---
@@ -28,7 +28,7 @@ These are the sites the design targets in quality. They were reviewed for what a
 
 A generic 3D portfolio is a rotating laptop model. That is not a differentiator in 2026.
 
-The concept here comes directly from the resume: the work spans **mobile → web → backend → cloud → physical hardware**. That is a literal stack, and a stack is a vertical space. So the site is a single continuous **descent through five floating layers**, one per domain, and the camera flies the visitor down a curved path through them.
+The concept here comes directly from the resume: the work spans **mobile → web → backend → cloud → physical hardware**. That is a literal stack, and a stack is a vertical space. So the site is a single continuous **descent through six floating layers**, one per domain, and the camera flies the visitor down a curved path through them.
 
 ```
      ▲  scroll up = ascend
@@ -118,13 +118,13 @@ Remounting a canvas per section is the single most common cause of jank in amate
 
 The camera is not animated per section. It rides a single spline.
 
-1. A `CatmullRomCurve3` is authored in Blender as an empty-path, exported as points.
+1. A `CatmullRomCurve3` through six control points, one per layer, defined in code (`src/canvas/curve.ts`).
 2. `ScrollTrigger` on the document body produces `progress: 0 → 1`.
 3. Lenis smooths the raw scroll; the progress value is additionally damped (`MathUtils.damp`) so a mouse-wheel notch never snaps the camera.
-4. `camera.position = curve.getPointAt(progress)`; `camera.lookAt(curve.getPointAt(progress + 0.01))` for tangent-following, overridden by per-layer look targets where a section needs to face a specific object.
+4. `camera.position = curve.getPointAt(progress)`; `camera.lookAt(lookCurve.getPointAt(progress))`, where the look target rides a parallel curve so each layer can face its own subject instead of following the tangent.
 5. Camera **language** changes per layer (the Lempens lesson): wide orbit at L0, tight dolly at L1, lateral truck at L2, forward push at L3, slow crane at L4, grounded eye-level at L5.
 
-`scrub: 1` on ScrollTrigger, never `scrub: true` — the one-second catch-up is what makes it feel cinematic rather than mechanical.
+Never snap the camera to raw scroll — the short catch-up is what makes it feel cinematic rather than mechanical. As built, `MathUtils.damp` in the render loop does this instead of ScrollTrigger's `scrub: 1`: same feel, but frame-rate independent and with no second smoothing stage to fight Lenis.
 
 ### 4.3 Layer visibility gating
 
