@@ -52,6 +52,27 @@
   letter-spacing: -0.02em;
 }
 
+/* Text over the 3D canvas sits on a scrim, never on bare geometry (ARCHITECTURE
+   §7). Vertical overhang only: an absolute pseudo-element reaching past the
+   viewport sideways would widen the page on phones. */
+.scrim {
+  position: relative;
+  isolation: isolate;
+}
+
+.scrim::before {
+  content: '';
+  position: absolute;
+  inset: -3rem 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--color-void) 82%, transparent),
+    transparent
+  );
+}
+
 /* Reading measure. Applied to prose so wide screens gain space, not line length. */
 .measure {
   max-width: 68ch;

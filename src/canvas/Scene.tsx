@@ -2,7 +2,9 @@ import { Canvas } from '@react-three/fiber'
 import { Suspense } from 'react'
 import { useLenis } from '@/hooks/useLenis'
 import { CameraRig } from './CameraRig'
+import { Lighting } from './Lighting'
 import { Stats } from './Stats'
+import { Orbit } from './layers/Orbit'
 import { Placeholder } from './layers/Placeholder'
 import { LAYERS } from './layers'
 
@@ -28,10 +30,11 @@ export default function Scene() {
         <Suspense fallback={null}>
           <CameraRig />
           <Stats />
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[4, 6, 8]} intensity={1.2} />
-          {LAYERS.map((layer, i) => (
-            <Placeholder key={layer.id} layer={layer} index={i} />
+          <Lighting />
+          <Orbit layer={LAYERS[0]} index={0} />
+          {/* Layers not built yet. Each is replaced in turn during Phase 3. */}
+          {LAYERS.slice(1).map((layer, i) => (
+            <Placeholder key={layer.id} layer={layer} index={i + 1} />
           ))}
         </Suspense>
       </Canvas>

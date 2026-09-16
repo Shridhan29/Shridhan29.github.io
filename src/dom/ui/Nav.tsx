@@ -30,7 +30,11 @@ export function Nav() {
     >
       <nav aria-label="Primary" className="shell flex items-center justify-between py-4">
         <a href="#top" className="font-mono text-sm tracking-tight text-bone">
-          shridhan<span className="text-accent">.</span>
+          shridhan
+          {/* Decorative: part of the logotype, not read aloud. */}
+          <span aria-hidden className="text-accent">
+            .
+          </span>
         </a>
         <ul className="flex items-center gap-5 text-sm text-mist md:gap-7">
           {LINKS.map((l) => (

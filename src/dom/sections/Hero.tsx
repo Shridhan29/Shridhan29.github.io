@@ -5,7 +5,7 @@ export function Hero() {
   return (
     <section id="top" className="flex min-h-dvh flex-col justify-center gap-16 pt-28 pb-10">
       <div className="grid w-full items-center gap-12 md:grid-cols-[minmax(0,1.5fr)_minmax(0,0.85fr)] md:gap-14 xl:gap-24">
-        <div>
+        <div data-hero-copy className="scrim">
           <p className="mb-5 flex items-center gap-2.5 font-mono text-xs tracking-[0.2em] text-mist uppercase">
             <span aria-hidden className="inline-block size-1.5 rounded-full bg-ember" />
             {profile.role} · {profile.location}
@@ -41,7 +41,10 @@ export function Hero() {
           </div>
         </div>
 
-        <div className="order-first max-w-[260px] md:order-none md:max-w-[420px] md:justify-self-end xl:max-w-[520px]">
+        <div
+          data-hero-portrait
+          className="order-first max-w-[260px] md:order-none md:max-w-[420px] md:justify-self-end xl:max-w-[520px]"
+        >
           <Picture
             base="/img/portrait"
             widths={[480, 960]}
