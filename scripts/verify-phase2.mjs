@@ -252,6 +252,29 @@ try {
     ['TRUUNA', 'Aashman Technicals', 'DMS', 'Urja'].every((n) => staticText.includes(n)),
   )
   check('no WebGL: contact form still present', !!(await plain.$('form')))
+
+  // Phones: the page must not be wider than the screen. Emulated as a real
+  // mobile viewport, because a desktop window at 390 px hides this — body's
+  // overflow-x clips it there, while a phone widens the layout and zooms out.
+  for (const [tier, motion] of [
+    ['3D', 'no-preference'],
+    ['static', 'reduce'],
+  ]) {
+    const phone = await browser.newPage()
+    await phone.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: motion }])
+    await phone.setViewport({
+      width: 390,
+      height: 844,
+      isMobile: true,
+      hasTouch: true,
+      deviceScaleFactor: 2,
+    })
+    await phone.goto(BASE, { waitUntil: 'networkidle0' })
+    await new Promise((r) => setTimeout(r, 600))
+    const width = await phone.evaluate(() => document.documentElement.scrollWidth)
+    check(`phone (390 px, ${tier}): no horizontal overflow`, width <= 390, `page width ${width}`)
+    await phone.close()
+  }
 } catch (err) {
   check('runtime suite ran', false, err instanceof Error ? err.message : String(err))
 } finally {

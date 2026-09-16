@@ -15,7 +15,13 @@ function Shots({ project }: { project: Project }) {
       }
     >
       {project.shots.map((shot, i) => (
-        <li key={shot.slug} className={phone ? 'w-[168px] shrink-0 snap-start lg:w-auto' : ''}>
+        // `relative` anchors the sr-only caption (position: absolute) inside the
+        // scroller. Without it the captions escape overflow-x and widen the whole
+        // page on phones, so mobile browsers zoom the site out.
+        <li
+          key={shot.slug}
+          className={phone ? 'relative w-[168px] shrink-0 snap-start lg:w-auto' : ''}
+        >
           <figure>
             <Picture
               base={`/img/${project.dir}/${shot.slug}`}
