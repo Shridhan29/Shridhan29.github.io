@@ -65,10 +65,13 @@ export function useLenis() {
     }
     const observer = new ResizeObserver(remeasure)
     observer.observe(document.body)
+    // A phone's address bar changes the viewport height without resizing body.
+    window.addEventListener('resize', remeasure)
     publish(window.scrollY)
 
     return () => {
       observer.disconnect()
+      window.removeEventListener('resize', remeasure)
       trigger.kill()
       if (raf) gsap.ticker.remove(raf)
       lenis?.destroy()
