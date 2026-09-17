@@ -1,18 +1,10 @@
 import { useTexture } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
-import {
-  type Group,
-  type Mesh,
-  MathUtils,
-  type PerspectiveCamera,
-  SRGBColorSpace,
-  Vector3,
-} from 'three'
+import { useMemo, useRef } from 'react'
+import { type Group, type Mesh, MathUtils, SRGBColorSpace } from 'three'
 import type { Layer } from '../layers'
 import { PALETTE } from '../palette'
-import { fitToStage } from '../stage'
-import { useLayerFrame } from '../useLayerFrame'
+import { useStagedFrame } from '../useStagedFrame'
 
 /**
  * L2 · Surface — aashman.in, the company's React site.
@@ -57,9 +49,6 @@ const TRUCK = 0.16
 export function Surface({ layer, index }: { layer: Layer; index: number }) {
   const group = useRef<Group>(null)
   const panes = useRef<(Mesh | null)[]>([])
-  const stage = useRef<Element | null>(null)
-  const target = useMemo(() => new Vector3(), [])
-  const size = useThree((s) => s.size)
   const gl = useThree((s) => s.gl)
 
   const textures = useTexture(URLS, (loaded) => {
@@ -70,10 +59,6 @@ export function Surface({ layer, index }: { layer: Layer; index: number }) {
     }
   })
 
-  useEffect(() => {
-    stage.current = document.querySelector('[data-stage="surface"]')
-  }, [])
-
   // Centre the cascade on the group origin.
   const origin = useMemo(
     () => ({
@@ -83,17 +68,8 @@ export function Surface({ layer, index }: { layer: Layer; index: number }) {
     [],
   )
 
-  useLayerFrame(index, group, (state) => {
+  useStagedFrame('surface', index, group, DISTANCE, (fit) => {
     const g = group.current!
-    const el = stage.current
-    const camera = state.camera as PerspectiveCamera
-    const fit = el ? fitToStage(el, camera, size, DISTANCE, target) : null
-
-    g.visible = !!fit?.visible
-    if (!fit?.visible) return
-
-    g.position.copy(target)
-    g.quaternion.copy(camera.quaternion)
     g.scale.setScalar(Math.min((fit.width * FILL) / SPAN_W, (fit.height * FILL) / SPAN_H))
     // Turned so the stack reads as depth, not as a flat collage.
     g.rotateY(0.32)

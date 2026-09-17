@@ -26,7 +26,8 @@ const layerFiles = (await readdir(layerDir)).filter((f) => f.endsWith('.tsx'))
 const ungated = []
 for (const f of layerFiles) {
   const src = await readFile(join(layerDir, f), 'utf8')
-  if (!/useLayerFrame\(/.test(src) || /\buseFrame\(/.test(src)) ungated.push(f)
+  // useStagedFrame is useLayerFrame plus stage placement.
+  if (!/use(Layer|Staged)Frame\(/.test(src) || /\buseFrame\(/.test(src)) ungated.push(f)
 }
 check(
   'every layer is visibility-gated through useLayerFrame (3.7)',
@@ -356,14 +357,14 @@ try {
    * on desktop, in place of its screenshot row.
    */
   const STAGED = [
-    { title: 'L1 · Device', article: 'truuna', stage: 'device', shots: 5, subject: 'the phone is' },
-    {
-      title: 'L2 · Surface',
-      article: 'aashman',
-      stage: 'surface',
-      shots: 6,
-      subject: 'the panes are',
-    },
+    // prettier-ignore
+    { title: 'L1 · Device', article: 'truuna', name: 'TRUUNA', dir: 'truuna', stage: 'device', shots: 5, subject: 'the phone is' },
+    // prettier-ignore
+    { title: 'L2 · Surface', article: 'aashman', name: 'aashman.in', dir: 'aashman.in', stage: 'surface', shots: 6, subject: 'the panes are' },
+    // prettier-ignore
+    { title: 'L3 · Ground (DMS)', article: 'dms', name: 'DMS', dir: 'dms', stage: 'ground-pos', shots: 4, subject: 'the terminal is' },
+    // prettier-ignore
+    { title: 'L3 · Ground (Urja)', article: 'urja', name: 'Urja', dir: 'urja', stage: 'ground-kiosk', shots: 4, subject: 'the kiosk is' },
   ]
 
   // Staged layers load their textures only when they can be shown.
@@ -372,7 +373,7 @@ try {
     const textures = (page) => {
       const seen = []
       page.on('request', (r) => {
-        if (/\/img\/(truuna|aashman\.in)\/.+\.webp$/.test(r.url()))
+        if (/\/img\/(truuna|aashman\.in|dms|urja)\/.+\.webp$/.test(r.url()))
           seen.push(r.url().split('/img/')[1])
       })
       return seen
@@ -384,8 +385,8 @@ try {
     await top.goto(`${preview.base}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
     await sleep(2500)
     check(
-      '1440 px at the top: L2 textures wait until the camera nears L2',
-      !atTop.some((u) => u.startsWith('aashman.in/')),
+      '1440 px at the top: L2 and L3 textures wait until the camera nears them',
+      !atTop.some((u) => /^(aashman\.in|dms|urja)\//.test(u)),
       atTop.join(', ') || 'none requested',
     )
     await top.close()
@@ -396,7 +397,7 @@ try {
     const onPhone = textures(phone)
     await phone.setViewport(PHONE)
     await phone.goto(`${preview.base}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
-    for (const id of ['truuna', 'aashman', 'dms']) {
+    for (const id of ['truuna', 'aashman', 'dms', 'urja', 'about']) {
       await phone.evaluate((id) => document.getElementById(id).scrollIntoView(), id)
       await sleep(1500)
     }
@@ -404,9 +405,8 @@ try {
     await phone.close()
   }
 
-  for (const { title, article, stage, shots, subject } of STAGED) {
+  for (const { title, article, name, dir, stage, shots, subject } of STAGED) {
     section(`${title} in a real browser`)
-    const name = article === 'truuna' ? 'TRUUNA' : 'aashman.in'
 
     /** Opens the page scrolled so the stage (or, without one, the screenshot row) is centred. */
     const open = async (viewport, { webgl = true } = {}) => {
@@ -416,11 +416,7 @@ try {
       page.on('pageerror', (e) => errors.push(e.message))
       // The row's own images are AVIF; the layer's textures are WebP.
       page.on('request', (r) => {
-        if (
-          r.url().includes(`/img/`) &&
-          r.url().endsWith('.avif') &&
-          r.url().includes(article === 'truuna' ? '/truuna/' : '/aashman.in/')
-        )
+        if (r.url().includes(`/img/`) && r.url().endsWith('.avif') && r.url().includes(`/${dir}/`))
           rowRequests.push(r.url())
       })
       if (!webgl) {

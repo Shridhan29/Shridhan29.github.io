@@ -4,10 +4,17 @@ import { Picture } from '@/dom/ui/Picture'
 import { CAN_RENDER_3D } from '@/tier'
 
 /** Projects whose screenshots a 3D layer shows on desktop, and the stage it draws into. */
-const STAGES: Partial<Record<string, 'device' | 'surface'>> = {
+type Stage = 'device' | 'surface' | 'ground-pos' | 'ground-kiosk'
+
+const STAGES: Partial<Record<string, Stage>> = {
   truuna: 'device', // L1: one phone
   aashman: 'surface', // L2: layered browser panes
+  dms: 'ground-pos', // L3: POS terminal and Raspberry Pi
+  urja: 'ground-kiosk', // L3: free-standing kiosk
 }
+
+/** A phone or a kiosk is tall; a stack of windows or a countertop is wide. */
+const TALL = new Set<Stage>(['device', 'ground-kiosk'])
 
 function Shots({ project }: { project: Project }) {
   const phone = project.shots[0]?.kind === 'phone'
@@ -25,8 +32,7 @@ function Shots({ project }: { project: Project }) {
             data-stage={stage}
             aria-hidden
             className={`mt-10 hidden lg:block ${
-              // A phone is tall; a stack of browser windows is wide.
-              stage === 'device'
+              stage && TALL.has(stage)
                 ? 'h-[min(78vh,760px)] min-h-[520px]'
                 : 'h-[min(64vh,620px)] min-h-[420px]'
             }`}

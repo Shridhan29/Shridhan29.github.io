@@ -6,6 +6,7 @@ import { Lighting } from './Lighting'
 import { Staged } from './Staged'
 import { Stats } from './Stats'
 import { Device } from './layers/Device'
+import { GroundKiosk, GroundPos } from './layers/Ground'
 import { Orbit } from './layers/Orbit'
 import { Placeholder } from './layers/Placeholder'
 import { Surface } from './layers/Surface'
@@ -42,9 +43,15 @@ export default function Scene() {
           <Staged stage="surface" index={2}>
             <Surface layer={LAYERS[2]} index={2} />
           </Staged>
+          <Staged stage="ground-pos" index={3}>
+            <GroundPos layer={LAYERS[3]} index={3} />
+          </Staged>
+          <Staged stage="ground-kiosk" index={3}>
+            <GroundKiosk layer={LAYERS[3]} index={3} />
+          </Staged>
           {/* Layers not built yet. Each is replaced in turn during Phase 3. */}
-          {LAYERS.slice(3).map((layer, i) => (
-            <Placeholder key={layer.id} layer={layer} index={i + 3} />
+          {LAYERS.slice(4).map((layer, i) => (
+            <Placeholder key={layer.id} layer={layer} index={i + 4} />
           ))}
         </Suspense>
       </Canvas>
