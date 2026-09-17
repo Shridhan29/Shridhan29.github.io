@@ -3,6 +3,7 @@ import { Nav } from '@/dom/ui/Nav'
 import { LayerNav } from '@/dom/ui/LayerNav'
 import { DebugOverlay } from '@/dom/ui/DebugOverlay'
 import { DEBUG } from '@/debug'
+import { CAN_RENDER_3D } from '@/tier'
 import { Hero } from '@/dom/sections/Hero'
 import { About } from '@/dom/sections/About'
 import { Projects } from '@/dom/sections/Projects'
@@ -16,18 +17,9 @@ import { Footer } from '@/dom/sections/Footer'
 const Scene = lazy(() => import('@/canvas/Scene'))
 
 export default function App() {
-  // No WebGL, or the visitor asked for reduced motion: the DOM below is the
-  // whole site, and it is complete on its own.
-  const canRender3D =
-    typeof window !== 'undefined' &&
-    !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
-    (() => {
-      try {
-        return !!document.createElement('canvas').getContext('webgl2')
-      } catch {
-        return false
-      }
-    })()
+  // Decided once at startup (src/tier.ts): no WebGL or reduced motion means the
+  // DOM below is the whole site, complete on its own.
+  const canRender3D = CAN_RENDER_3D
 
   return (
     <>

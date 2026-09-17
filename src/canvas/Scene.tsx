@@ -4,6 +4,7 @@ import { useLenis } from '@/hooks/useLenis'
 import { CameraRig } from './CameraRig'
 import { Lighting } from './Lighting'
 import { Stats } from './Stats'
+import { Device } from './layers/Device'
 import { Orbit } from './layers/Orbit'
 import { Placeholder } from './layers/Placeholder'
 import { LAYERS } from './layers'
@@ -32,9 +33,14 @@ export default function Scene() {
           <Stats />
           <Lighting />
           <Orbit layer={LAYERS[0]} index={0} />
+          {/* Its own boundary: while the screen texture loads, the rest of the
+              scene keeps rendering instead of suspending with it. */}
+          <Suspense fallback={null}>
+            <Device layer={LAYERS[1]} index={1} />
+          </Suspense>
           {/* Layers not built yet. Each is replaced in turn during Phase 3. */}
-          {LAYERS.slice(1).map((layer, i) => (
-            <Placeholder key={layer.id} layer={layer} index={i + 1} />
+          {LAYERS.slice(2).map((layer, i) => (
+            <Placeholder key={layer.id} layer={layer} index={i + 2} />
           ))}
         </Suspense>
       </Canvas>

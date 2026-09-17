@@ -65,9 +65,14 @@ check('canvas is aria-hidden', /aria-hidden="true"/.test(scene))
 check('DPR is clamped', /dpr=\{\[1, 2\]\}/.test(scene))
 
 const app = await readFile('src/App.tsx', 'utf8')
+// The tier decision moved out of App so sections can read it too.
+const tier = await readFile('src/tier.ts', 'utf8')
 check('Scene is lazily imported', /lazy\(\(\) => import\('@\/canvas\/Scene'\)\)/.test(app))
-check('render is guarded on WebGL2', /getContext\('webgl2'\)/.test(app))
-check('render is guarded on prefers-reduced-motion', /prefers-reduced-motion: reduce/.test(app))
+check(
+  'render is guarded on WebGL2',
+  /getContext\('webgl2'\)/.test(tier) && /CAN_RENDER_3D/.test(app),
+)
+check('render is guarded on prefers-reduced-motion', /prefers-reduced-motion: reduce/.test(tier))
 
 const rig = await readFile('src/canvas/CameraRig.tsx', 'utf8')
 check('camera progress is damped, not snapped', /MathUtils\.damp/.test(rig))

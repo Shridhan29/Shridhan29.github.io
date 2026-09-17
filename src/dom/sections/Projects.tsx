@@ -1,17 +1,54 @@
 import { projects, type Project } from '@/data/projects'
 import { Section } from '@/dom/ui/Section'
 import { Picture } from '@/dom/ui/Picture'
+import { CAN_RENDER_3D } from '@/tier'
 
 function Shots({ project }: { project: Project }) {
   const phone = project.shots[0]?.kind === 'phone'
+  // On desktop with 3D, the phone shots are shown by the L1 Device layer: one
+  // large phone drawn into this stage. There, the image row is display: none —
+  // so its lazy images are never fetched — and screen readers get the same
+  // descriptions as a plain list. Phones, tablets and the Static tier keep the row.
+  const staged = phone && CAN_RENDER_3D
+  return (
+    <>
+      {staged && (
+        <>
+          <div
+            data-stage="device"
+            aria-hidden
+            className="mt-10 hidden h-[min(78vh,760px)] min-h-[520px] lg:block"
+          />
+          <ul data-shot-captions className="hidden lg:block lg:sr-only">
+            {project.shots.map((shot) => (
+              <li key={shot.slug}>{shot.alt}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      <ShotList project={project} phone={phone} staged={staged} />
+    </>
+  )
+}
+
+function ShotList({
+  project,
+  phone,
+  staged,
+}: {
+  project: Project
+  phone: boolean
+  staged: boolean
+}) {
   return (
     <ul
       className={
         // Phone shots scroll horizontally where they do not fit and lay out as a
         // plain row once the shell is wide enough to hold all five.
-        phone
+        (phone
           ? 'mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 lg:grid lg:grid-cols-5 lg:gap-6 lg:overflow-visible'
-          : 'mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:gap-6'
+          : 'mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:gap-6') +
+        (staged ? ' lg:hidden' : '')
       }
     >
       {project.shots.map((shot, i) => (
@@ -29,7 +66,8 @@ function Shots({ project }: { project: Project }) {
               width={phone ? 1080 : 1843}
               height={phone ? 1920 : 954}
               alt={shot.alt}
-              priority={i === 0 && project.featured}
+              // Eager loading would fetch it even while the row is display: none.
+              priority={i === 0 && project.featured && !staged}
               sizes={
                 phone
                   ? '(max-width: 1024px) 168px, 19vw'
