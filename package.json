@@ -21,6 +21,7 @@
     "verify": "node scripts/verify-all.mjs",
     "verify:phase2": "node scripts/verify-phase2.mjs",
     "verify:phase3": "node scripts/verify-phase3.mjs",
+    "perf": "node scripts/perf-report.mjs",
     "verify:models": "node scripts/verify-models.mjs"
   },
   "dependencies": {

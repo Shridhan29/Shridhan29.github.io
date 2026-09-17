@@ -19,8 +19,12 @@ export function DebugOverlay() {
       <div>progress {progress.toFixed(3)}</div>
       <div>dir {direction > 0 ? 'down' : 'up'}</div>
       <div>fps {stats.fps}</div>
+      <div>ms {stats.ms}</div>
       <div>calls {stats.calls}</div>
       <div>tris {stats.tris.toLocaleString()}</div>
+      <div>geometries {stats.geometries}</div>
+      <div>textures {stats.textures}</div>
+      <div>programs {stats.programs}</div>
     </div>
   )
 }

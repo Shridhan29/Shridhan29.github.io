@@ -22,8 +22,12 @@ export function Stats() {
     // total would scale with fps instead of with the scene.
     setStats({
       fps: Math.round(frames.current / elapsed.current),
+      ms: Math.round((elapsed.current / frames.current) * 10000) / 10,
       calls: Math.round(gl.info.render.calls / frames.current),
       tris: Math.round(gl.info.render.triangles / frames.current),
+      geometries: gl.info.memory.geometries,
+      textures: gl.info.memory.textures,
+      programs: gl.info.programs?.length ?? 0,
     })
     frames.current = 0
     elapsed.current = 0
