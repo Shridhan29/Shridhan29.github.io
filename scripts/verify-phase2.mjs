@@ -143,22 +143,26 @@ try {
     mid.label ?? 'none',
   )
 
-  // Layer gating: at any point on the path, most layers should be culled.
-  // Draw calls are per frame. A zero reading means nothing was measured (or
-  // nothing is in view), so it must not count as "within budget". Both samples
-  // sit exactly on a layer (p = i / 5): halfway between two layers the camera
-  // is ~7 units from either, so everything is frustum-culled and 0 is correct.
-  await page.goto(`${BASE}/?debug=1&p=0`, NAV)
-  await new Promise((r) => setTimeout(r, 1200))
-  const atTop = await readOverlay()
-  await page.goto(`${BASE}/?debug=1&p=0.6`, NAV)
-  await new Promise((r) => setTimeout(r, 1200))
-  const atMid = await readOverlay()
-  const inBudget = (calls) => (calls ?? 0) > 0 && calls <= 120
+  // Draw calls per frame stay within budget along the real journey. Sampled at
+  // real scroll positions — the top, then each article centred — because staged
+  // layers draw into their article's stage: pinning the camera with ?p= while
+  // the page sits at the top shows a layer whose stage is off screen, which
+  // correctly draws nothing. A zero reading counts as not measured.
+  await page.goto(`${BASE}/?debug=1`, NAV)
+  const samples = []
+  for (const id of ['top', 'truuna', 'aashman', 'dms', 'urja', 'about', 'experience']) {
+    await page.evaluate((id) => {
+      const el = document.getElementById(id)
+      const r = el.getBoundingClientRect()
+      window.scrollTo(0, Math.max(0, r.top + scrollY + r.height / 2 - innerHeight / 2))
+    }, id)
+    await new Promise((r) => setTimeout(r, 1800))
+    samples.push([id, (await readOverlay()).calls])
+  }
   check(
-    'draw calls per frame stay within budget as the camera descends',
-    inBudget(atTop.calls) && inBudget(atMid.calls),
-    `top ${atTop.calls}, mid ${atMid.calls}`,
+    'draw calls per frame stay within budget along the journey',
+    samples.every(([, calls]) => (calls ?? 0) > 0 && calls <= 120),
+    samples.map(([id, calls]) => `${id} ${calls}`).join(', '),
   )
 
   // Real scrolling must drive progress, not just the ?p= override.
