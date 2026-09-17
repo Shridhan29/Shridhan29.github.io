@@ -181,7 +181,7 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 | A4 | aashman.in captures | 3.3 | **received ×8** |
 | A5 | DMS POS screenshots | 3.6 | **received ×4** |
 | A6 | Urja Dairy Tour screenshots | 3.6 | **received ×5** |
-| A7 | Raspberry Pi kiosk photos ×2–3 | 3.6 | **CUT — none available.** L5 rescoped to pure geometry; see Appendix A revision |
+| A7 | Raspberry Pi kiosk photos ×2–3 | 3.4 | **CUT — none available.** L3 Ground (L5 before D10) rescoped to pure geometry; see Appendix A revision |
 | A8 | Aashman Technicals logo (SVG) | 3.3 | pending, optional |
 | A9 | TRUUNA screen recording | 4.3 | pending, optional |
 | A10 | Web3Forms access key | 1.6 | **received** — inlined in `src/dom/sections/Contact.tsx`, `VITE_WEB3FORMS_KEY` overrides it. See Confirmed Facts and Appendix B |
@@ -273,14 +273,14 @@ Capture at the kiosk's real resolution, not a scaled browser window.
 
 ### A7 — Raspberry Pi hardware — **CUT, no photos available**
 
-No field photos exist. This does not cost the site much, because L5 was always going to be geometry rather than photography. Revised plan for L5 Ground:
+No field photos exist. This does not cost the site much, because the Ground layer was always going to be geometry rather than photography. Revised plan for L3 Ground (L5 before decision D10):
 
 - **Raspberry Pi board:** a CC0 Pi model (Sketchfab CC0 / Poly Haven electronics props), or built procedurally — a Pi is a green box, a black SoC, four USB blocks and a GPIO comb. Roughly 40 lines of `three` primitives and it reads instantly.
 - **Kiosk enclosure:** procedural — a slab, a stand, a bezel. No modelling skill needed.
 - **The kiosk screen:** this is where the credibility comes back. Instead of a photo of hardware, the screen renders the **real Urja Dairy Tour UI** live via `<Html transform>` — the language selector, actually clickable, inside the 3D scene. A working interface beats a photo of a box.
 - **Second screen** in the diorama shows the DMS POS billing view the same way.
 
-Net effect: L5 needs A5 and A6 screenshots, and no hardware photography at all.
+Net effect: L3 Ground needs A5 and A6 screenshots, and no hardware photography at all.
 
 If a field photo ever becomes available — a colleague at the plant, a site visit, an old phone gallery — it slots straight in as a texture on a frame beside the diorama. Worth asking around; it is still the strongest possible proof. But the layer ships without it.
 

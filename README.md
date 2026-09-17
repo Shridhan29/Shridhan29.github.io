@@ -1,8 +1,8 @@
 # Shridhan Vidhate — Portfolio
 
 A scroll-driven 3D portfolio. The site is one continuous camera descent through six
-layers, each one a domain of the work: orbit, mobile device, web surface, service
-core, cloud, and physical hardware. The 3D is the information architecture rather
+layers, each one a domain of the work and each arriving with its part of the page:
+orbit, mobile device, web surface, physical hardware, service core, and cloud. The 3D is the information architecture rather
 than decoration.
 
 **Live:** https://shridhan29.github.io

@@ -28,7 +28,7 @@ These are the sites the design targets in quality. They were reviewed for what a
 
 A generic 3D portfolio is a rotating laptop model. That is not a differentiator in 2026.
 
-The concept here comes directly from the resume: the work spans **mobile → web → backend → cloud → physical hardware**. That is a literal stack, and a stack is a vertical space. So the site is a single continuous **descent through six floating layers**, one per domain, and the camera flies the visitor down a curved path through them.
+The concept here comes directly from the resume: the work spans **mobile → web → backend → cloud → physical hardware** (built in page order instead — see D10 below the diagram). That is a literal stack, and a stack is a vertical space. So the site is a single continuous **descent through six floating layers**, one per domain, and the camera flies the visitor down a curved path through them.
 
 ```
      ▲  scroll up = ascend
@@ -107,9 +107,9 @@ Remounting a canvas per section is the single most common cause of jank in amate
 │   │   ├── <LayerOrbit />           L0
 │   │   ├── <LayerDevice />          L1   each layer: frustum-culled + visibility-gated
 │   │   ├── <LayerSurface />         L2
-│   │   ├── <LayerCore />            L3
-│   │   ├── <LayerCloud />           L4
-│   │   └── <LayerGround />          L5
+│   │   ├── <LayerGround />          L3
+│   │   ├── <LayerCore />            L4
+│   │   └── <LayerCloud />           L5
 │   ├── <ParticleField />            persistent, morphs per layer
 │   ├── <Effects />                  post-processing, tier-gated
 │   └── <PerformanceMonitor />       auto-downgrade on sustained FPS drop
@@ -124,7 +124,7 @@ The camera is not animated per section. It rides a single spline.
 2. `ScrollTrigger` on the document body reports scroll, mapped through measured article positions (`src/store/stops.ts`) into `progress: 0 → 1`, with layer *i* at exactly *i* / 5 (D10).
 3. Lenis smooths the raw scroll; the progress value is additionally damped (`MathUtils.damp`) so a mouse-wheel notch never snaps the camera.
 4. `camera.position = curve.getPoint(progress)`; `camera.lookAt(lookCurve.getPoint(progress))` — by parameter, not arc length, so each control point lands exactly on its layer's progress, where the look target rides a parallel curve so each layer can face its own subject instead of following the tangent.
-5. Camera **language** changes per layer (the Lempens lesson): wide orbit at L0, tight dolly at L1, lateral truck at L2, forward push at L3, slow crane at L4, grounded eye-level at L5.
+5. Camera **language** changes per layer (the Lempens lesson): wide orbit at L0, tight dolly at L1, lateral truck at L2, grounded eye-level at L3, forward push at L4, slow crane at L5.
 
 Never snap the camera to raw scroll — the short catch-up is what makes it feel cinematic rather than mechanical. As built, `MathUtils.damp` in the render loop does this instead of ScrollTrigger's `scrub: 1`: same feel, but frame-rate independent and with no second smoothing stage to fight Lenis.
 
