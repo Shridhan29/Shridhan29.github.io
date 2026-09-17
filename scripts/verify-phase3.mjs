@@ -366,6 +366,44 @@ try {
     },
   ]
 
+  // Staged layers load their textures only when they can be shown.
+  section('Staged layers load on approach')
+  {
+    const textures = (page) => {
+      const seen = []
+      page.on('request', (r) => {
+        if (/\/img\/(truuna|aashman\.in)\/.+\.webp$/.test(r.url()))
+          seen.push(r.url().split('/img/')[1])
+      })
+      return seen
+    }
+
+    const top = await browser.newPage()
+    const atTop = textures(top)
+    await top.setViewport({ width: 1440, height: 900 })
+    await top.goto(`${preview.base}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
+    await sleep(2500)
+    check(
+      '1440 px at the top: L2 textures wait until the camera nears L2',
+      !atTop.some((u) => u.startsWith('aashman.in/')),
+      atTop.join(', ') || 'none requested',
+    )
+    await top.close()
+
+    // A phone never shows a stage, so it should never fetch a layer texture —
+    // even after scrolling the full length of both articles.
+    const phone = await browser.newPage()
+    const onPhone = textures(phone)
+    await phone.setViewport(PHONE)
+    await phone.goto(`${preview.base}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
+    for (const id of ['truuna', 'aashman', 'dms']) {
+      await phone.evaluate((id) => document.getElementById(id).scrollIntoView(), id)
+      await sleep(1500)
+    }
+    check('phone: no layer textures downloaded', !onPhone.length, onPhone.join(', '))
+    await phone.close()
+  }
+
   for (const { title, article, stage, shots, subject } of STAGED) {
     section(`${title} in a real browser`)
     const name = article === 'truuna' ? 'TRUUNA' : 'aashman.in'

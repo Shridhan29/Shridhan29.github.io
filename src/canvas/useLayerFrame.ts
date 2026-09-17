@@ -4,7 +4,7 @@ import type { Object3D } from 'three'
 import { useScrollStore } from '@/store/useScrollStore'
 
 /** How many layers either side of the active one stay rendered. */
-const REACH = 1
+export const REACH = 1
 
 /**
  * Visibility gating for a layer (tracker 3.7). Layers more than one step from

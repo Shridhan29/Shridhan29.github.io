@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { useLenis } from '@/hooks/useLenis'
 import { CameraRig } from './CameraRig'
 import { Lighting } from './Lighting'
+import { Staged } from './Staged'
 import { Stats } from './Stats'
 import { Device } from './layers/Device'
 import { Orbit } from './layers/Orbit'
@@ -34,14 +35,13 @@ export default function Scene() {
           <Stats />
           <Lighting />
           <Orbit layer={LAYERS[0]} index={0} />
-          {/* Its own boundary: while the screen texture loads, the rest of the
-              scene keeps rendering instead of suspending with it. */}
-          <Suspense fallback={null}>
+          {/* Staged layers mount when their stage is laid out and the camera is near. */}
+          <Staged stage="device" index={1}>
             <Device layer={LAYERS[1]} index={1} />
-          </Suspense>
-          <Suspense fallback={null}>
+          </Staged>
+          <Staged stage="surface" index={2}>
             <Surface layer={LAYERS[2]} index={2} />
-          </Suspense>
+          </Staged>
           {/* Layers not built yet. Each is replaced in turn during Phase 3. */}
           {LAYERS.slice(3).map((layer, i) => (
             <Placeholder key={layer.id} layer={layer} index={i + 3} />
