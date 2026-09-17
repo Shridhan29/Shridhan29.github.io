@@ -19,6 +19,7 @@ postprocessing · GSAP + ScrollTrigger · Lenis · Zustand · Tailwind CSS v4
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Concept, tech choices and rejected alternatives, rendering architecture, performance budgets, quality tiers, asset pipeline, deployment |
 | [IMPLEMENTATION_TRACKER.md](IMPLEMENTATION_TRACKER.md) | Phased task breakdown, asset register, open decisions, screenshot brief |
 | [BUILD_PROMPT.md](BUILD_PROMPT.md) | Self-contained brief for the build |
+| [DEVICE_TESTING.md](DEVICE_TESTING.md) | Checks that need real hardware: frame rate, Lighthouse, Android |
 
 ## Development
 
@@ -36,6 +37,7 @@ npm run verify:phase2   # 31 checks incl. a driven browser; needs a build first 
 npm run verify:models   # model pipeline self-test (CI runs this)
 npm run verify:phase3   # built layers: gating, first frame, placement, text contrast over the scene
 npm run models     # assets-source/models/ -> public/models/ (Meshopt + WebP)
+npm run perf       # cost per stop: draw calls, triangles, GPU resources, downloads
 npm run analyze    # bundle treemap at dist/stats.html
 node scripts/process-images.mjs       # portrait crops, grade, OG card
 node scripts/process-screenshots.mjs  # project screenshots -> AVIF + WebP

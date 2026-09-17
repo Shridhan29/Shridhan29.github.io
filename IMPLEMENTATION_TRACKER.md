@@ -137,7 +137,16 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
   - `verify:phase3` (62 checks) adds the Cloud stage: present at 1440 px, pipeline inside the column, Experience text ≥ 4.5:1 beside it, absent on a phone and without WebGL
   - Fog and stage-by-stage lighting are 4.7
 - [x] **3.7 Visibility gating** — `src/canvas/useLayerFrame.ts`: every layer, placeholders included, hides and skips its frame work when more than one layer from the camera; `verify:phase3` fails any layer that bypasses it
-- [ ] **3.8 Perf checkpoint** — ≤ 120 draw calls, 60 fps desktop, first mobile profile run
+- [~] **3.8 Perf checkpoint** — machine-measurable part done 2026-09-18 with `npm run perf` (`scripts/perf-report.mjs`); device part waits on `DEVICE_TESTING.md`
+  - [x] ≤ 120 draw calls: peak **13** per frame (About, L4), 7,300 triangles; phone peak 1 draw call
+  - [x] Downloads: desktop **428 KB** on load (three.js 227 KB of it) and 572 KB after the whole journey; phone 386 KB on load. JS heap 9–13 MB. First frame 1.9–2.6 s under software GL
+  - [x] GPU resources grow as staged layers mount and stay mounted: geometries 15 → 64, textures 4 → 12, shader programs 5 → 14
+  - [x] `?debug=1` overlay now also shows frame time (`ms`), geometries, textures and shader programs, so device tests read the same numbers
+  - [ ] 60 fps desktop — needs a real GPU (software GL frame times of 34–360 ms here are meaningless)
+  - [ ] First mobile profile on a mid-range Android phone
+  - [ ] Lighthouse desktop ≥ 85, mobile ≥ 70 (also open since 1.8)
+  - **Finding — shader compile on mount:** programs are compiled the first time a staged layer draws (a 360 ms frame at TRUUNA under software GL). On a GPU that is far shorter but can still show as a stutter when a layer first appears. Fix with pre-compilation (`gl.compileAsync`) when a layer mounts, before it is on screen — belongs with 5.1 warming
+  - **Finding — phones download three.js for a starfield:** see D12
 
 **Done when:** all six layers render in place, budgets hold, no effects yet.
 
@@ -224,6 +233,7 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 | D9 | Environment lighting within 200 KB | 3.1–3.6 | **DECIDED 2026-09-17: (a) procedural light panels** rendered into a 64 px environment map — 0 KB, art-directable per layer. A 1k Poly Haven HDRI measured 1.3–1.6 MB, and one per layer would have been ~9 MB. |
 | D10 | How the 3D journey lines up with the page | 2.6, 3.2–3.6 | **DECIDED 2026-09-17: follow the page order.** Each layer arrives with its article; layer order is Orbit, Device (TRUUNA), Surface (aashman.in), Ground (DMS + Urja), Core (About/Skills), Cloud (Experience). The page is unchanged; the descent no longer ends at hardware. |
 | D11 | Third-party component libraries | 5.2, 5.3 | **DECIDED 2026-09-17: React Bits, selectively; Aceternity UI, no.** React Bits matches the stack (React 19, Tailwind v4, TS) and its licence (MIT + Commons Clause) allows use inside the site; take only `Magnet`, `ScrambledText`/`DecryptedText`, a `CountUp`-style counter and `SpotlightCard`/`GlareHover`. Rejected: all React Bits backgrounds (each opens a second WebGL context via `ogl`, breaking the one-canvas rule) and cursor gimmicks. Aceternity rejected: its signature effects are the generic glow-and-gradient look D1 avoids, Globe and Macbook Scroll duplicate L0 and L1, it assumes Next.js, and its licence forbids redistributing source files, which a public repo arguably does. |
+| D12 | 3D on phones | 3.8, 6.1 | Open. Every layer after the hero is desktop-only (stages need ≥ 1024 px), so a phone downloads three.js (227 KB gzip) and starts a GPU context to draw only the hero's starfield — below the hero it draws nothing. Options: **(a)** treat phones as the Static tier — no three.js, no GPU work, the page they already see (recommended); **(b)** keep the starfield on phones and accept the cost; **(c)** design phone versions of the layers in Phase 6 tiers. |
 
 ---
 
@@ -375,3 +385,4 @@ Web3Forms gives 5× the free headroom and better spam handling at the same price
 | 2026-09-17 | **3.5 L4 Core complete.** The L4 placeholder no longer draws over About and Skills; only the L5 placeholder over Experience remains. |
 | 2026-09-18 | **3.6 L5 Cloud complete — all six layers built.** No placeholder geometry remains anywhere on the site. Remaining in Phase 3: 3.8 performance checkpoint. |
 | 2026-09-18 | **Review after L5 found two serious defects, both fixed.** (1) *three.js was downloaded on every first visit.* zustand is shared by the page and react-three-fiber; the bundler put it in the three chunk and the entry imported it statically, so the lazy 3D payload loaded eagerly — including on phones and in the Static tier. The budget check only read `index.html`, so it reported a 75 KB entry while visitors downloaded 303 KB. Fixed by chunking zustand with React (entry now 76.7 KB, three chunk truly lazy); `scripts/lib/bundle.mjs` computes the eager set by following static imports, used by the build budget and `verify:phase2`, plus a runtime check that the no-WebGL page never requests the three chunk. (2) *A failed 3D download blanked the whole site.* The lazy scene had no error boundary, so a failed chunk unmounted the app. `SceneBoundary` now contains it and marks `html[data-scene-off]` (also set on GPU context loss); the `scene-off:` CSS variant hides every stage and brings back the screenshots it stood in for. Stages stay the default on capable desktops, so a normal visit still never fetches the rows' images — a first attempt that showed rows until the scene started made the browser lazy-load them, which the download check caught. `verify:phase3` blocks the 3D download and checks the page is whole; removing the boundary fails it. |
+| 2026-09-18 | 3.8 measurable part done: `npm run perf`, extended debug overlay, `DEVICE_TESTING.md`. Peak 13 draw calls, 428 KB on load. Opened D12 (three.js on phones for a starfield) and noted shader-compile-on-mount for 5.1. |
