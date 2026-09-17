@@ -75,7 +75,9 @@ export const LAYERS: Layer[] = [
     camera: [-1.39, -55.18, 8.16],
     lookOffset: [0, 0, -3],
     fov: 30, // forward push — down the pipe
-    color: '#c084fc',
+    // Neutral, not purple: a glowing purple reads as a generic template, and the
+    // warm accent is kept for Ground (D1).
+    color: '#e8eaf0',
     section: 'about',
   },
   {

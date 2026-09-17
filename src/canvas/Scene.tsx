@@ -5,6 +5,7 @@ import { CameraRig } from './CameraRig'
 import { Lighting } from './Lighting'
 import { Staged } from './Staged'
 import { Stats } from './Stats'
+import { Core } from './layers/Core'
 import { Device } from './layers/Device'
 import { GroundKiosk, GroundPos } from './layers/Ground'
 import { Orbit } from './layers/Orbit'
@@ -49,9 +50,12 @@ export default function Scene() {
           <Staged stage="ground-kiosk" index={3}>
             <GroundKiosk layer={LAYERS[3]} index={3} />
           </Staged>
+          <Staged stage="core" index={4}>
+            <Core layer={LAYERS[4]} index={4} />
+          </Staged>
           {/* Layers not built yet. Each is replaced in turn during Phase 3. */}
-          {LAYERS.slice(4).map((layer, i) => (
-            <Placeholder key={layer.id} layer={layer} index={i + 4} />
+          {LAYERS.slice(5).map((layer, i) => (
+            <Placeholder key={layer.id} layer={layer} index={i + 5} />
           ))}
         </Suspense>
       </Canvas>
