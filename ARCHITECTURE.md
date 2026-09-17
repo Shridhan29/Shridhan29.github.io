@@ -158,7 +158,9 @@ Positions per layer are precomputed at build time from sampled mesh surfaces and
 Two kinds of layer emerged in Phase 3.
 
 - **Scenery** — L0 Orbit: geometry at its world anchor on the camera path, framed by that layer's camera, kept out from behind text by measuring the page.
-- **Staged** — L1 Device, L2 Surface: illustrations *inside* an article. On desktop with 3D (≥ 1024 px) the article reserves an empty element (`data-stage`) where its screenshot row was, and the layer draws into it every frame: on the camera ray through the stage's centre, sized to the stage (`src/canvas/stage.ts`). The content stays locked to its stage while the page scrolls and the camera moves, so it can never drift over text. Below 1024 px and in the Static tier there is no stage and the screenshot row is shown instead; on desktop the row is `display: none` and its descriptions are kept as a screen-reader list.
+- **Staged** — L1 Device, L2 Surface, L3 Ground (two stages: DMS and Urja): illustrations *inside* an article. On desktop with 3D (≥ 1024 px) the article reserves an empty element (`data-stage`) where its screenshot row was, and the layer draws into it every frame: on the camera ray through the stage's centre, sized to the stage (`src/canvas/stage.ts`). The content stays locked to its stage while the page scrolls and the camera moves, so it can never drift over text. Below 1024 px and in the Static tier there is no stage and the screenshot row is shown instead; on desktop the row is `display: none` and its descriptions are kept as a screen-reader list.
+
+Staged layers share `useStagedFrame` (visibility gating plus stage placement), `shared/ScreenPlane` (a rounded display showing a real screenshot) and `shared/Glow` (an additive halo in place of a real-time light).
 
 Staged layers mount — and start downloading textures — only when their stage is laid out and the camera is within one layer (`src/canvas/Staged.tsx`). Phones therefore download no layer textures at all.
 
