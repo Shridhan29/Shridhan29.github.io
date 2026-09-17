@@ -375,6 +375,9 @@ try {
     // No screenshots: draws into the free column beside the About copy, text alongside.
     // prettier-ignore
     { title: 'L4 · Core', article: 'about', name: 'About', stage: 'core', shots: 0, beside: true, subject: 'the diagram is' },
+    // No screenshots: draws under the dates in the Experience entry, text alongside.
+    // prettier-ignore
+    { title: 'L5 · Cloud', article: 'experience', name: 'Experience', stage: 'cloud', shots: 0, beside: true, subject: 'the pipeline is' },
   ]
 
   // Staged layers load their textures only when they can be shown.

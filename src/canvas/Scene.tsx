@@ -5,11 +5,11 @@ import { CameraRig } from './CameraRig'
 import { Lighting } from './Lighting'
 import { Staged } from './Staged'
 import { Stats } from './Stats'
+import { Cloud } from './layers/Cloud'
 import { Core } from './layers/Core'
 import { Device } from './layers/Device'
 import { GroundKiosk, GroundPos } from './layers/Ground'
 import { Orbit } from './layers/Orbit'
-import { Placeholder } from './layers/Placeholder'
 import { Surface } from './layers/Surface'
 import { LAYERS } from './layers'
 
@@ -53,10 +53,9 @@ export default function Scene() {
           <Staged stage="core" index={4}>
             <Core layer={LAYERS[4]} index={4} />
           </Staged>
-          {/* Layers not built yet. Each is replaced in turn during Phase 3. */}
-          {LAYERS.slice(5).map((layer, i) => (
-            <Placeholder key={layer.id} layer={layer} index={i + 5} />
-          ))}
+          <Staged stage="cloud" index={5}>
+            <Cloud layer={LAYERS[5]} index={5} />
+          </Staged>
         </Suspense>
       </Canvas>
     </div>

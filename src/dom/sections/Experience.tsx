@@ -1,16 +1,26 @@
 import { experience } from '@/data/experience'
 import { education, certifications } from '@/data/education'
 import { Section } from '@/dom/ui/Section'
+import { CAN_RENDER_3D } from '@/tier'
 
 export function Experience() {
   return (
     <Section id="experience" label="Experience" title="Where I've been shipping.">
-      {experience.map((job) => (
+      {experience.map((job, i) => (
         <article key={job.company} className="border-t border-slate/60 pt-8">
           <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:gap-12 xl:grid-cols-[300px_minmax(0,1fr)]">
-            <div>
+            <div className="flex flex-col">
               <p className="font-mono text-xs text-mist">{job.period}</p>
               <p className="mt-1 text-xs text-mist/85">{job.location}</p>
+              {/* Below the dates this column is empty for the length of the entry: on
+                  desktop the L5 Cloud layer draws its delivery pipeline here. */}
+              {CAN_RENDER_3D && i === 0 && (
+                <div
+                  data-stage="cloud"
+                  aria-hidden
+                  className="mt-8 hidden min-h-[360px] flex-1 lg:block"
+                />
+              )}
             </div>
             <div>
               <h3 className="text-xl font-semibold tracking-tight">
