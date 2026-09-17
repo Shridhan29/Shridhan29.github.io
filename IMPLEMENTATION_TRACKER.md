@@ -132,7 +132,10 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
   - `verify:phase3` (56 checks) adds the Core stage: present at 1440 px, diagram inside the column, About text ≥ 4.5:1 beside it (6.59:1), absent on a phone and without WebGL. Oversizing the diagram fails placement and contrast
   - Packets are static here; 4.6 sets them flowing
   - Test hardening: a full verify crashed once ("Target closed", then EBUSY while deleting Chrome's temp profile) on this 4 GB machine; standalone reruns passed. `verify:phase3` now starts a fresh browser per layer block, and both suites close browsers through `closeBrowser`, which tolerates only Windows' EBUSY
-- [ ] **3.6 L5 Cloud** — instanced wireframe containers, fog volume, CI/CD pipeline stage markers
+- [x] **3.6 L5 Cloud** — `src/canvas/layers/Cloud.tsx`. A delivery pipeline read bottom to top: a rail through four stage markers (commit, build and test, container registry, deploy) up to a rising cluster of wireframe containers, the running service. Drawn into the Experience entry's left column on desktop, empty below the dates for the length of the entry; nothing replaced. Slow-crane camera language: seen from above, turning gently. All six containers are one merged line set; markers and their indicator lights are instanced. Cost: 5 draw calls, no textures
+  - Every layer is now built, so the placeholder component is deleted — which also removes drei's `Edges` from the 3D chunk (lazy 287.4 → 282.2 KB gzip) and the last wireframe drawn over live text
+  - `verify:phase3` (62 checks) adds the Cloud stage: present at 1440 px, pipeline inside the column, Experience text ≥ 4.5:1 beside it, absent on a phone and without WebGL
+  - Fog and stage-by-stage lighting are 4.7
 - [x] **3.7 Visibility gating** — `src/canvas/useLayerFrame.ts`: every layer, placeholders included, hides and skips its frame work when more than one layer from the camera; `verify:phase3` fails any layer that bypasses it
 - [ ] **3.8 Perf checkpoint** — ≤ 120 draw calls, 60 fps desktop, first mobile profile run
 
@@ -370,3 +373,4 @@ Web3Forms gives 5× the free headroom and better spam handling at the same price
 | 2026-09-17 | **3.4 L3 Ground complete.** The L3 placeholder no longer draws over the DMS and Urja articles. Still to replace: the L4 and L5 placeholders over About, Skills and Experience. |
 | 2026-09-17 | Process slip, corrected. The L3 commits were pushed although `npm run verify` had failed: the verify output was piped through `tail`, whose exit code let the chained commit run. CI and the live site were unaffected. The failing check pinned the camera at L3 with `?p=` while the page sat at the top — since L3 became staged, its stages were off screen and it correctly drew nothing, which the check treats as unmeasured. It now samples draw calls at real scroll positions (top and each article centred): at most 12 per frame against the 120 budget. Commits now wait for verify's own exit code. |
 | 2026-09-17 | **3.5 L4 Core complete.** The L4 placeholder no longer draws over About and Skills; only the L5 placeholder over Experience remains. |
+| 2026-09-18 | **3.6 L5 Cloud complete — all six layers built.** No placeholder geometry remains anywhere on the site. Remaining in Phase 3: 3.8 performance checkpoint. |
