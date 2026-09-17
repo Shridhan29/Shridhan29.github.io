@@ -3,7 +3,7 @@
  *
  *   npm run verify:phase3
  *
- * Covers L0 · Orbit and L1 · Device so far. Requires a production build in dist/ and Chrome.
+ * Covers L0 · Orbit, L1 · Device and L2 · Surface so far. Requires a production build in dist/ and Chrome.
  */
 import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -349,128 +349,164 @@ try {
     await page.close()
   }
 
-  // ------------------------------------------------------------ L1 · Device --
+  // ------------------------------------------------- staged layers: L1, L2 --
 
-  section('L1 · Device in a real browser')
+  /**
+   * Layers that draw a project's screenshots into a stage the article reserves
+   * on desktop, in place of its screenshot row.
+   */
+  const STAGED = [
+    { title: 'L1 · Device', article: 'truuna', stage: 'device', shots: 5, subject: 'the phone is' },
+    {
+      title: 'L2 · Surface',
+      article: 'aashman',
+      stage: 'surface',
+      shots: 6,
+      subject: 'the panes are',
+    },
+  ]
 
-  /** Opens the page scrolled so the device stage (or, without one, the TRUUNA shot row) is centred. */
-  const openDevice = async (viewport, { webgl = true } = {}) => {
-    const page = await browser.newPage()
-    const errors = []
-    const shotRequests = []
-    page.on('pageerror', (e) => errors.push(e.message))
-    // The row's images; the phone's own screen texture is a separate -840.webp.
-    page.on('request', (r) => {
-      if (/\/img\/truuna\/.+-(420|840)\.avif/.test(r.url())) shotRequests.push(r.url())
-    })
-    if (!webgl) {
-      await page.evaluateOnNewDocument(() => {
-        const original = HTMLCanvasElement.prototype.getContext
-        HTMLCanvasElement.prototype.getContext = function (type, ...rest) {
-          return String(type).startsWith('webgl') ? null : original.call(this, type, ...rest)
-        }
+  for (const { title, article, stage, shots, subject } of STAGED) {
+    section(`${title} in a real browser`)
+    const name = article === 'truuna' ? 'TRUUNA' : 'aashman.in'
+
+    /** Opens the page scrolled so the stage (or, without one, the screenshot row) is centred. */
+    const open = async (viewport, { webgl = true } = {}) => {
+      const page = await browser.newPage()
+      const errors = []
+      const rowRequests = []
+      page.on('pageerror', (e) => errors.push(e.message))
+      // The row's own images are AVIF; the layer's textures are WebP.
+      page.on('request', (r) => {
+        if (
+          r.url().includes(`/img/`) &&
+          r.url().endsWith('.avif') &&
+          r.url().includes(article === 'truuna' ? '/truuna/' : '/aashman.in/')
+        )
+          rowRequests.push(r.url())
       })
-    }
-    await page.setViewport(viewport)
-    await page.goto(`${preview.base}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
-    await page.evaluate(() => {
-      const stage = document.querySelector('[data-stage="device"]')
-      const row = [...document.querySelectorAll('#truuna ul')].find((u) => u.querySelector('img'))
-      const target = stage?.getBoundingClientRect().width ? stage : row
-      const r = target.getBoundingClientRect()
-      window.scrollTo(0, r.top + scrollY + r.height / 2 - innerHeight / 2)
-    })
-    await sleep(3500)
-    return { page, errors, shotRequests }
-  }
-
-  const layout = (page) =>
-    page.evaluate(() => {
-      const stage = document.querySelector('[data-stage="device"]')
-      const row = [...document.querySelectorAll('#truuna ul')].find((u) => u.querySelector('img'))
-      const captions = document.querySelector('[data-shot-captions]')
-      const s = stage?.getBoundingClientRect()
-      const l = row.getBoundingClientRect()
-      return {
-        stage: s && s.width ? { left: s.left, top: s.top, right: s.right, bottom: s.bottom } : null,
-        rowVisible: l.width > 100 && l.height > 100,
-        images: row.querySelectorAll('img[alt]').length,
-        // Rendered for assistive tech: laid out, even if clipped to 1 px.
-        captions:
-          captions && getComputedStyle(captions).display !== 'none'
-            ? captions.querySelectorAll('li').length
-            : 0,
+      if (!webgl) {
+        await page.evaluateOnNewDocument(() => {
+          const original = HTMLCanvasElement.prototype.getContext
+          HTMLCanvasElement.prototype.getContext = function (type, ...rest) {
+            return String(type).startsWith('webgl') ? null : original.call(this, type, ...rest)
+          }
+        })
       }
-    })
+      await page.setViewport(viewport)
+      await page.goto(`${preview.base}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
+      await page.evaluate(
+        (article, stage) => {
+          const el = document.querySelector(`[data-stage="${stage}"]`)
+          const row = [...document.querySelectorAll(`#${article} ul`)].find((u) =>
+            u.querySelector('img'),
+          )
+          const target = el?.getBoundingClientRect().width ? el : row
+          const r = target.getBoundingClientRect()
+          window.scrollTo(0, r.top + scrollY + r.height / 2 - innerHeight / 2)
+        },
+        article,
+        stage,
+      )
+      await sleep(4000)
+      return { page, errors, rowRequests }
+    }
 
-  {
-    const { page, errors, shotRequests } = await openDevice({ width: 1440, height: 900 })
-    const view = await layout(page)
-    check('1440 px: no page errors', !errors.length, errors.slice(0, 2).join(' | '))
-    check(
-      '1440 px: TRUUNA gets a device stage in place of the screenshot row',
-      !!view.stage && !view.rowVisible,
-    )
-    check(
-      '1440 px: screen readers get each screen described once',
-      view.captions === 5,
-      `${view.captions} descriptions`,
-    )
-    check(
-      '1440 px: the hidden screenshot row downloads nothing',
-      !shotRequests.length,
-      shotRequests.slice(0, 2).join(', '),
-    )
+    const layout = (page) =>
+      page.evaluate(
+        (article, stage) => {
+          const el = document.querySelector(`[data-stage="${stage}"]`)
+          const row = [...document.querySelectorAll(`#${article} ul`)].find((u) =>
+            u.querySelector('img'),
+          )
+          const captions = document.querySelector(`#${article} [data-shot-captions]`)
+          const s = el?.getBoundingClientRect()
+          const l = row.getBoundingClientRect()
+          return {
+            stage:
+              s && s.width ? { left: s.left, top: s.top, right: s.right, bottom: s.bottom } : null,
+            rowVisible: l.width > 100 && l.height > 100,
+            images: row.querySelectorAll('img[alt]').length,
+            // Rendered for assistive tech: laid out, even if clipped to 1 px.
+            captions:
+              captions && getComputedStyle(captions).display !== 'none'
+                ? captions.querySelectorAll('li').length
+                : 0,
+          }
+        },
+        article,
+        stage,
+      )
 
-    const box = await sceneBounds(page, '#truuna')
-    const s = view.stage
-    const inside =
-      !!s &&
-      box.count > 0 &&
-      box.left >= s.left - 4 &&
-      box.right <= s.right + 4 &&
-      box.top >= s.top - 4 &&
-      box.bottom <= s.bottom + 4
-    check(
-      '1440 px: the phone is drawn, and only inside its stage',
-      inside,
-      box.count
-        ? `drawn ${Math.round(box.left)}–${Math.round(box.right)} × ${Math.round(box.top)}–${Math.round(box.bottom)}` +
-            (s
-              ? `, stage ${Math.round(s.left)}–${Math.round(s.right)} × ${Math.round(s.top)}–${Math.round(s.bottom)}`
-              : '')
-        : 'nothing drawn',
-    )
+    {
+      const { page, errors, rowRequests } = await open({ width: 1440, height: 900 })
+      const view = await layout(page)
+      check('1440 px: no page errors', !errors.length, errors.slice(0, 2).join(' | '))
+      check(
+        `1440 px: ${name} gets a stage in place of its screenshot row`,
+        !!view.stage && !view.rowVisible,
+      )
+      check(
+        '1440 px: screen readers get each screenshot described once',
+        view.captions === shots,
+        `${view.captions} of ${shots} descriptions`,
+      )
+      check(
+        '1440 px: the hidden screenshot row downloads nothing',
+        !rowRequests.length,
+        rowRequests.slice(0, 2).join(', '),
+      )
 
-    // Measured where the article's text and the lit phone share the screen: the
-    // stage's top two-thirds of the way down, so the glow reaches the text above.
-    await page.evaluate(() => {
-      const r = document.querySelector('[data-stage="device"]').getBoundingClientRect()
-      window.scrollTo(0, r.top + scrollY - innerHeight * 0.66)
-    })
-    await sleep(2500)
-    const worst = await worstContrast(page, ['#truuna'])
-    check(
-      `1440 px: TRUUNA text ≥ ${AA_CONTRAST}:1 against the rendered scene`,
-      worst.lines > 0 && worst.value >= AA_CONTRAST,
-      worst.lines
-        ? `worst ${worst.value.toFixed(2)}:1 on “${worst.text}” (${worst.lines} lines)`
-        : 'no text measured',
-    )
-    await page.close()
-  }
+      const box = await sceneBounds(page, `#${article}`)
+      const s = view.stage
+      const inside =
+        !!s &&
+        box.count > 0 &&
+        box.left >= s.left - 4 &&
+        box.right <= s.right + 4 &&
+        box.top >= s.top - 4 &&
+        box.bottom <= s.bottom + 4
+      check(
+        `1440 px: ${subject} drawn, and only inside the stage`,
+        inside,
+        box.count
+          ? `drawn ${Math.round(box.left)}–${Math.round(box.right)} × ${Math.round(box.top)}–${Math.round(box.bottom)}` +
+              (s
+                ? `, stage ${Math.round(s.left)}–${Math.round(s.right)} × ${Math.round(s.top)}–${Math.round(s.bottom)}`
+                : '')
+          : 'nothing drawn',
+      )
 
-  for (const [label, viewport, webgl] of [
-    ['phone', PHONE, true],
-    ['no WebGL, 1440 px', { width: 1440, height: 900 }, false],
-  ]) {
-    const { page } = await openDevice(viewport, { webgl })
-    const view = await layout(page)
-    check(
-      `${label}: no device stage; the screenshot row is shown`,
-      !view.stage && view.rowVisible && view.images === 5 && view.captions === 0,
-    )
-    await page.close()
+      // Measured where the article's text and the lit stage share the screen:
+      // the stage's top two-thirds of the way down.
+      await page.evaluate((stage) => {
+        const r = document.querySelector(`[data-stage="${stage}"]`).getBoundingClientRect()
+        window.scrollTo(0, r.top + scrollY - innerHeight * 0.66)
+      }, stage)
+      await sleep(2500)
+      const worst = await worstContrast(page, [`#${article}`])
+      check(
+        `1440 px: ${name} text ≥ ${AA_CONTRAST}:1 against the rendered scene`,
+        worst.lines > 0 && worst.value >= AA_CONTRAST,
+        worst.lines
+          ? `worst ${worst.value.toFixed(2)}:1 on “${worst.text}” (${worst.lines} lines)`
+          : 'no text measured',
+      )
+      await page.close()
+    }
+
+    for (const [label, viewport, webgl] of [
+      ['phone', PHONE, true],
+      ['no WebGL, 1440 px', { width: 1440, height: 900 }, false],
+    ]) {
+      const { page } = await open(viewport, { webgl })
+      const view = await layout(page)
+      check(
+        `${label}: no stage; the screenshot row is shown`,
+        !view.stage && view.rowVisible && view.images === shots && view.captions === 0,
+      )
+      await page.close()
+    }
   }
 } catch (err) {
   check('runtime suite ran', false, err instanceof Error ? err.message : String(err))

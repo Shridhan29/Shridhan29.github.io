@@ -7,6 +7,7 @@ import { Stats } from './Stats'
 import { Device } from './layers/Device'
 import { Orbit } from './layers/Orbit'
 import { Placeholder } from './layers/Placeholder'
+import { Surface } from './layers/Surface'
 import { LAYERS } from './layers'
 
 /**
@@ -38,9 +39,12 @@ export default function Scene() {
           <Suspense fallback={null}>
             <Device layer={LAYERS[1]} index={1} />
           </Suspense>
+          <Suspense fallback={null}>
+            <Surface layer={LAYERS[2]} index={2} />
+          </Suspense>
           {/* Layers not built yet. Each is replaced in turn during Phase 3. */}
-          {LAYERS.slice(2).map((layer, i) => (
-            <Placeholder key={layer.id} layer={layer} index={i + 2} />
+          {LAYERS.slice(3).map((layer, i) => (
+            <Placeholder key={layer.id} layer={layer} index={i + 3} />
           ))}
         </Suspense>
       </Canvas>

@@ -3,21 +3,33 @@ import { Section } from '@/dom/ui/Section'
 import { Picture } from '@/dom/ui/Picture'
 import { CAN_RENDER_3D } from '@/tier'
 
+/** Projects whose screenshots a 3D layer shows on desktop, and the stage it draws into. */
+const STAGES: Partial<Record<string, 'device' | 'surface'>> = {
+  truuna: 'device', // L1: one phone
+  aashman: 'surface', // L2: layered browser panes
+}
+
 function Shots({ project }: { project: Project }) {
   const phone = project.shots[0]?.kind === 'phone'
-  // On desktop with 3D, the phone shots are shown by the L1 Device layer: one
-  // large phone drawn into this stage. There, the image row is display: none —
-  // so its lazy images are never fetched — and screen readers get the same
-  // descriptions as a plain list. Phones, tablets and the Static tier keep the row.
-  const staged = phone && CAN_RENDER_3D
+  // On desktop with 3D, a layer draws these screenshots into a stage. There, the
+  // image row is display: none — so its lazy images are never fetched — and
+  // screen readers get the same descriptions as a plain list. Phones, tablets
+  // and the Static tier keep the row.
+  const stage = CAN_RENDER_3D ? STAGES[project.id] : undefined
+  const staged = !!stage
   return (
     <>
       {staged && (
         <>
           <div
-            data-stage="device"
+            data-stage={stage}
             aria-hidden
-            className="mt-10 hidden h-[min(78vh,760px)] min-h-[520px] lg:block"
+            className={`mt-10 hidden lg:block ${
+              // A phone is tall; a stack of browser windows is wide.
+              stage === 'device'
+                ? 'h-[min(78vh,760px)] min-h-[520px]'
+                : 'h-[min(64vh,620px)] min-h-[420px]'
+            }`}
           />
           <ul data-shot-captions className="hidden lg:block lg:sr-only">
             {project.shots.map((shot) => (

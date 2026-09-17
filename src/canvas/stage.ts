@@ -18,6 +18,8 @@ export type StageFit = {
   visible: boolean
   /** World-space height that fills the stage. */
   height: number
+  /** World-space width that fills the stage. */
+  width: number
   /** Stage centre's vertical position on screen, -1 at the bottom and 1 at the top. */
   screenY: number
 }
@@ -31,7 +33,7 @@ export function fitToStage(
 ): StageFit {
   const rect = stage.getBoundingClientRect()
   if (rect.width === 0 || rect.bottom < 0 || rect.top > viewport.height) {
-    return { visible: false, height: 0, screenY: 0 }
+    return { visible: false, height: 0, width: 0, screenY: 0 }
   }
 
   // The rig moved the camera this frame; its matrices are refreshed at render,
@@ -49,5 +51,11 @@ export function fitToStage(
   camera.getWorldDirection(forward)
   const depth = distance * point.dot(forward)
   const viewHeight = 2 * Math.tan(MathUtils.degToRad(camera.fov / 2)) * depth
-  return { visible: true, height: viewHeight * (rect.height / viewport.height), screenY }
+  const worldPerPx = viewHeight / viewport.height
+  return {
+    visible: true,
+    height: rect.height * worldPerPx,
+    width: rect.width * worldPerPx,
+    screenY,
+  }
 }
