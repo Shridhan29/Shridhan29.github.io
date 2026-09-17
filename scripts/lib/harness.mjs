@@ -69,6 +69,19 @@ export function launchBrowser() {
   })
 }
 
+/**
+ * Closes a browser. On Windows, Chrome can still hold its temporary profile when
+ * Puppeteer deletes it, and the resulting EBUSY crashed a whole suite after its
+ * checks had run. The leftover temp folder is harmless; anything else rethrows.
+ */
+export async function closeBrowser(browser) {
+  try {
+    await browser?.close()
+  } catch (err) {
+    if (err?.code !== 'EBUSY') throw err
+  }
+}
+
 /** A real phone viewport. A desktop window at 390 px hides mobile-only layout bugs. */
 export const PHONE = {
   width: 390,

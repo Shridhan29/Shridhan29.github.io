@@ -8,7 +8,14 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import sharp from 'sharp'
-import { PHONE, createReport, launchBrowser, sleep, startPreview } from './lib/harness.mjs'
+import {
+  PHONE,
+  closeBrowser,
+  createReport,
+  launchBrowser,
+  sleep,
+  startPreview,
+} from './lib/harness.mjs'
 
 const { check, section, finish } = createReport()
 
@@ -365,10 +372,15 @@ try {
     { title: 'L3 · Ground (DMS)', article: 'dms', name: 'DMS', dir: 'dms', stage: 'ground-pos', shots: 4, subject: 'the terminal is' },
     // prettier-ignore
     { title: 'L3 · Ground (Urja)', article: 'urja', name: 'Urja', dir: 'urja', stage: 'ground-kiosk', shots: 4, subject: 'the kiosk is' },
+    // No screenshots: draws into the free column beside the About copy, text alongside.
+    // prettier-ignore
+    { title: 'L4 · Core', article: 'about', name: 'About', stage: 'core', shots: 0, beside: true, subject: 'the diagram is' },
   ]
 
   // Staged layers load their textures only when they can be shown.
   section('Staged layers load on approach')
+  await closeBrowser(browser)
+  browser = await launchBrowser()
   {
     const textures = (page) => {
       const seen = []
@@ -405,8 +417,13 @@ try {
     await phone.close()
   }
 
-  for (const { title, article, name, dir, stage, shots, subject } of STAGED) {
+  for (const { title, article, name, dir, stage, shots, subject, beside } of STAGED) {
     section(`${title} in a real browser`)
+    // A fresh browser per layer. Software-rendered Chrome keeps GPU and image
+    // memory across page loads, and on a 4 GB machine a page was killed partway
+    // through a full verify ("Target closed").
+    await closeBrowser(browser)
+    browser = await launchBrowser()
 
     /** Opens the page scrolled so the stage (or, without one, the screenshot row) is centred. */
     const open = async (viewport, { webgl = true } = {}) => {
@@ -416,7 +433,12 @@ try {
       page.on('pageerror', (e) => errors.push(e.message))
       // The row's own images are AVIF; the layer's textures are WebP.
       page.on('request', (r) => {
-        if (r.url().includes(`/img/`) && r.url().endsWith('.avif') && r.url().includes(`/${dir}/`))
+        if (
+          dir &&
+          r.url().includes(`/img/`) &&
+          r.url().endsWith('.avif') &&
+          r.url().includes(`/${dir}/`)
+        )
           rowRequests.push(r.url())
       })
       if (!webgl) {
@@ -435,7 +457,9 @@ try {
           const row = [...document.querySelectorAll(`#${article} ul`)].find((u) =>
             u.querySelector('img'),
           )
-          const target = el?.getBoundingClientRect().width ? el : row
+          const target = el?.getBoundingClientRect().width
+            ? el
+            : (row ?? document.getElementById(article))
           const r = target.getBoundingClientRect()
           window.scrollTo(0, r.top + scrollY + r.height / 2 - innerHeight / 2)
         },
@@ -455,12 +479,12 @@ try {
           )
           const captions = document.querySelector(`#${article} [data-shot-captions]`)
           const s = el?.getBoundingClientRect()
-          const l = row.getBoundingClientRect()
+          const l = row?.getBoundingClientRect() ?? { width: 0, height: 0 }
           return {
             stage:
               s && s.width ? { left: s.left, top: s.top, right: s.right, bottom: s.bottom } : null,
             rowVisible: l.width > 100 && l.height > 100,
-            images: row.querySelectorAll('img[alt]').length,
+            images: row ? row.querySelectorAll('img[alt]').length : 0,
             // Rendered for assistive tech: laid out, even if clipped to 1 px.
             captions:
               captions && getComputedStyle(captions).display !== 'none'
@@ -476,20 +500,24 @@ try {
       const { page, errors, rowRequests } = await open({ width: 1440, height: 900 })
       const view = await layout(page)
       check('1440 px: no page errors', !errors.length, errors.slice(0, 2).join(' | '))
-      check(
-        `1440 px: ${name} gets a stage in place of its screenshot row`,
-        !!view.stage && !view.rowVisible,
-      )
-      check(
-        '1440 px: screen readers get each screenshot described once',
-        view.captions === shots,
-        `${view.captions} of ${shots} descriptions`,
-      )
-      check(
-        '1440 px: the hidden screenshot row downloads nothing',
-        !rowRequests.length,
-        rowRequests.slice(0, 2).join(', '),
-      )
+      if (shots) {
+        check(
+          `1440 px: ${name} gets a stage in place of its screenshot row`,
+          !!view.stage && !view.rowVisible,
+        )
+        check(
+          '1440 px: screen readers get each screenshot described once',
+          view.captions === shots,
+          `${view.captions} of ${shots} descriptions`,
+        )
+        check(
+          '1440 px: the hidden screenshot row downloads nothing',
+          !rowRequests.length,
+          rowRequests.slice(0, 2).join(', '),
+        )
+      } else {
+        check(`1440 px: ${name} gets a stage`, !!view.stage)
+      }
 
       const box = await sceneBounds(page, `#${article}`)
       const s = view.stage
@@ -511,13 +539,16 @@ try {
           : 'nothing drawn',
       )
 
-      // Measured where the article's text and the lit stage share the screen:
-      // the stage's top two-thirds of the way down.
-      await page.evaluate((stage) => {
-        const r = document.querySelector(`[data-stage="${stage}"]`).getBoundingClientRect()
-        window.scrollTo(0, r.top + scrollY - innerHeight * 0.66)
-      }, stage)
-      await sleep(2500)
+      // Measured where the text and the lit stage share the screen: a stage
+      // beside its text already does, centred; one below it is moved to the lower
+      // third so the text above is in view.
+      if (!beside) {
+        await page.evaluate((stage) => {
+          const r = document.querySelector(`[data-stage="${stage}"]`).getBoundingClientRect()
+          window.scrollTo(0, r.top + scrollY - innerHeight * 0.66)
+        }, stage)
+        await sleep(2500)
+      }
       const worst = await worstContrast(page, [`#${article}`])
       check(
         `1440 px: ${name} text ≥ ${AA_CONTRAST}:1 against the rendered scene`,
@@ -536,8 +567,10 @@ try {
       const { page } = await open(viewport, { webgl })
       const view = await layout(page)
       check(
-        `${label}: no stage; the screenshot row is shown`,
-        !view.stage && view.rowVisible && view.images === shots && view.captions === 0,
+        shots ? `${label}: no stage; the screenshot row is shown` : `${label}: no stage`,
+        !view.stage &&
+          view.captions === 0 &&
+          (!shots || (view.rowVisible && view.images === shots)),
       )
       await page.close()
     }
@@ -545,7 +578,7 @@ try {
 } catch (err) {
   check('runtime suite ran', false, err instanceof Error ? err.message : String(err))
 } finally {
-  await browser?.close()
+  await closeBrowser(browser)
   preview?.stop()
 }
 

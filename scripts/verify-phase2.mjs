@@ -16,7 +16,14 @@
 import { readFile, readdir } from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 import { join } from 'node:path'
-import { NAV, PHONE, createReport, launchBrowser, startPreview } from './lib/harness.mjs'
+import {
+  NAV,
+  PHONE,
+  closeBrowser,
+  createReport,
+  launchBrowser,
+  startPreview,
+} from './lib/harness.mjs'
 
 const { check, section, finish } = createReport()
 
@@ -245,7 +252,7 @@ try {
 } catch (err) {
   check('runtime suite ran', false, err instanceof Error ? err.message : String(err))
 } finally {
-  await browser?.close()
+  await closeBrowser(browser)
   preview?.stop()
 }
 
