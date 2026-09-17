@@ -124,7 +124,10 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
   - Replaces the L2 placeholder, which had been drawing its wireframe over the aashman.in article text
   - `verify:phase3` (32 checks) runs the stage checks for L1 and L2 alike. Oversizing the panes fails the placement and contrast checks
   - Ribbons, glass transmission and the rest of the signature effect are 4.4
-- [ ] **3.4 L3 Ground** — low-poly dairy kiosk + Raspberry Pi board, warm bake, `<Html transform>` mini React UI on the kiosk screen
+- [x] **3.4 L3 Ground** — `src/canvas/layers/Ground.tsx`. Two stages, both built from primitives (no models, no hardware photos — A7): in the DMS article a countertop POS terminal showing the real point-of-sale screen with a Raspberry Pi 4 beside it (board, SoC, USB and Ethernet blocks, 40-pin header as one instanced draw call); in the Urja article a free-standing kiosk showing the real language chooser. The one warm layer (D1): an amber glow, not a real-time light, which would recompile every lit material as the layer mounts. Cost: +1 KB gzip, 16 draw calls across both, two ~40 KB textures
+  - Shared pieces extracted before a third copy: `useStagedFrame` (gating + stage placement), `shared/ScreenPlane` (rounded screenshot display), `shared/Glow`; Device and Surface now use them, with all their checks unchanged
+  - `verify:phase3` (50 checks) runs the stage checks for DMS and Urja, and confirms L3 textures also wait until the camera nears them and never load on a phone
+  - **Moved to 4.5:** the working miniature React UI on the kiosk screen (`<Html transform>`). Phase 3 shows the real screenshot
 - [ ] **3.5 L4 Core** — service nodes, tube geometry between them, instanced packet mesh
 - [ ] **3.6 L5 Cloud** — instanced wireframe containers, fog volume, CI/CD pipeline stage markers
 - [x] **3.7 Visibility gating** — `src/canvas/useLayerFrame.ts`: every layer, placeholders included, hides and skips its frame work when more than one layer from the camera; `verify:phase3` fails any layer that bypasses it
@@ -361,3 +364,4 @@ Web3Forms gives 5× the free headroom and better spam handling at the same price
 | 2026-09-17 | D11: reviewed React Bits and Aceternity UI. Four small React Bits pieces added to 5.2 and 5.3 with licence, reduced-motion and budget conditions; Aceternity not used. |
 | 2026-09-17 | **3.3 L2 Surface complete.** The placeholder wireframe over the aashman.in article is gone. |
 | 2026-09-17 | Review of L1–L2: staged layers mounted at startup, so a phone downloaded 156 KB of layer textures it never shows, and desktop fetched L2's pages before leaving the hero. `src/canvas/Staged.tsx` mounts a staged layer only when its stage is laid out and the camera is within reach; `verify:phase3` (34 checks) confirms a phone downloads none and desktop defers L2, and fails without the fix. ARCHITECTURE §4.6 documents scenery vs staged layers. |
+| 2026-09-17 | **3.4 L3 Ground complete.** The L3 placeholder no longer draws over the DMS and Urja articles. Still to replace: the L4 and L5 placeholders over About, Skills and Experience. |
