@@ -24,6 +24,7 @@ import {
   launchBrowser,
   startPreview,
 } from './lib/harness.mjs'
+import { eagerAssets } from './lib/bundle.mjs'
 
 const { check, section, finish } = createReport()
 
@@ -31,8 +32,8 @@ const { check, section, finish } = createReport()
 
 section('Bundle graph')
 
-const html = await readFile('dist/index.html', 'utf8')
-const eager = new Set([...html.matchAll(/\/assets\/([^"']+)/g)].map((m) => m[1]))
+// Everything a first visit downloads: index.html's assets and their static imports.
+const eager = await eagerAssets()
 const assets = await readdir('dist/assets')
 
 const gz = async (f) => gzipSync(await readFile(join('dist/assets', f))).length / 1024
@@ -50,7 +51,9 @@ check('a three chunk exists', !!threeChunk, threeChunk ?? '')
 check(
   'three is NOT loaded on first paint',
   !!threeChunk && !eager.has(threeChunk),
-  threeChunk && eager.has(threeChunk) ? 'it is in index.html — the lazy Canvas is defeated' : '',
+  threeChunk && eager.has(threeChunk)
+    ? 'loaded eagerly (index.html or a static import) — the lazy Canvas is defeated'
+    : '',
 )
 check('entry bundle within 180 KB gzip', entryKb <= 180, `${entryKb.toFixed(1)} KB`)
 check('lazy chunks within 600 KB gzip', lazyKb <= 600, `${lazyKb.toFixed(1)} KB`)
@@ -222,9 +225,21 @@ try {
       return original.call(this, type, ...rest)
     }
   })
+  // The Static tier must never download the 3D payload: this is the runtime
+  // twin of the bundle-graph check, and would have caught three.js being
+  // statically imported by the entry.
+  const threeRequests = []
+  plain.on('request', (r) => {
+    if (/\/assets\/three-/.test(r.url())) threeRequests.push(r.url())
+  })
   await plain.goto(BASE, NAV)
   await new Promise((r) => setTimeout(r, 600))
   check('no WebGL: canvas is not mounted', (await plain.$$('canvas')).length === 0)
+  check(
+    'no WebGL: the three.js chunk is never downloaded',
+    !threeRequests.length,
+    threeRequests.join(', '),
+  )
   const staticText = await plain.evaluate(() => document.body.innerText)
   check('no WebGL: hero copy still present', staticText.includes('I ship software'))
   check(

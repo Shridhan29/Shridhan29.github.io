@@ -38,7 +38,11 @@ export default defineConfig(({ mode }) => ({
           // three and its R3F ecosystem are the lazy 3D payload; keeping them
           // in one chunk means the DOM-only Static tier never downloads them.
           if (/[\\/]node_modules[\\/](three|@react-three|postprocessing)[\\/]/.test(id)) return 'three'
-          if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react'
+          // zustand is shared by the page (layer dots, debug overlay) and by
+          // react-three-fiber. Left unassigned, the bundler put it in the three
+          // chunk, and the entry's static import of it downloaded all of three.js
+          // on every first visit. It belongs with the eager React vendor code.
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler|zustand|use-sync-external-store)[\\/]/.test(id)) return 'react'
           if (/[\\/]node_modules[\\/](gsap|lenis)[\\/]/.test(id)) return 'motion'
         },
       },

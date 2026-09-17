@@ -4,15 +4,15 @@ import { readdir, readFile, stat } from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 import { join } from 'node:path'
 import { BUNDLE_KB as BUDGETS, MODEL_KB } from './budgets.mjs'
+import { eagerAssets } from './lib/bundle.mjs'
 
 const DIST = 'dist/assets'
 
-// "entry" is what index.html actually pulls on first paint; everything else is
-// lazy. Classifying by filename was wrong — it hid a `three` modulepreload in
-// the entry graph and miscounted lazy chunks as eager.
-
-const html = await readFile('dist/index.html', 'utf8')
-const eager = new Set([...html.matchAll(/\/assets\/([^"']+)/g)].map((m) => m[1]))
+// "entry" is what a first visit downloads before any lazy import: index.html's
+// assets and everything they statically import. Classifying by filename hid a
+// `three` modulepreload; reading only index.html hid a static import of the
+// three chunk from the entry.
+const eager = await eagerAssets()
 
 const files = await readdir(DIST)
 let entryTotal = 0
