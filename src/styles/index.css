@@ -5,6 +5,12 @@
 @source '../';
 @source '../../index.html';
 
+/* `scene-off:` applies once the 3D scene has failed — its download failed, or
+   the GPU context was lost. Stages that replace page content are shown by
+   default on capable desktops (so the screenshots they replace are never
+   fetched), and give way to that content again when this is set. */
+@custom-variant scene-off (html[data-scene-off] &);
+
 /* Cinematic-serious direction (decision D1): dark ground, restrained accent,
    one warm highlight reserved for the Ground layer (L3). Tokens live here so the
    3D layers and the DOM overlay can read the same palette. */

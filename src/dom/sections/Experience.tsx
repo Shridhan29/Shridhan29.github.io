@@ -18,7 +18,7 @@ export function Experience() {
                 <div
                   data-stage="cloud"
                   aria-hidden
-                  className="mt-8 hidden min-h-[360px] flex-1 lg:block"
+                  className="mt-8 hidden min-h-[360px] flex-1 lg:block scene-off:hidden"
                 />
               )}
             </div>

@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { Nav } from '@/dom/ui/Nav'
 import { LayerNav } from '@/dom/ui/LayerNav'
 import { DebugOverlay } from '@/dom/ui/DebugOverlay'
+import { SceneBoundary } from '@/dom/SceneBoundary'
 import { DEBUG } from '@/debug'
 import { CAN_RENDER_3D } from '@/tier'
 import { Hero } from '@/dom/sections/Hero'
@@ -31,9 +32,11 @@ export default function App() {
       </a>
 
       {canRender3D && (
-        <Suspense fallback={null}>
-          <Scene />
-        </Suspense>
+        <SceneBoundary>
+          <Suspense fallback={null}>
+            <Scene />
+          </Suspense>
+        </SceneBoundary>
       )}
 
       <Nav />

@@ -18,7 +18,11 @@ export function About() {
         {/* On desktop the hero already shows the stats, so this column is free: the
             L4 Core layer draws into it. Decorative, so hidden from assistive tech. */}
         {CAN_RENDER_3D && (
-          <div data-stage="core" aria-hidden className="hidden min-h-[380px] lg:block" />
+          <div
+            data-stage="core"
+            aria-hidden
+            className="hidden min-h-[380px] lg:block scene-off:hidden"
+          />
         )}
         <dl className="grid grid-cols-2 gap-x-6 gap-y-8 self-start lg:hidden">
           {profile.stats.map((s) => (

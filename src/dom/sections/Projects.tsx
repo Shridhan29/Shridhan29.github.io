@@ -31,13 +31,13 @@ function Shots({ project }: { project: Project }) {
           <div
             data-stage={stage}
             aria-hidden
-            className={`mt-10 hidden lg:block ${
+            className={`mt-10 hidden lg:block scene-off:hidden ${
               stage && TALL.has(stage)
                 ? 'h-[min(78vh,760px)] min-h-[520px]'
                 : 'h-[min(64vh,620px)] min-h-[420px]'
             }`}
           />
-          <ul data-shot-captions className="hidden lg:block lg:sr-only">
+          <ul data-shot-captions className="hidden lg:block lg:sr-only scene-off:hidden">
             {project.shots.map((shot) => (
               <li key={shot.slug}>{shot.alt}</li>
             ))}
@@ -66,7 +66,7 @@ function ShotList({
         (phone
           ? 'mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 lg:grid lg:grid-cols-5 lg:gap-6 lg:overflow-visible'
           : 'mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:gap-6') +
-        (staged ? ' lg:hidden' : '')
+        (staged ? ' lg:hidden scene-off:lg:grid' : '')
       }
     >
       {project.shots.map((shot, i) => (

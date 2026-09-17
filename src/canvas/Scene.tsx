@@ -31,6 +31,13 @@ export default function Scene() {
         gl={{ antialias: true, powerPreference: 'high-performance' }}
         camera={{ fov: 42, near: 0.1, far: 200 }}
         frameloop="always"
+        onCreated={({ gl }) => {
+          // A lost GPU context hands the stages back to the page content
+          // (the `scene-off:` CSS variant) until it is restored.
+          const root = document.documentElement
+          gl.domElement.addEventListener('webglcontextlost', () => (root.dataset.sceneOff = ''))
+          gl.domElement.addEventListener('webglcontextrestored', () => delete root.dataset.sceneOff)
+        }}
       >
         <Suspense fallback={null}>
           <CameraRig />

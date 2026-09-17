@@ -381,6 +381,49 @@ try {
   ]
 
   // Staged layers load their textures only when they can be shown.
+  // If the 3D code never arrives, the page must still be whole: its copy, its
+  // screenshots, and no empty stages. Before SceneBoundary this left a blank page.
+  section('3D fails to load')
+  await closeBrowser(browser)
+  browser = await launchBrowser()
+  {
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1440, height: 900 })
+    await page.setRequestInterception(true)
+    const blocked = []
+    page.on('request', (r) => {
+      if (/\/assets\/three-/.test(r.url())) {
+        blocked.push(r.url())
+        r.abort()
+      } else r.continue()
+    })
+    await page.goto(`${preview.base}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
+    await sleep(2500)
+    const state = await page.evaluate(() => {
+      const stages = [...document.querySelectorAll('[data-stage]')]
+      const row = [...document.querySelectorAll('#truuna ul')].find((u) => u.querySelector('img'))
+      return {
+        text: document.body.innerText.length,
+        canvas: document.querySelectorAll('canvas').length,
+        shownStages: stages.filter((el) => el.getBoundingClientRect().height > 0).length,
+        rowHeight: row ? row.getBoundingClientRect().height : 0,
+        sceneOff: document.documentElement.hasAttribute('data-scene-off'),
+      }
+    })
+    check(
+      'the 3D download was actually blocked',
+      blocked.length > 0,
+      `${blocked.length} request(s)`,
+    )
+    check('the page still renders its content', state.text > 2000, `${state.text} characters`)
+    check(
+      'no empty stages; screenshot rows shown instead',
+      state.shownStages === 0 && state.rowHeight > 100 && state.sceneOff,
+      `${state.shownStages} stages shown, TRUUNA row ${Math.round(state.rowHeight)} px`,
+    )
+    await page.close()
+  }
+
   section('Staged layers load on approach')
   await closeBrowser(browser)
   browser = await launchBrowser()
