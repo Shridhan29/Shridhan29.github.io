@@ -367,7 +367,7 @@ try {
     // prettier-ignore
     { title: 'L1 · Device', article: 'truuna', name: 'TRUUNA', dir: 'truuna', stage: 'device', shots: 5, subject: 'the phone is', sequence: true },
     // prettier-ignore
-    { title: 'L2 · Surface', article: 'aashman', name: 'aashman.in', dir: 'aashman.in', stage: 'surface', shots: 6, subject: 'the panes are' },
+    { title: 'L2 · Surface', article: 'aashman', name: 'aashman.in', dir: 'aashman.in', stage: 'surface', shots: 6, subject: 'the panes are', runs: { effect: 'ribbons', label: 'the ribbons draw themselves as the stack rises', full: 100, atLeast: 85 } },
     // prettier-ignore
     { title: 'L3 · Ground (DMS)', article: 'dms', name: 'DMS', dir: 'dms', stage: 'ground-pos', shots: 4, subject: 'the terminal is' },
     // prettier-ignore
@@ -377,7 +377,7 @@ try {
     { title: 'L4 · Core', article: 'about', name: 'About', stage: 'core', shots: 0, beside: true, subject: 'the diagram is', moves: { effect: 'packets', label: 'packets along the request path' } },
     // No screenshots: draws under the dates in the Experience entry, text alongside.
     // prettier-ignore
-    { title: 'L5 · Cloud', article: 'experience', name: 'Experience', stage: 'cloud', shots: 0, beside: true, subject: 'the pipeline is', runs: { effect: 'pipeline', stages: 4 } },
+    { title: 'L5 · Cloud', article: 'experience', name: 'Experience', stage: 'cloud', shots: 0, beside: true, subject: 'the pipeline is', runs: { effect: 'pipeline', label: 'the pipeline runs stage by stage as the column rises', full: 4 } },
   ]
 
   // Staged layers load their textures only when they can be shown.
@@ -687,9 +687,9 @@ try {
           const middle = await litAt(0.5)
           const late = await litAt(0.95)
           check(
-            '1440 px: the pipeline runs stage by stage as the column rises',
-            early >= 0 && early < middle && middle < late && late === runs.stages,
-            `stages lit ${early} → ${middle} → ${late} of ${runs.stages}`,
+            `1440 px: ${runs.label}`,
+            early >= 0 && early < middle && middle < late && late >= (runs.atLeast ?? runs.full),
+            `${early} → ${middle} → ${late} of ${runs.full}`,
           )
           await debug.close()
         }
