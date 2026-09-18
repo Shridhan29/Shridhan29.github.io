@@ -371,7 +371,7 @@ try {
     // prettier-ignore
     { title: 'L3 · Ground (DMS)', article: 'dms', name: 'DMS', dir: 'dms', stage: 'ground-pos', shots: 4, subject: 'the terminal is' },
     // prettier-ignore
-    { title: 'L3 · Ground (Urja)', article: 'urja', name: 'Urja', dir: 'urja', stage: 'ground-kiosk', shots: 4, subject: 'the kiosk is' },
+    { title: 'L3 · Ground (Urja)', article: 'urja', name: 'Urja', dir: 'urja', stage: 'ground-kiosk', shots: 4, subject: 'the kiosk is', live: true },
     // No screenshots: draws into the free column beside the About copy, text alongside.
     // prettier-ignore
     { title: 'L4 · Core', article: 'about', name: 'About', stage: 'core', shots: 0, beside: true, subject: 'the diagram is', moves: { effect: 'packets', label: 'packets along the request path' } },
@@ -475,6 +475,7 @@ try {
     sequence,
     moves,
     runs,
+    live,
   } of STAGED) {
     section(`${title} in a real browser`)
     // A fresh browser per layer. Software-rendered Chrome keeps GPU and image
@@ -660,6 +661,39 @@ try {
 
         // 4.7: stages light in order as the column rises, read from the layer's
         // own published count.
+        // 4.5: the kiosk screen is the real interface, and answers a click.
+        if (live) {
+          const kiosk = await page.evaluate(() => {
+            const el = document.querySelector('[data-kiosk]')
+            if (!el) return null
+            const buttons = [...el.querySelectorAll('button')]
+            return {
+              text: el.innerText.replace(/\s+/g, ' ').trim(),
+              buttons: buttons.length,
+              // Focusable controls inside the aria-hidden canvas would be a
+              // keyboard trap: reachable by Tab, invisible to a screen reader.
+              focusable: buttons.filter((b) => b.tabIndex >= 0).length,
+            }
+          })
+          check('1440 px: the kiosk screen runs the real interface', !!kiosk?.buttons, kiosk?.text)
+          check(
+            '1440 px: nothing in the scene is keyboard-focusable',
+            kiosk?.focusable === 0,
+            `${kiosk?.focusable ?? '?'} focusable controls`,
+          )
+          const after = await page.evaluate(async () => {
+            const buttons = [...document.querySelectorAll('[data-kiosk] button')]
+            buttons[1]?.click()
+            await new Promise((r) => setTimeout(r, 500))
+            return document.querySelector('[data-kiosk]')?.innerText.replace(/\s+/g, ' ').trim()
+          })
+          check(
+            '1440 px: choosing a language changes the kiosk',
+            !!after && !!kiosk?.text && after !== kiosk.text,
+            after?.slice(0, 48),
+          )
+        }
+
         if (runs) {
           const debug = await browser.newPage()
           await debug.setViewport({ width: 1440, height: 900 })
@@ -676,12 +710,24 @@ try {
               stage,
               k,
             )
+            // Wait for the value rather than sampling blind: on the first stop
+            // the layer may still be mounting and loading its textures, and an
+            // absent value reads as -1.
+            const read = () =>
+              debug.evaluate((effect) => {
+                const text = document.querySelector('[data-debug]')?.textContent ?? ''
+                // Escaped for the template literal: `\s` there would collapse to `s`.
+                return Number(new RegExp(`${effect}\\s+(\\d+)`).exec(text)?.[1] ?? -1)
+              }, runs.effect)
+            const until = Date.now() + 12_000
+            let value = await read()
+            while (value < 0 && Date.now() < until) {
+              await sleep(500)
+              value = await read()
+            }
+            // Settle: the value is still easing toward its place for this stop.
             await sleep(2500)
-            return debug.evaluate((effect) => {
-              const text = document.querySelector('[data-debug]')?.textContent ?? ''
-              // Escaped for the template literal: `\s` there would collapse to `s`.
-              return Number(new RegExp(`${effect}\\s+(\\d+)`).exec(text)?.[1] ?? -1)
-            }, runs.effect)
+            return read()
           }
           const early = await litAt(0.1)
           const middle = await litAt(0.5)

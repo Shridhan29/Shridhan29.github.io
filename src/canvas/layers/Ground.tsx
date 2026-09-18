@@ -11,6 +11,7 @@ import {
 import type { Layer } from '../layers'
 import { Glow } from '../shared/Glow'
 import { ScreenPlane } from '../shared/ScreenPlane'
+import { KioskScreen } from '../shared/KioskScreen'
 import { useStagedFrame } from '../useStagedFrame'
 
 /**
@@ -27,7 +28,9 @@ import { useStagedFrame } from '../useStagedFrame'
  * from an amber glow, not a real-time light, which would recompile every lit
  * material in the scene as the layer mounts.
  *
- * Phase 4.5 replaces the kiosk's screenshot with a working miniature UI.
+ * The kiosk's screen is the real interface, running (4.5): pick a language and
+ * the tour list answers. The POS terminal keeps its screenshot — it is a till,
+ * not something to try.
  */
 
 const DISTANCE = 6
@@ -181,13 +184,7 @@ export function GroundKiosk({ layer, index }: { layer: Layer; index: number }) {
         <RoundedBox args={[KIOSK_W + 0.12, KIOSK_H + 0.12, 0.09]} radius={0.04}>
           <Housing />
         </RoundedBox>
-        <ScreenPlane
-          url="/img/urja/03-language-1600.webp"
-          width={KIOSK_W}
-          height={KIOSK_H}
-          radius={0.025}
-          position={[0, 0, 0.047]}
-        />
+        <KioskScreen width={KIOSK_W} />
       </group>
       <Glow color={layer.color} width={3} height={3.6} strength={0.5} position={[0, 0.1, -0.6]} />
     </group>
