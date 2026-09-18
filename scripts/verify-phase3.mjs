@@ -56,6 +56,14 @@ for (const f of sources) {
 }
 check('lighting loads no image files (D9)', !loaders.length, loaders.join(', '))
 
+// 4.2: the monolith's signature effect is a fresnel rim — lit where its surface
+// turns away from the viewer, so the slab's faces stay dark behind the hero copy.
+const orbit = await readFile('src/canvas/layers/Orbit.tsx', 'utf8')
+check(
+  'the monolith has a fresnel rim that leaves its faces dark',
+  /1\.0 - facing/.test(orbit) && /AdditiveBlending/.test(orbit),
+)
+
 const lighting = await readFile('src/canvas/Lighting.tsx', 'utf8')
 const envSize = Number(/fromScene\([^)]*size:\s*(\d+)/s.exec(lighting)?.[1] ?? NaN)
 check(
@@ -339,10 +347,11 @@ try {
       !external.length,
       external.slice(0, 2).join(', '),
     )
-    // Stars are one draw call; the monolith is one more, only where it has room.
+    // Stars are one draw call; where the monolith has room it adds two, the slab
+    // and its fresnel rim (4.2).
     check(
       `${label}: monolith ${monolith ? 'drawn in the gap' : 'not drawn (no room beside the copy)'}`,
-      calls === (monolith ? 2 : 1),
+      calls === (monolith ? 3 : 1),
       `${calls} draw calls`,
     )
 

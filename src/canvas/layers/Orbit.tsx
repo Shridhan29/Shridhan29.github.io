@@ -1,6 +1,6 @@
 import { RoundedBox } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { type RefObject, useEffect, useMemo, useRef } from 'react'
 import {
   AdditiveBlending,
   BufferAttribute,
@@ -42,6 +42,7 @@ const MIN_GAP_PX = 140
 export function Orbit({ layer, index }: { layer: Layer; index: number }) {
   const group = useRef<Group>(null)
   const monolith = useRef<Group>(null)
+  const rim = useRef<ShaderMaterial>(null)
   const target = useRef<Placement>(HIDDEN)
   const size = useThree((s) => s.size)
 
@@ -112,6 +113,8 @@ export function Orbit({ layer, index }: { layer: Layer; index: number }) {
     // A slow swing rather than a full turn: every angle in this range catches
     // the rim light, so the slab never goes edge-on or reads as a flat hole.
     m.rotation.y = -0.55 + Math.sin(time * 0.18) * 0.4
+    // The rim's hue drifts with the same clock as the swing.
+    if (rim.current) rim.current.uniforms.uTime.value = time
   })
 
   return (
@@ -129,11 +132,79 @@ export function Orbit({ layer, index }: { layer: Layer; index: number }) {
             clearcoat={1}
             clearcoatRoughness={0.04}
             envMapIntensity={2.5}
+            // A thin film over the glass, for the colour it lends the few
+            // reflections the slab catches.
+            iridescence={0.8}
+            iridescenceIOR={1.35}
+            iridescenceThicknessRange={[100, 700]}
           />
         </RoundedBox>
+        <Rim materialRef={rim} />
       </group>
       <Stars />
     </group>
+  )
+}
+
+// -------------------------------------------------------------------- rim --
+
+/**
+ * The monolith's signature effect (4.2): an iridescent fresnel rim.
+ *
+ * A shell just outside the slab, lit only where its surface turns away from the
+ * viewer, so it draws the silhouette and leaves the faces black — the page
+ * behind stays as dark as it was. The hue walks with the angle and drifts with
+ * time, which is where the iridescence reads; the physical film alone was
+ * invisible in a scene this dim. One additive draw call, no lighting work.
+ */
+function Rim({ materialRef }: { materialRef: RefObject<ShaderMaterial | null> }) {
+  const shader = useMemo(
+    () =>
+      new ShaderMaterial({
+        uniforms: {
+          uTime: { value: 0 },
+          uNear: { value: new Color(PALETTE.accent) },
+          uFar: { value: new Color('#b98cff') },
+        },
+        transparent: true,
+        depthWrite: false,
+        blending: AdditiveBlending,
+        vertexShader: /* glsl */ `
+          varying vec3 vNormal;
+          varying vec3 vView;
+          void main() {
+            vec4 world = modelMatrix * vec4(position, 1.0);
+            vNormal = normalize(mat3(modelMatrix) * normal);
+            vView = normalize(cameraPosition - world.xyz);
+            gl_Position = projectionMatrix * viewMatrix * world;
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform float uTime;
+          uniform vec3 uNear;
+          uniform vec3 uFar;
+          varying vec3 vNormal;
+          varying vec3 vView;
+          void main() {
+            float facing = clamp(dot(normalize(vNormal), normalize(vView)), 0.0, 1.0);
+            // Edge-on surfaces glow; surfaces facing the viewer stay dark.
+            float rim = pow(1.0 - facing, 4.0);
+            // Hue walks with the angle and drifts slowly: a thin-film sheen.
+            float shift = 0.5 + 0.5 * sin(facing * 6.2831 + uTime * 0.35);
+            vec3 colour = mix(uNear, uFar, shift);
+            gl_FragColor = vec4(colour * rim * 1.6, rim);
+          }
+        `,
+      }),
+    [],
+  )
+
+  useEffect(() => () => shader.dispose(), [shader])
+
+  return (
+    <RoundedBox args={MONOLITH} radius={0.035} smoothness={3} scale={1.006}>
+      <primitive object={shader} ref={materialRef} attach="material" />
+    </RoundedBox>
   )
 }
 
