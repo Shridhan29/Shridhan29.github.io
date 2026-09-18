@@ -4,7 +4,7 @@ import { type Group, MathUtils } from 'three'
 import type { Layer } from '../layers'
 import { PALETTE } from '../palette'
 import { Glow } from '../shared/Glow'
-import { ScreenPlane } from '../shared/ScreenPlane'
+import { ScreenSequence } from '../shared/ScreenSequence'
 import { useStagedFrame } from '../useStagedFrame'
 
 /**
@@ -16,11 +16,18 @@ import { useStagedFrame } from '../useStagedFrame'
  * so the edges catch the same studio light, around a screen that glows with a
  * real screen from the app.
  *
- * Phase 4.3 makes the screen advance through the app flow as the page scrolls.
+ * The screen advances through the app's real flow as the page scrolls (4.3):
+ * language, login, configurator, booking, order timeline — the order a farmer
+ * meets them in.
  */
 
-/** The first screen a farmer sees: language choice. The rest arrive in 4.3. */
-const SCREEN = '/img/truuna/01-language-840.webp'
+const SCREENS = [
+  '01-language',
+  '02-login-otp',
+  '03-configurator',
+  '04-booking-summary',
+  '05-order-timeline',
+].map((slug) => `/img/truuna/${slug}-840.webp`)
 
 // Screen is the screenshots' 9:16; the body adds even, slim bezels — no chin,
 // like a current phone — and is thin enough to read as one at an angle.
@@ -36,6 +43,8 @@ const FILL = 0.86
 
 export function Device({ layer, index }: { layer: Layer; index: number }) {
   const group = useRef<Group>(null)
+  /** How far the stage has travelled up the screen: 0 entering, 1 leaving. */
+  const flow = useRef(0)
 
   useStagedFrame('device', index, group, DISTANCE, (fit, state) => {
     const g = group.current!
@@ -44,6 +53,7 @@ export function Device({ layer, index }: { layer: Layer; index: number }) {
     // the screen, so the phone reads as an object in space, not a sticker.
     g.rotateY(-0.38 + Math.sin(state.clock.elapsedTime * 0.35) * 0.06)
     g.rotateX(MathUtils.clamp(fit.screenY, -1, 1) * -0.12)
+    flow.current = (MathUtils.clamp(fit.screenY, -1, 1) + 1) / 2
   })
 
   return (
@@ -58,13 +68,14 @@ export function Device({ layer, index }: { layer: Layer; index: number }) {
           envMapIntensity={2.5}
         />
       </RoundedBox>
-      <ScreenPlane
-        url={SCREEN}
+      <ScreenSequence
+        urls={SCREENS}
         width={SCREEN_W}
         height={SCREEN_H}
         radius={0.045}
         // Just proud of the glass.
         position={[0, 0, BODY[2] / 2 + 0.002]}
+        progress={flow}
       />
       <Glow color={layer.color} width={BODY[0] * 3.2} height={BODY[1] * 2.2} />
     </group>

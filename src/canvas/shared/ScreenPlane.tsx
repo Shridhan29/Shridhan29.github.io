@@ -1,7 +1,8 @@
 import { useTexture } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
-import { Shape, ShapeGeometry, SRGBColorSpace } from 'three'
+import { SRGBColorSpace } from 'three'
+import { roundedScreen } from './roundedScreen'
 
 /**
  * A lit display showing a real screenshot: a rounded rectangle with the image
@@ -31,26 +32,7 @@ export function ScreenPlane({
     t.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy())
   })
 
-  const geometry = useMemo(() => {
-    const [x, y, w, h, r] = [-width / 2, -height / 2, width, height, radius]
-    const shape = new Shape()
-      .moveTo(x + r, y)
-      .lineTo(x + w - r, y)
-      .quadraticCurveTo(x + w, y, x + w, y + r)
-      .lineTo(x + w, y + h - r)
-      .quadraticCurveTo(x + w, y + h, x + w - r, y + h)
-      .lineTo(x + r, y + h)
-      .quadraticCurveTo(x, y + h, x, y + h - r)
-      .lineTo(x, y + r)
-      .quadraticCurveTo(x, y, x + r, y)
-    const g = new ShapeGeometry(shape, 6)
-    const pos = g.attributes.position
-    const uv = g.attributes.uv
-    for (let i = 0; i < pos.count; i++) {
-      uv.setXY(i, (pos.getX(i) - x) / w, (pos.getY(i) - y) / h)
-    }
-    return g
-  }, [width, height, radius])
+  const geometry = useMemo(() => roundedScreen(width, height, radius), [width, height, radius])
 
   useEffect(() => () => geometry.dispose(), [geometry])
 

@@ -365,7 +365,7 @@ try {
    */
   const STAGED = [
     // prettier-ignore
-    { title: 'L1 · Device', article: 'truuna', name: 'TRUUNA', dir: 'truuna', stage: 'device', shots: 5, subject: 'the phone is' },
+    { title: 'L1 · Device', article: 'truuna', name: 'TRUUNA', dir: 'truuna', stage: 'device', shots: 5, subject: 'the phone is', sequence: true },
     // prettier-ignore
     { title: 'L2 · Surface', article: 'aashman', name: 'aashman.in', dir: 'aashman.in', stage: 'surface', shots: 6, subject: 'the panes are' },
     // prettier-ignore
@@ -463,7 +463,7 @@ try {
     await phone.close()
   }
 
-  for (const { title, article, name, dir, stage, shots, subject, beside } of STAGED) {
+  for (const { title, article, name, dir, stage, shots, subject, beside, sequence } of STAGED) {
     section(`${title} in a real browser`)
     // A fresh browser per layer. Software-rendered Chrome keeps GPU and image
     // memory across page loads, and on a 4 GB machine a page was killed partway
@@ -584,6 +584,44 @@ try {
                 : '')
           : 'nothing drawn',
       )
+
+      // 4.3: the screen plays the app's flow as the stage crosses the screen.
+      // Read from the layer's own published index, not from pixels: between two
+      // scroll positions the whole page has moved, so comparing screenshots
+      // "passes" even when the screen never changes.
+      if (sequence) {
+        // Its own page: the staged pages run without ?debug=1, and the overlay
+        // would otherwise sit over the article while the other checks measure it.
+        const debug = await browser.newPage()
+        await debug.setViewport({ width: 1440, height: 900 })
+        await debug.goto(`${preview.base}/?debug=1`, { waitUntil: 'networkidle0', timeout: 60_000 })
+        const screenAt = async (k) => {
+          await debug.evaluate(
+            (stage, k) => {
+              const r = document.querySelector(`[data-stage="${stage}"]`).getBoundingClientRect()
+              window.scrollTo(0, r.top + scrollY + r.height / 2 - innerHeight * (1 - k))
+            },
+            stage,
+            k,
+          )
+          await sleep(2500)
+          return debug.evaluate(() => {
+            const text = document.querySelector('[data-debug]')?.textContent ?? ''
+            return Number(/screen\s+(\d+)/.exec(text)?.[1] ?? -1)
+          })
+        }
+        const early = await screenAt(0.1)
+        const middle = await screenAt(0.5)
+        const late = await screenAt(0.9)
+        check(
+          '1440 px: the screen advances through the app flow',
+          // Advancing and arriving, not landing on exact indices: smooth scrolling
+          // does not stop at a precise offset.
+          early >= 0 && early < middle && middle < late && late >= shots - 2,
+          `screens ${early} → ${middle} → ${late} of 0–${shots - 1}`,
+        )
+        await debug.close()
+      }
 
       // Measured where the text and the lit stage share the screen: a stage
       // beside its text already does, centred; one below it is moved to the lower

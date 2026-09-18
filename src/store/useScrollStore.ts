@@ -27,7 +27,14 @@ type ScrollState = {
   /** Frame stats, published by the canvas for the debug overlay. */
   stats: FrameStats
   setProgress: (progress: number, direction: 1 | -1) => void
+  /**
+   * Which screen a device layer is showing (4.3). Published so the debug overlay
+   * and the verification suite can read the effect's state instead of guessing
+   * it from pixels, which a scrolling page makes unreliable.
+   */
+  screen: number
   setStats: (stats: FrameStats) => void
+  setScreen: (screen: number) => void
 }
 
 export const useScrollStore = create<ScrollState>((set) => ({
@@ -35,6 +42,7 @@ export const useScrollStore = create<ScrollState>((set) => ({
   layer: 0,
   direction: 1,
   stats: { fps: 0, ms: 0, calls: 0, tris: 0, geometries: 0, textures: 0, programs: 0 },
+  screen: 0,
   setProgress: (progress, direction) =>
     set({
       progress,
@@ -42,4 +50,5 @@ export const useScrollStore = create<ScrollState>((set) => ({
       layer: Math.min(LAYERS.length - 1, Math.round(progress * (LAYERS.length - 1))),
     }),
   setStats: (stats) => set({ stats }),
+  setScreen: (screen) => set({ screen }),
 }))
