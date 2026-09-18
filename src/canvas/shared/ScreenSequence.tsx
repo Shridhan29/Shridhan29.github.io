@@ -20,6 +20,7 @@ export function ScreenSequence({
   radius = 0.04,
   position = [0, 0, 0],
   progress,
+  effect = 'screen',
 }: {
   urls: string[]
   width: number
@@ -27,9 +28,11 @@ export function ScreenSequence({
   radius?: number
   position?: [number, number, number]
   progress: RefObject<number>
+  /** Name this sequence publishes its current screen under. */
+  effect?: string
 }) {
   const gl = useThree((s) => s.gl)
-  const setScreen = useScrollStore((s) => s.setScreen)
+  const setEffect = useScrollStore((s) => s.setEffect)
   const shown = useRef(-1)
   const textures = useTexture(urls, (loaded) => {
     for (const t of Array.isArray(loaded) ? loaded : [loaded]) {
@@ -87,7 +90,7 @@ export function ScreenSequence({
     const current = mix > 0.5 ? index + 1 : index
     if (current !== shown.current) {
       shown.current = current
-      setScreen(current)
+      setEffect(effect, current)
     }
   })
 

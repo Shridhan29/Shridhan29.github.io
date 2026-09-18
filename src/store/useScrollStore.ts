@@ -28,13 +28,14 @@ type ScrollState = {
   stats: FrameStats
   setProgress: (progress: number, direction: 1 | -1) => void
   /**
-   * Which screen a device layer is showing (4.3). Published so the debug overlay
-   * and the verification suite can read the effect's state instead of guessing
-   * it from pixels, which a scrolling page makes unreliable.
+   * Named values published by the layers' effects — the screen a device shows,
+   * how many pipeline stages have lit. The debug overlay prints them and the
+   * verification suite reads them, so an effect is checked by its own state
+   * rather than guessed from pixels, which a scrolling page makes unreliable.
    */
-  screen: number
+  effects: Record<string, number>
   setStats: (stats: FrameStats) => void
-  setScreen: (screen: number) => void
+  setEffect: (name: string, value: number) => void
 }
 
 export const useScrollStore = create<ScrollState>((set) => ({
@@ -42,7 +43,7 @@ export const useScrollStore = create<ScrollState>((set) => ({
   layer: 0,
   direction: 1,
   stats: { fps: 0, ms: 0, calls: 0, tris: 0, geometries: 0, textures: 0, programs: 0 },
-  screen: 0,
+  effects: {},
   setProgress: (progress, direction) =>
     set({
       progress,
@@ -50,5 +51,8 @@ export const useScrollStore = create<ScrollState>((set) => ({
       layer: Math.min(LAYERS.length - 1, Math.round(progress * (LAYERS.length - 1))),
     }),
   setStats: (stats) => set({ stats }),
-  setScreen: (screen) => set({ screen }),
+  setEffect: (name, value) =>
+    set((state) =>
+      state.effects[name] === value ? state : { effects: { ...state.effects, [name]: value } },
+    ),
 }))

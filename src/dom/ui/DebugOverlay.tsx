@@ -3,7 +3,7 @@ import { LAYERS } from '@/canvas/layers'
 
 /** Shown only with ?debug=1. Tree-shaken out of the DOM, not the bundle. */
 export function DebugOverlay() {
-  const { progress, layer, direction, stats, screen } = useScrollStore()
+  const { progress, layer, direction, stats, effects } = useScrollStore()
 
   return (
     // data-debug gives the verification script a stable hook; the layer-nav
@@ -25,7 +25,11 @@ export function DebugOverlay() {
       <div>geometries {stats.geometries}</div>
       <div>textures {stats.textures}</div>
       <div>programs {stats.programs}</div>
-      <div>screen {screen}</div>
+      {Object.entries(effects).map(([name, value]) => (
+        <div key={name}>
+          {name} {value}
+        </div>
+      ))}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import {
   BoxGeometry,
+  Color,
   BufferGeometry,
   CylinderGeometry,
   EdgesGeometry,
@@ -14,6 +15,7 @@ import {
   Object3D,
 } from 'three'
 import type { Layer } from '../layers'
+import { useScrollStore } from '@/store/useScrollStore'
 import { PALETTE } from '../palette'
 import { Glow } from '../shared/Glow'
 import { useStagedFrame } from '../useStagedFrame'
@@ -27,7 +29,9 @@ import { useStagedFrame } from '../useStagedFrame'
  * space under the dates in the Experience entry's left column on desktop.
  * Slow-crane camera language: seen from slightly above, turning gently.
  *
- * The markers are lit evenly here; Phase 4.7 lights them stage by stage.
+ * The stages light in order as the column rises through the screen (4.7):
+ * commit, then build and test, then the registry, then deploy — a run of the
+ * pipeline, played by scrolling.
  */
 
 const DISTANCE = 6
@@ -47,6 +51,10 @@ const CONTAINERS: [number, number, number][] = [
 ]
 const CONTAINER = 0.34
 
+/** A stage's indicator: dim while it waits, the layer's colour once it has run. */
+const WAITING = new Color(PALETTE.slate)
+const LIVE = new Color()
+
 // Vertical extent of the whole pipeline, for centring and fitting it.
 const TOP = RAIL.top + Math.max(...CONTAINERS.map(([, y]) => y)) + CONTAINER / 2
 const BOTTOM = RAIL.bottom - 0.07
@@ -57,6 +65,10 @@ export function Cloud({ layer, index }: { layer: Layer; index: number }) {
   const group = useRef<Group>(null)
   const markers = useRef<InstancedMesh>(null)
   const lights = useRef<InstancedMesh>(null)
+  const setEffect = useScrollStore((s) => s.setEffect)
+  const litNow = useRef(-1)
+
+  LIVE.set(layer.color)
 
   const parts = useMemo(() => {
     const markerGeometry = new BoxGeometry(0.4, 0.14, 0.4)
@@ -112,7 +124,10 @@ export function Cloud({ layer, index }: { layer: Layer; index: number }) {
 
   useLayoutEffect(() => {
     const dummy = new Object3D()
+    // Every indicator starts dim; the frame loop lights them in order.
+    lights.current?.setColorAt(0, WAITING)
     STAGE_Y.forEach((y, i) => {
+      lights.current?.setColorAt(i, WAITING)
       dummy.position.set(0, y, 0)
       dummy.updateMatrix()
       markers.current?.setMatrixAt(i, dummy.matrix)
@@ -129,6 +144,22 @@ export function Cloud({ layer, index }: { layer: Layer; index: number }) {
 
   useStagedFrame('cloud', index, group, DISTANCE, (fit, state) => {
     const g = group.current!
+
+    // A stage lights once the column has carried it past the middle of the
+    // screen: scrolling runs the pipeline from commit to deploy.
+    const run = (MathUtils.clamp(fit.screenY, -1, 1) + 1) / 2
+    const lit = Math.round(run * STAGE_Y.length)
+    if (lit !== litNow.current) {
+      litNow.current = lit
+      setEffect('pipeline', lit)
+      const mesh = lights.current
+      if (mesh) {
+        for (let i = 0; i < STAGE_Y.length; i++) {
+          mesh.setColorAt(i, i < lit ? LIVE : WAITING)
+        }
+        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+      }
+    }
     g.scale.setScalar(Math.min((fit.height * 0.86) / SPAN_H, (fit.width * 0.78) / SPAN_W))
     // Slow crane: looking down on it, turning gently.
     g.rotateX(0.3 + MathUtils.clamp(fit.screenY, -1, 1) * -0.06)

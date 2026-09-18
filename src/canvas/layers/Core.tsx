@@ -1,5 +1,5 @@
 import { RoundedBox } from '@react-three/drei'
-import { useLayoutEffect, useMemo, useRef } from 'react'
+import { type RefObject, useLayoutEffect, useMemo, useRef } from 'react'
 import {
   CatmullRomCurve3,
   type Group,
@@ -15,6 +15,7 @@ import type { Layer } from '../layers'
 import { PALETTE } from '../palette'
 import { Glow } from '../shared/Glow'
 import { useStagedFrame } from '../useStagedFrame'
+import { useScrollStore } from '@/store/useScrollStore'
 
 /**
  * L4 · Core — FastAPI and PostgreSQL, the service behind the products.
@@ -25,7 +26,8 @@ import { useStagedFrame } from '../useStagedFrame'
  * No labels — words belong in the page. Drawn into the empty column beside the
  * About copy on desktop, where the stats sit on smaller screens.
  *
- * Packets sit still along the lines; Phase 4.6 sets them flowing.
+ * The packets travel the lines, in from the edge and on to the database (4.6):
+ * the request path is read by watching it move, not by labelling it.
  */
 
 const DISTANCE = 6
@@ -48,6 +50,8 @@ const CURVES = [
   ]),
 ]
 const PACKETS_PER_LINE = 7
+/** Fraction of a line travelled per second. */
+const SPEED = 0.16
 
 function Glass() {
   return (
@@ -64,6 +68,9 @@ function Glass() {
 
 export function Core({ layer, index }: { layer: Layer; index: number }) {
   const group = useRef<Group>(null)
+  const setEffect = useScrollStore((s) => s.setEffect)
+  const packets = useRef<InstancedMesh>(null)
+  const dummy = useMemo(() => new Object3D(), [])
 
   useStagedFrame('core', index, group, DISTANCE, (fit, state) => {
     const g = group.current!
@@ -72,6 +79,27 @@ export function Core({ layer, index }: { layer: Layer; index: number }) {
     // Forward push: the diagram leans in as the column rises through the screen.
     g.rotateY(-0.35 + Math.sin(state.clock.elapsedTime * 0.25) * 0.04)
     g.rotateX(0.18 + MathUtils.clamp(fit.screenY, -1, 1) * -0.08)
+
+    // Packets ride the curves; each line's packets are evenly spaced and all
+    // move together, so the diagram reads as one continuous request path.
+    const mesh = packets.current
+    if (!mesh) return
+    const travelled = state.clock.elapsedTime * SPEED
+    // Published so the effect is checked by its own state: the diagram also
+    // sways, so "pixels changed" cannot tell whether the packets are moving.
+    setEffect('packets', Math.round((travelled % 1) * 100))
+    CURVES.forEach((curve, c) => {
+      for (let i = 0; i < PACKETS_PER_LINE; i++) {
+        const along = (travelled + (i + 0.5) / PACKETS_PER_LINE) % 1
+        curve.getPointAt(along, dummy.position)
+        // Fade in and out at the ends instead of popping.
+        const edge = Math.min(along, 1 - along) / 0.12
+        dummy.scale.setScalar(MathUtils.clamp(edge, 0, 1))
+        dummy.updateMatrix()
+        mesh.setMatrixAt(c * PACKETS_PER_LINE + i, dummy.matrix)
+      }
+    })
+    mesh.instanceMatrix.needsUpdate = true
   })
 
   return (
@@ -105,32 +133,17 @@ export function Core({ layer, index }: { layer: Layer; index: number }) {
         ))}
       </group>
 
-      <Lines color={layer.color} />
+      <Lines color={layer.color} packets={packets} />
       <Glow color={layer.color} width={4.2} height={3.4} strength={0.14} position={[0, 0, -0.9]} />
     </group>
   )
 }
 
 /** The lines as thin glass tubes, and every packet on them as one instanced draw call. */
-function Lines({ color }: { color: string }) {
-  const packets = useRef<InstancedMesh>(null)
+function Lines({ color, packets }: { color: string; packets: RefObject<InstancedMesh | null> }) {
   const tubes = useMemo(() => CURVES.map((c) => new TubeGeometry(c, 48, 0.028, 8)), [])
   const packetGeometry = useMemo(() => new SphereGeometry(0.05, 12, 12), [])
   const packetMaterial = useMemo(() => new MeshBasicMaterial({ color, toneMapped: false }), [color])
-
-  useLayoutEffect(() => {
-    const mesh = packets.current
-    if (!mesh) return
-    const dummy = new Object3D()
-    CURVES.forEach((curve, c) => {
-      for (let i = 0; i < PACKETS_PER_LINE; i++) {
-        curve.getPointAt((i + 0.5) / PACKETS_PER_LINE, dummy.position)
-        dummy.updateMatrix()
-        mesh.setMatrixAt(c * PACKETS_PER_LINE + i, dummy.matrix)
-      }
-    })
-    mesh.instanceMatrix.needsUpdate = true
-  }, [])
 
   useLayoutEffect(
     () => () => {
