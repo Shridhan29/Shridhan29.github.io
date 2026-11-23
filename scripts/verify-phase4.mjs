@@ -24,9 +24,9 @@ const { check, section, finish } = createReport()
 const MAX_CALLS = 120
 /** What each tier must run. `postfx`: 0 none, 1 bloom only, 2 the full stack. */
 const EXPECT = {
-  low: { postfx: 0, glass: 0, packets: 8 },
-  medium: { postfx: 1, glass: 0, packets: 14 },
-  high: { postfx: 2, glass: 1, packets: 20 },
+  low: { postfx: 0, glass: 0, packets: 8, particles: 8000 },
+  medium: { postfx: 1, glass: 0, packets: 14, particles: 25000 },
+  high: { postfx: 2, glass: 1, packets: 20, particles: 60000 },
 }
 /** Every stop on the journey: the hero, then each staged layer's stage. */
 const STOPS = [
@@ -73,6 +73,26 @@ const layerSources = await Promise.all(
 check(
   'no other layer uses transmission',
   layerSources.every((s) => !/transmission/.test(s)),
+)
+
+const name = await read('src/canvas/shared/NameField.tsx')
+check(
+  'the particle name is one Points buffer, morphed on the GPU',
+  (name.match(/<points\b/g) ?? []).length === 1 &&
+    /uMorph/.test(name) &&
+    /mix\(position, aScatter/.test(name),
+)
+const sequence = await read('src/canvas/shared/ScreenSequence.tsx')
+const device = await read('src/canvas/layers/Device.tsx')
+check(
+  'L1: the phone screen spills light onto its glass',
+  /spill=\{/.test(device) && /uReach/.test(sequence),
+)
+const ground = await read('src/canvas/layers/Ground.tsx')
+check(
+  'L3: warm practicals, faked — two light pools and no real-time light',
+  (ground.match(/rotation=\{\[-Math\.PI \/ 2, 0, 0\]\}/g) ?? []).length === 2 &&
+    !/(Point|Spot|RectArea|Directional)Light|<(point|spot|rectArea|directional)Light/.test(ground),
 )
 
 const eager = await eagerAssets()
@@ -134,6 +154,28 @@ try {
       waitUntil: 'networkidle0',
       timeout: 60_000,
     })
+    const want = EXPECT[tier]
+
+    // The name forms at the top of the page and disperses as the hero scrolls out.
+    const morphs = []
+    for (const y of [0, 200, 900]) {
+      await page.evaluate((y) => window.scrollTo(0, y), y)
+      await sleep(tier === 'high' ? 4000 : 2500)
+      const o = await overlay(page)
+      morphs.push(o.nameMorph)
+      if (y === 0) {
+        check(
+          `${tier}: the name holds ${want.particles} particles`,
+          o.nameParticles === want.particles,
+          `${o.nameParticles}`,
+        )
+      }
+    }
+    check(
+      `${tier}: the name is formed at the top and dispersed past the hero`,
+      morphs[0] === 0 && morphs[1] > 0 && morphs[1] < 100 && morphs[2] === 100,
+      morphs.join(' → '),
+    )
 
     const seen = {}
     let maxCalls = 0
@@ -152,7 +194,6 @@ try {
       slowest = Math.max(slowest, o.ms ?? 0)
     }
 
-    const want = EXPECT[tier]
     check(`${tier}: the forced tier is applied`, seen.tier === tier && seen.source === 'override')
     check(
       `${tier}: post-processing matches the tier`,
@@ -219,9 +260,30 @@ try {
       })
     })
     check('blocked storage does not break detection', blocked.source === 'detected', blocked.tier)
+  }
 
-    const phone = await open('', PHONE)
-    check('a touch-first device is detected as Low', phone.tier === 'low', phone.tier)
+  section('Phones get the Static tier (D12)')
+  {
+    /** Loads the page and reports whether 3D ran: a canvas, and the three.js chunk fetched. */
+    const probe = async (viewport) => {
+      const page = await browser.newPage()
+      const scripts = []
+      page.on('request', (r) => r.resourceType() === 'script' && scripts.push(r.url()))
+      await page.setViewport(viewport)
+      await page.goto(`${preview.base}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
+      await sleep(1500)
+      const canvas = await page.evaluate(() => !!document.querySelector('canvas'))
+      await page.close()
+      return { canvas, three: scripts.some((u) => /\/three-[^/]+\.js$/.test(u)) }
+    }
+
+    const phone = await probe(PHONE)
+    check('phone: no canvas', !phone.canvas)
+    check('phone: three.js is never downloaded', !phone.three)
+
+    // A touch tablet wide enough for the stages keeps the scene.
+    const tablet = await probe({ width: 1180, height: 820, isMobile: true, hasTouch: true })
+    check('touch tablet at ≥ 1024 px: the scene still runs', tablet.canvas && tablet.three)
   }
 } catch (err) {
   check('runtime suite ran', false, err instanceof Error ? err.message : String(err))

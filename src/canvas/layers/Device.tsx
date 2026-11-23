@@ -76,6 +76,9 @@ export function Device({ layer, index }: { layer: Layer; index: number }) {
         // Just proud of the glass.
         position={[0, 0, BODY[2] / 2 + 0.002]}
         progress={flow}
+        // The screen's light on the glass around it (4.3): the bezel and a
+        // little past the edge, in the colour of the screen in view.
+        spill={0.16}
       />
       <Glow color={layer.color} width={BODY[0] * 3.2} height={BODY[1] * 2.2} />
     </group>

@@ -13,6 +13,9 @@ import {
 import type { Layer } from '../layers'
 import { PALETTE } from '../palette'
 import { useGlowGain } from '../Effects'
+import { NameField } from '../shared/NameField'
+import { useQualityStore } from '@/store/useQualityStore'
+import { profile } from '@/data/profile'
 import { useLayerFrame } from '../useLayerFrame'
 
 /**
@@ -40,6 +43,9 @@ const HIDDEN: Placement = { x: 0, y: 0, scale: 0 }
 /** Below this gap, in CSS px, there is no room to stand between copy and portrait. */
 const MIN_GAP_PX = 140
 
+/** Particles in the name, by quality tier (ARCHITECTURE §4.5): one draw call on every tier. */
+const NAME_PARTICLES = { low: 8000, medium: 25000, high: 60000 } as const
+
 export function Orbit({ layer, index }: { layer: Layer; index: number }) {
   const group = useRef<Group>(null)
   const monolith = useRef<Group>(null)
@@ -47,6 +53,7 @@ export function Orbit({ layer, index }: { layer: Layer; index: number }) {
   const target = useRef<Placement>(HIDDEN)
   const size = useThree((s) => s.size)
   const gain = useGlowGain()
+  const particles = useQualityStore((s) => NAME_PARTICLES[s.tier])
 
   // Measure the hero, not a hard-coded breakpoint: the gap moves with the fluid
   // shell and the font, and this stays right at every width.
@@ -147,6 +154,8 @@ export function Orbit({ layer, index }: { layer: Layer; index: number }) {
         <Rim materialRef={rim} />
       </group>
       <Stars />
+      {/* 4.1 + 4.2: the name, in particles, dispersing into the sky as the hero scrolls out. */}
+      <NameField text={profile.name.split(' ')[0].toUpperCase()} count={particles} layer={layer} />
     </group>
   )
 }

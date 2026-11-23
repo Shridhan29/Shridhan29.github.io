@@ -191,10 +191,8 @@ try {
     label: m[1],
     section: m[2],
   }))
-  for (const [name, viewport] of [
-    ['1440 px', { width: 1440, height: 900 }],
-    ['phone', PHONE],
-  ]) {
+  // Desktop only: phones get the Static tier (D12), with no camera to sync.
+  for (const [name, viewport] of [['1440 px', { width: 1440, height: 900 }]]) {
     const synced = await browser.newPage()
     await synced.setViewport(viewport)
     await synced.goto(`${BASE}/?debug=1`, NAV)
@@ -252,8 +250,8 @@ try {
   // mobile viewport, because a desktop window at 390 px hides this — body's
   // overflow-x clips it there, while a phone widens the layout and zooms out.
   for (const [tier, motion] of [
-    ['3D', 'no-preference'],
-    ['static', 'reduce'],
+    ['motion allowed', 'no-preference'],
+    ['reduced motion', 'reduce'],
   ]) {
     const phone = await browser.newPage()
     await phone.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: motion }])

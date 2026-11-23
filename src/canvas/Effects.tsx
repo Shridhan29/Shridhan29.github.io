@@ -38,7 +38,7 @@ export const GLOW_GAIN: Record<QualityTier, number> = { low: 1, medium: 2.2, hig
 /** Emissive gain for this tier; 1 where there is no bloom to read it. */
 export const useGlowGain = () => useQualityStore((s) => GLOW_GAIN[s.tier])
 
-const ABERRATION = new Vector2(0.0006, 0.0004)
+const ABERRATION = new Vector2(0.0003, 0.0002)
 
 export function Effects() {
   const tier = useQualityStore((s) => s.tier)

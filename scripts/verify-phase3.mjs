@@ -81,7 +81,7 @@ const overlay = (page) =>
   page.evaluate(() => {
     const text = document.querySelector('[data-debug]')?.textContent ?? ''
     const num = (label) => Number(new RegExp(`${label}\\s+([0-9.,]+)`).exec(text)?.[1] ?? 0)
-    return { fps: num('fps'), calls: num('calls') }
+    return { fps: num('fps'), calls: num('calls'), name: num('nameParticles') }
   })
 
 /** Opens the top of the page and waits for the render loop to report frames. */
@@ -341,10 +341,9 @@ try {
   for (const [label, viewport, monolith] of [
     ['1440 px', { width: 1440, height: 900 }, true],
     ['1024 px', { width: 1024, height: 768 }, false],
-    ['phone', PHONE, false],
   ]) {
     const { page, errors, external } = await openTop(browser, preview.base, viewport)
-    const { calls } = await overlay(page)
+    const { calls, name } = await overlay(page)
 
     check(`${label}: no page or console errors`, !errors.length, errors.slice(0, 2).join(' | '))
     check(
@@ -353,11 +352,11 @@ try {
       external.slice(0, 2).join(', '),
     )
     // Stars are one draw call; where the monolith has room it adds two, the slab
-    // and its fresnel rim (4.2).
+    // and its fresnel rim (4.2); the particle name, where placed, adds one (4.1).
     check(
       `${label}: monolith ${monolith ? 'drawn in the gap' : 'not drawn (no room beside the copy)'}`,
-      calls === (monolith ? 3 : 1),
-      `${calls} draw calls`,
+      calls === (monolith ? 3 : 1) + (name > 0 ? 1 : 0),
+      `${calls} draw calls${name > 0 ? ', name placed' : ''}`,
     )
 
     // Readability is judged at High, the tier with the most on screen: bloom

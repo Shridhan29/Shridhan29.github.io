@@ -25,8 +25,10 @@ import { useStagedFrame } from '../useStagedFrame'
  * - Urja Dairy Tour: a free-standing kiosk showing the real language chooser.
  *
  * Grounded, eye-level camera language: both sway only slightly. Warmth comes
- * from an amber glow, not a real-time light, which would recompile every lit
- * material in the scene as the layer mounts.
+ * from amber glows, not real-time lights, which would recompile every lit
+ * material in the scene as the layer mounts: a halo behind each piece, and a
+ * practical — a pool of warm light on the surface under each screen, as a
+ * shop counter or a kiosk floor would catch it.
  *
  * The kiosk's screen is the real interface, running (4.5): pick a language and
  * the tour list answers. The POS terminal keeps its screenshot — it is a till,
@@ -82,6 +84,15 @@ export function GroundPos({ layer, index }: { layer: Layer; index: number }) {
         </group>
       </group>
 
+      {/* Practical: the counter under the terminal, warm where the screen lights it. */}
+      <Glow
+        color={layer.color}
+        width={2.6}
+        height={1.3}
+        strength={0.42}
+        position={[0.1, -0.935, 0.35]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      />
       <RaspberryPi position={[1.15, -0.93, 0.35]} rotation={[0, -0.5, 0]} />
       <Glow color={layer.color} width={4.4} height={3} strength={0.5} position={[0, 0, -0.6]} />
     </group>
@@ -186,6 +197,15 @@ export function GroundKiosk({ layer, index }: { layer: Layer; index: number }) {
         </RoundedBox>
         <KioskScreen width={KIOSK_W} />
       </group>
+      {/* Practical: the floor in front of the kiosk, warm under the visitor's feet. */}
+      <Glow
+        color={layer.color}
+        width={2.2}
+        height={1.6}
+        strength={0.4}
+        position={[0, -1.435, 0.35]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      />
       <Glow color={layer.color} width={3} height={3.6} strength={0.5} position={[0, 0.1, -0.6]} />
     </group>
   )

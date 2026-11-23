@@ -12,12 +12,14 @@ export function Glow({
   height,
   strength = 0.32,
   position = [0, 0, -0.25],
+  rotation = [0, 0, 0],
 }: {
   color: string
   width: number
   height: number
   strength?: number
   position?: [number, number, number]
+  rotation?: [number, number, number]
 }) {
   const material = useMemo(
     () =>
@@ -49,7 +51,7 @@ export function Glow({
   useEffect(() => () => material.dispose(), [material])
 
   return (
-    <mesh position={position} material={material}>
+    <mesh position={position} rotation={rotation} material={material}>
       <planeGeometry args={[width, height]} />
     </mesh>
   )
