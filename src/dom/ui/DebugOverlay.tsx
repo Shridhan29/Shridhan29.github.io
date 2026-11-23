@@ -1,9 +1,11 @@
 import { useScrollStore } from '@/store/useScrollStore'
 import { LAYERS } from '@/canvas/layers'
+import { useQualityStore } from '@/store/useQualityStore'
 
 /** Shown only with ?debug=1. Tree-shaken out of the DOM, not the bundle. */
 export function DebugOverlay() {
   const { progress, layer, direction, stats, effects } = useScrollStore()
+  const { tier, source } = useQualityStore()
 
   return (
     // data-debug gives the verification script a stable hook; the layer-nav
@@ -15,6 +17,9 @@ export function DebugOverlay() {
     >
       <div data-debug-layer className="text-bone">
         {LAYERS[layer].label}
+      </div>
+      <div data-debug-tier={tier}>
+        tier {tier} ({source})
       </div>
       <div>progress {progress.toFixed(3)}</div>
       <div>dir {direction > 0 ? 'down' : 'up'}</div>

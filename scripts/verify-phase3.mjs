@@ -85,7 +85,7 @@ const overlay = (page) =>
   })
 
 /** Opens the top of the page and waits for the render loop to report frames. */
-async function openTop(browser, base, viewport) {
+async function openTop(browser, base, viewport, tier = 'low') {
   const page = await browser.newPage()
   const errors = []
   const external = []
@@ -94,7 +94,12 @@ async function openTop(browser, base, viewport) {
   page.on('request', (r) => !r.url().startsWith(base) && external.push(r.url()))
   await page.setViewport(viewport)
   const started = Date.now()
-  await page.goto(`${base}/?p=0&debug=1`, { waitUntil: 'domcontentloaded', timeout: 60_000 })
+  // Pinned tier: the draw-call counts here are the scene's geometry, and the
+  // composer's own passes on Medium and High would be counted with it.
+  await page.goto(`${base}/?p=0&debug=1&tier=${tier}`, {
+    waitUntil: 'domcontentloaded',
+    timeout: 60_000,
+  })
   let firstFrame = null
   while (Date.now() - started < 25_000) {
     if ((await overlay(page)).fps > 0) {
@@ -355,7 +360,12 @@ try {
       `${calls} draw calls`,
     )
 
-    const worst = await worstContrast(page, ['#top', 'header'])
+    // Readability is judged at High, the tier with the most on screen: bloom
+    // on the rim, the vignette and chromatic aberration.
+    await page.close()
+    const high = await openTop(browser, preview.base, viewport, 'high')
+    const worst = await worstContrast(high.page, ['#top', 'header'])
+    await high.page.close()
     check(
       `${label}: hero and header text ≥ ${AA_CONTRAST}:1 against the rendered scene`,
       worst.lines > 0 && worst.value >= AA_CONTRAST,
@@ -363,7 +373,6 @@ try {
         ? `worst ${worst.value.toFixed(2)}:1 on “${worst.text}” (${worst.lines} lines)`
         : 'no text measured',
     )
-    await page.close()
   }
 
   // ------------------------------------------------- staged layers: L1, L2 --

@@ -19,6 +19,9 @@ import { useScrollStore } from '@/store/useScrollStore'
 import { PALETTE } from '../palette'
 import { Glow } from '../shared/Glow'
 import { useStagedFrame } from '../useStagedFrame'
+import { useGlowGain } from '../Effects'
+import { Fog } from '../shared/Fog'
+import { useQualityStore } from '@/store/useQualityStore'
 
 /**
  * L5 · Cloud — Azure and GitHub Actions, how the work reaches production.
@@ -51,6 +54,8 @@ const CONTAINERS: [number, number, number][] = [
 ]
 const CONTAINER = 0.34
 
+const FOG_SHEETS = { low: 1, medium: 2, high: 4 } as const
+
 /** A stage's indicator: dim while it waits, the layer's colour once it has run. */
 const WAITING = new Color(PALETTE.slate)
 const LIVE = new Color()
@@ -67,8 +72,13 @@ export function Cloud({ layer, index }: { layer: Layer; index: number }) {
   const lights = useRef<InstancedMesh>(null)
   const setEffect = useScrollStore((s) => s.setEffect)
   const litNow = useRef(-1)
+  const gainNow = useRef(0)
+  /** Fog sheets by tier: depth comes from sheets sliding past each other. */
+  const sheets = useQualityStore((s) => FOG_SHEETS[s.tier])
 
-  LIVE.set(layer.color)
+  // Past 1.0 where bloom can pick it up, so a stage that has run glows.
+  const gain = useGlowGain()
+  LIVE.set(layer.color).multiplyScalar(gain)
 
   const parts = useMemo(() => {
     const markerGeometry = new BoxGeometry(0.4, 0.14, 0.4)
@@ -149,7 +159,8 @@ export function Cloud({ layer, index }: { layer: Layer; index: number }) {
     // screen: scrolling runs the pipeline from commit to deploy.
     const run = (MathUtils.clamp(fit.screenY, -1, 1) + 1) / 2
     const lit = Math.round(run * STAGE_Y.length)
-    if (lit !== litNow.current) {
+    if (lit !== litNow.current || gain !== gainNow.current) {
+      gainNow.current = gain
       litNow.current = lit
       setEffect('pipeline', lit)
       const mesh = lights.current
@@ -184,6 +195,14 @@ export function Cloud({ layer, index }: { layer: Layer; index: number }) {
           args={[parts.lightGeometry, parts.lightMaterial, STAGE_Y.length]}
         />
         <lineSegments geometry={parts.containerGeometry} material={parts.containerMaterial} />
+        {/* The containers rise through it (4.7): around the upper half of the column. */}
+        <Fog
+          color={layer.color}
+          width={2.4}
+          height={2.6}
+          sheets={sheets}
+          position={[0, RAIL.top + 0.7, 0]}
+        />
         <Glow
           color={layer.color}
           width={2.6}

@@ -12,6 +12,7 @@ import {
 } from 'three'
 import type { Layer } from '../layers'
 import { PALETTE } from '../palette'
+import { useGlowGain } from '../Effects'
 import { useLayerFrame } from '../useLayerFrame'
 
 /**
@@ -45,6 +46,7 @@ export function Orbit({ layer, index }: { layer: Layer; index: number }) {
   const rim = useRef<ShaderMaterial>(null)
   const target = useRef<Placement>(HIDDEN)
   const size = useThree((s) => s.size)
+  const gain = useGlowGain()
 
   // Measure the hero, not a hard-coded breakpoint: the gap moves with the fluid
   // shell and the font, and this stays right at every width.
@@ -114,7 +116,10 @@ export function Orbit({ layer, index }: { layer: Layer; index: number }) {
     // the rim light, so the slab never goes edge-on or reads as a flat hole.
     m.rotation.y = -0.55 + Math.sin(time * 0.18) * 0.4
     // The rim's hue drifts with the same clock as the swing.
-    if (rim.current) rim.current.uniforms.uTime.value = time
+    if (rim.current) {
+      rim.current.uniforms.uTime.value = time
+      rim.current.uniforms.uGain.value = gain
+    }
   })
 
   return (
@@ -163,6 +168,7 @@ function Rim({ materialRef }: { materialRef: RefObject<ShaderMaterial | null> })
       new ShaderMaterial({
         uniforms: {
           uTime: { value: 0 },
+          uGain: { value: 1 },
           uNear: { value: new Color(PALETTE.accent) },
           uFar: { value: new Color('#b98cff') },
         },
@@ -181,6 +187,7 @@ function Rim({ materialRef }: { materialRef: RefObject<ShaderMaterial | null> })
         `,
         fragmentShader: /* glsl */ `
           uniform float uTime;
+          uniform float uGain;
           uniform vec3 uNear;
           uniform vec3 uFar;
           varying vec3 vNormal;
@@ -192,7 +199,7 @@ function Rim({ materialRef }: { materialRef: RefObject<ShaderMaterial | null> })
             // Hue walks with the angle and drifts slowly: a thin-film sheen.
             float shift = 0.5 + 0.5 * sin(facing * 6.2831 + uTime * 0.35);
             vec3 colour = mix(uNear, uFar, shift);
-            gl_FragColor = vec4(colour * rim * 1.6, rim);
+            gl_FragColor = vec4(colour * rim * 1.6 * uGain, rim);
           }
         `,
       }),

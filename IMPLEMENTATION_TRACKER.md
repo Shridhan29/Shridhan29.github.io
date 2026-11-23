@@ -172,8 +172,14 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
   - Warm practical lights stay for the tier work; the amber glow carries the warmth for now
 - [x] **4.6 L4 Core** — packets travel the request path: in from the edge, into the API, on to the database, fading in and out at the ends rather than popping. Still one instanced draw call, its matrices updated in the layer's existing frame callback
 - [x] **4.7 L5 Cloud** — the pipeline runs as the column rises: commit, build and test, container registry, deploy light in order, through per-instance colours on the indicator mesh (no extra draw call). Volumetric fog stays for the post-processing pass
-- [ ] **4.8 Post-processing** — Bloom, selective DoF, vignette, subtle chromatic aberration; all tier-gated
-- [ ] **4.9 Palette** *(needs D3)* — distinct lighting mood + colour grade per layer, coherent as one journey
+- [x] **4.8 Post-processing** — `src/canvas/Effects.tsx`, gated by quality tier: High runs bloom, a vignette and a trace of chromatic aberration; Medium runs bloom only; Low mounts no composer at all. Lazy bundle 286.5 → 311.5 KB gzip; entry unchanged at 77.2 KB
+  - **Bloom is selective by brightness, not by object.** The threshold sits at 1.0, which no screenshot or page colour can exceed, so the product screens never bloom. Only accents pushed past 1 by `GLOW_GAIN` (2.2 where bloom runs, 1 on Low) glow: the monolith's rim, the API slots, DB seams and packets, the ribbons and the lit pipeline stages. No `SelectiveBloom`, which would cost an extra render of the selected objects
+  - **Neutral tone mapping, not ACES.** The composer turns the renderer's tone mapping off, so it is re-applied as the last effect. With ACES the TRUUNA and aashman.in screenshots came out grey and washed out (ACES maps 1.0 to about 0.8 and desaturates highlights); Khronos PBR Neutral leaves colours below about 0.76 untouched. A slight lift on near-white screens remains on Medium and High
+  - **No depth of field.** Content sits on stages beside the copy and is meant to be read; a focus blur over a product screen works against that
+- [x] **4.4 follow-up: glass on L2 (High only)** — a transmission sheet over the front aashman.in page catches the studio light as the stack turns. Clear (roughness 0, no tint): a first pass with roughness 0.06 and a blue tint frosted the page grey. Transmission re-renders the opaque scene, so draw calls on that stop go 15 → 45 on High, within the 120 budget
+- [x] **4.7 follow-up: fog on L5 Cloud** — `shared/Fog.tsx`: depth-staggered sheets of rising fbm noise, one additive quad each, no raymarching. 1 / 2 / 4 sheets on Low / Medium / High; each sheet is fainter the more there are, so tiers buy depth rather than density
+- [x] **4.6 follow-up: packets by tier** — 4 / 7 / 10 per line (8 / 14 / 20 in all). Still one instanced draw call; the mesh is keyed by count, since an `InstancedMesh` cannot grow
+- [!] **4.9 Palette** *(blocked on D3)* — distinct lighting mood + colour grade per layer, coherent as one journey
 
 **Done when:** each layer has exactly one effect you would screenshot. Resist adding a second.
 
@@ -200,7 +206,9 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 ## Phase 6 — Hardening
 *Goal: it works for everyone, everywhere. Est. 2 days.*
 
-- [ ] **6.1 Quality tiers** — `useDeviceTier` detection; High / Medium / Low; manual override in UI, persisted
+- [~] **6.1 Quality tiers** — `useDeviceTier` detection; High / Medium / Low; manual override in UI, persisted
+  - [x] Pulled forward for 4.8: `src/store/useQualityStore.ts` (three-free). Detected once at boot: coarse pointer, ≤ 2 GB or ≤ 2 cores is Low; ≥ 8 cores with ≥ 8 GB (or unknown memory) is High; everything else Medium. `?tier=low|medium|high` forces a tier; a saved choice in `localStorage` (`quality-tier`) is honoured, and blocked storage falls back to detection. Shown in the `?debug=1` overlay
+  - [ ] The UI toggle, and reconciling detection with D12 (phones currently detect as Low and still download three.js)
 - [ ] **6.2 Auto-downgrade** — `PerformanceMonitor` ladder: post-FX off → particles halved → shadows off → DPR 1
 - [ ] **6.3 Static tier** — no-WebGL / reduced-motion / user-toggle path serves the Phase 1 build. Verified by disabling WebGL in the browser
 - [ ] **6.4 Mobile pass** — real device testing on a low-end and a mid-tier Android; touch scroll feel; thermal check over 3 minutes
@@ -366,6 +374,7 @@ Web3Forms gives 5× the free headroom and better spam handling at the same price
 
 | Date | Change |
 |---|---|
+| 2026-11-23 | **4.8 complete; tiers started (6.1).** Quality store with detection and `?tier=` override; tier-gated post-processing with brightness-selective bloom; glass on L2 (High only); fog on L5; packet count by tier. Two defects caught by looking at captures rather than numbers: ACES tone mapping in the composer washed out every product screenshot (switched to Neutral), and the first glass pass frosted the aashman.in page grey (now clear). Added `verify:phase4` and wired it into `npm run verify`. Software-GL fps on High is ~1, so the suites force tiers rather than trusting detection. 4.1 particles, the L0 name dispersal, L1 glow spill and L3 warm lights remain. |
 | 2026-09-07 | Tracker created. Architecture and build prompt drafted. Repo name availability confirmed. |
 | 2026-09-07 | Decisions D1, D2, D5, D7 answered. D3, D4, D6 deferred with defaults. B4 cleared. Phase 3 rescoped from Blender modelling to CC0 kits + procedural geometry. |
 | 2026-09-07 | Appendix A (screenshot brief) and Appendix B (form backend) added. Asset register made specific. |

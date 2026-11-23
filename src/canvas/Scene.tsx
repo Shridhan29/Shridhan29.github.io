@@ -2,6 +2,7 @@ import { Canvas } from '@react-three/fiber'
 import { Suspense } from 'react'
 import { useLenis } from '@/hooks/useLenis'
 import { CameraRig } from './CameraRig'
+import { Effects } from './Effects'
 import { Lighting } from './Lighting'
 import { Staged } from './Staged'
 import { Stats } from './Stats'
@@ -43,6 +44,7 @@ export default function Scene() {
           <CameraRig />
           <Stats />
           <Lighting />
+          <Effects />
           <Orbit layer={LAYERS[0]} index={0} />
           {/* Staged layers mount when their stage is laid out and the camera is near. */}
           <Staged stage="device" index={1}>

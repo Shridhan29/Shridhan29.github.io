@@ -3,6 +3,7 @@ import { useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import {
   CatmullRomCurve3,
+  Color,
   type Group,
   type Mesh,
   MathUtils,
@@ -15,6 +16,8 @@ import type { Layer } from '../layers'
 import { PALETTE } from '../palette'
 import { useStagedFrame } from '../useStagedFrame'
 import { useScrollStore } from '@/store/useScrollStore'
+import { useGlowGain } from '../Effects'
+import { useQualityStore } from '@/store/useQualityStore'
 
 /**
  * L2 · Surface — aashman.in, the company's React site.
@@ -26,9 +29,9 @@ import { useScrollStore } from '@/store/useScrollStore'
  * so the stack separates the way windows would past a moving camera.
  *
  * Ribbons weave between the panes and draw themselves as the stage crosses the
- * screen (4.4) — the routes threading the site's pages together. Real glass
- * (transmission) renders the scene a second time per frame and the plan marks it
- * High tier only, so it waits for the quality tiers in 6.1.
+ * screen (4.4) — the routes threading the site's pages together. On the High
+ * tier a sheet of real glass (transmission) lies over the front page; it
+ * renders the opaque scene a second time per frame, so no other tier gets it.
  */
 
 /** Front to back. The front pane is the one read closely, so it gets 1600 px. */
@@ -120,6 +123,9 @@ export function Surface({ layer, index }: { layer: Layer; index: number }) {
   })
 
   const origin = CENTRED
+  // Real glass renders the opaque scene a second time per frame, so High only (§7).
+  const glass = useQualityStore((s) => s.tier === 'high')
+  useEffect(() => setEffect('glass', glass ? 1 : 0), [glass, setEffect])
 
   useStagedFrame('surface', index, group, DISTANCE, (fit) => {
     const g = group.current!
@@ -174,6 +180,23 @@ export function Surface({ layer, index }: { layer: Layer; index: number }) {
           </mesh>
         </mesh>
       ))}
+      {glass && (
+        // A sheet of glass over the front page: the page reads through it
+        // unchanged while its surface catches the studio light as the stack turns.
+        <mesh position={[origin.x, origin.y, 0.035]}>
+          <planeGeometry args={[PANE_W + 0.06, PANE_H + 0.06]} />
+          <meshPhysicalMaterial
+            transmission={1}
+            thickness={0}
+            ior={1.45}
+            roughness={0}
+            metalness={0}
+            clearcoat={1}
+            clearcoatRoughness={0.03}
+            envMapIntensity={1.6}
+          />
+        </mesh>
+      )}
       {RIBBONS.map((ribbon, i) => (
         <Ribbon
           key={i}
@@ -206,9 +229,17 @@ function Ribbon({
     return new TubeGeometry(new CatmullRomCurve3(points), 96, RIBBON_RADIUS, 6)
   }, [ribbon, origin])
 
+  const gain = useGlowGain()
   const material = useMemo(
-    () => new MeshBasicMaterial({ color, toneMapped: false, transparent: true, opacity: 0.75 }),
-    [color],
+    () =>
+      new MeshBasicMaterial({
+        // Past 1.0 on tiers with bloom, so the ribbons glow and the panes do not.
+        color: new Color(color).multiplyScalar(gain),
+        toneMapped: false,
+        transparent: true,
+        opacity: 0.75,
+      }),
+    [color, gain],
   )
 
   useEffect(() => () => geometry.dispose(), [geometry])

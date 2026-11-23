@@ -2,6 +2,7 @@ import { RoundedBox } from '@react-three/drei'
 import { type RefObject, useLayoutEffect, useMemo, useRef } from 'react'
 import {
   CatmullRomCurve3,
+  Color,
   type Group,
   type InstancedMesh,
   MathUtils,
@@ -16,6 +17,8 @@ import { PALETTE } from '../palette'
 import { Glow } from '../shared/Glow'
 import { useStagedFrame } from '../useStagedFrame'
 import { useScrollStore } from '@/store/useScrollStore'
+import { useQualityStore } from '@/store/useQualityStore'
+import { useGlowGain } from '../Effects'
 
 /**
  * L4 · Core — FastAPI and PostgreSQL, the service behind the products.
@@ -49,7 +52,8 @@ const CURVES = [
     DB.clone().add(new Vector3(-0.2, 0.3, 0)),
   ]),
 ]
-const PACKETS_PER_LINE = 7
+/** Packets on each line, by quality tier (4.6): the instanced draw call stays one either way. */
+const PACKETS_PER_LINE = { low: 4, medium: 7, high: 10 } as const
 /** Fraction of a line travelled per second. */
 const SPEED = 0.16
 
@@ -71,6 +75,9 @@ export function Core({ layer, index }: { layer: Layer; index: number }) {
   const setEffect = useScrollStore((s) => s.setEffect)
   const packets = useRef<InstancedMesh>(null)
   const dummy = useMemo(() => new Object3D(), [])
+  const perLine = useQualityStore((s) => PACKETS_PER_LINE[s.tier])
+  const gain = useGlowGain()
+  const lit = useMemo(() => new Color(layer.color).multiplyScalar(gain), [layer.color, gain])
 
   useStagedFrame('core', index, group, DISTANCE, (fit, state) => {
     const g = group.current!
@@ -88,15 +95,16 @@ export function Core({ layer, index }: { layer: Layer; index: number }) {
     // Published so the effect is checked by its own state: the diagram also
     // sways, so "pixels changed" cannot tell whether the packets are moving.
     setEffect('packets', Math.round((travelled % 1) * 100))
+    setEffect('packetCount', mesh.count)
     CURVES.forEach((curve, c) => {
-      for (let i = 0; i < PACKETS_PER_LINE; i++) {
-        const along = (travelled + (i + 0.5) / PACKETS_PER_LINE) % 1
+      for (let i = 0; i < perLine; i++) {
+        const along = (travelled + (i + 0.5) / perLine) % 1
         curve.getPointAt(along, dummy.position)
         // Fade in and out at the ends instead of popping.
         const edge = Math.min(along, 1 - along) / 0.12
         dummy.scale.setScalar(MathUtils.clamp(edge, 0, 1))
         dummy.updateMatrix()
-        mesh.setMatrixAt(c * PACKETS_PER_LINE + i, dummy.matrix)
+        mesh.setMatrixAt(c * perLine + i, dummy.matrix)
       }
     })
     mesh.instanceMatrix.needsUpdate = true
@@ -112,7 +120,7 @@ export function Core({ layer, index }: { layer: Layer; index: number }) {
         {[0.2, 0, -0.2].map((y, i) => (
           <mesh key={y} position={[-0.08 + i * 0.04, y, 0.452]}>
             <planeGeometry args={[0.5 - i * 0.1, 0.045]} />
-            <meshBasicMaterial color={layer.color} toneMapped={false} />
+            <meshBasicMaterial color={lit} toneMapped={false} />
           </mesh>
         ))}
       </group>
@@ -128,19 +136,27 @@ export function Core({ layer, index }: { layer: Layer; index: number }) {
         {[0.13, -0.13].map((y) => (
           <mesh key={y} position={[0, y, 0]}>
             <cylinderGeometry args={[0.47, 0.47, 0.018, 48, 1, true]} />
-            <meshBasicMaterial color={layer.color} toneMapped={false} />
+            <meshBasicMaterial color={lit} toneMapped={false} />
           </mesh>
         ))}
       </group>
 
-      <Lines color={layer.color} packets={packets} />
+      <Lines color={lit} perLine={perLine} packets={packets} />
       <Glow color={layer.color} width={4.2} height={3.4} strength={0.14} position={[0, 0, -0.9]} />
     </group>
   )
 }
 
 /** The lines as thin glass tubes, and every packet on them as one instanced draw call. */
-function Lines({ color, packets }: { color: string; packets: RefObject<InstancedMesh | null> }) {
+function Lines({
+  color,
+  perLine,
+  packets,
+}: {
+  color: Color
+  perLine: number
+  packets: RefObject<InstancedMesh | null>
+}) {
   const tubes = useMemo(() => CURVES.map((c) => new TubeGeometry(c, 48, 0.028, 8)), [])
   const packetGeometry = useMemo(() => new SphereGeometry(0.05, 12, 12), [])
   const packetMaterial = useMemo(() => new MeshBasicMaterial({ color, toneMapped: false }), [color])
@@ -169,7 +185,9 @@ function Lines({ color, packets }: { color: string; packets: RefObject<Instanced
       ))}
       <instancedMesh
         ref={packets}
-        args={[packetGeometry, packetMaterial, CURVES.length * PACKETS_PER_LINE]}
+        // Keyed by count: an InstancedMesh cannot grow, so a tier change rebuilds it.
+        key={perLine}
+        args={[packetGeometry, packetMaterial, CURVES.length * perLine]}
       />
     </>
   )

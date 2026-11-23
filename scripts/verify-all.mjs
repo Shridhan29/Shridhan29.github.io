@@ -124,6 +124,9 @@ await step('Phase 2 camera + browser (verify:phase2)', suite('verify:phase2'), {
 await step('Phase 3 layers + contrast (verify:phase3)', suite('verify:phase3'), {
   needs: 'build + bundle and model budgets',
 })
+await step('Phase 4 tiers + effects (verify:phase4)', suite('verify:phase4'), {
+  needs: 'build + bundle and model budgets',
+})
 
 // -------------------------------------------------------------------- live --
 
