@@ -49,8 +49,38 @@ jobs:
         with:
           path: dist
 
+  # The browser suites, one job each so they run side by side: wall time is the
+  # slowest suite, not the sum. Each builds its own dist/ — they read the
+  # production build, and a shared artifact would add an upload and a download
+  # per job for about the same time as a build. ubuntu-latest ships Chrome at
+  # /usr/bin/google-chrome, which the harness finds; it runs with software GL,
+  # so the suites force quality tiers wherever they compare numbers.
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [phase2, phase3, phase4, phase5, a11y]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: verify:${{ matrix.suite }}
+        run: npm run verify:${{ matrix.suite }}
+
   deploy:
-    needs: build
+    # A failing browser suite blocks the deploy, not just the build.
+    needs: [build, verify]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

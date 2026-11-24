@@ -191,18 +191,20 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 ## Phase 5 — Polish
 *Goal: the details that get it nominated. Est. 3 days.*
 
-- [ ] **5.1 Preloader** — `useProgress`-driven, shader-based, no fake progress bar; assets warmed before reveal
-- [ ] **5.2 Custom cursor** — magnetic on interactive elements; disabled on touch
-  - [ ] Magnetic pull from React Bits `Magnet` (no dependencies) on the hero and project buttons — see D11
+- [x] **5.1 Preloader** — deliberately not a blocking screen: the page is readable the moment it paints, which is what Lighthouse and a recruiter both measure. The canvas fades in behind it once `Warmup` has compiled every shader and two real frames have drawn, so the reveal never shows programs compiling. A 1 px accent line at the top follows drei's `useProgress` — real texture downloads as staged layers load, never a timer. Both live in the lazy chunk
+- [~] **5.2 Custom cursor** — magnetic on interactive elements; disabled on touch
+  - [x] Magnetic pull on the hero's two buttons: `src/dom/motion/useMagnet.ts`, written after React Bits' `Magnet` rather than copied. Writes `transform` directly (no re-renders); only for a fine pointer that can hover, never with reduced motion
+  - [-] A replacement cursor: cut. D11 already rejected cursor gimmicks, and hiding the system cursor costs precision and accessibility for a portfolio whose content is text
 - [ ] **5.3 Micro-interactions** — link hovers, button states, scroll hint, layer-entry text reveals
-  - [ ] One-time decode of the hero role line (`SOFTWARE DEVELOPER · PUNE`) from React Bits `ScrambledText` or `DecryptedText` — see D11
-  - [ ] Hero stats (13, 20+, 2, 100%) count up once when in view, modelled on React Bits `CountUp` but rewritten without `motion`
-  - [ ] Subtle hover light on project cards or the portrait, from React Bits `SpotlightCard` or `GlareHover` (no dependencies)
-  - [ ] Every copied component: keeps its MIT + Commons Clause notice and is listed in `LICENSE` as not covered by the repo's MIT licence; respects `prefers-reduced-motion`; keeps GSAP out of the entry bundle unless the budget impact is measured and accepted; passes `npm run verify`
+  - [x] One-time decode of the hero role line — `src/dom/motion/DecodeText.tsx`. Screen readers get the real text from a visually hidden copy (`aria-label` on a plain span is not reliably announced); reduced motion shows it plain
+  - [x] Hero stats count up once when in view — `src/dom/motion/CountUp.tsx`, no `motion`. The final value is always in the DOM for screen readers and crawlers
+  - [x] Pointer-following light on the portrait — `src/dom/motion/Glare.tsx` plus one CSS gradient. Project articles have no card edges, so the portrait is the only surface it suits
+  - [x] Nothing was copied, so no Commons Clause code is in the repo and `LICENSE` needs no carve-out. All four pieces were written here after the React Bits originals, respect `prefers-reduced-motion`, and import no animation library: the entry bundle grew 1.5 KB gzip, GSAP stays lazy
+  - [-] Scroll hint: cut. At 1440 × 900 the hero already fills the viewport to its stats row, so a hint pushes the stats below the fold; the layer dots on the right already say there is more below
 - [ ] **5.4 Sound design** *(needs D4)* — ambient bed per layer + UI ticks via Howler.js; muted by default, persistent toggle, respects `prefers-reduced-motion`
 - [ ] **5.5 Collectibles** — 5 hidden objects, one per layer; `useDiscoveryStore` persisted to `localStorage`; all five unlock the resume download with a small celebration
-- [ ] **5.6 404 page** — themed, on-brand, with a route back
-- [ ] **5.7 Easter egg** — Konami code or console art (optional, cheap, memorable)
+- [x] **5.6 404 page** — `public/404.html`, which GitHub Pages serves for any unknown path. Self-contained: inline styles in the site's palette, a CSS starfield, no app bundle. Shows the path asked for (as text, never markup) and routes back to the top and to the work
+- [x] **5.7 Easter egg** — a styled note in the console for whoever opens it: the repo link and the `?debug=1` / `?tier=` switches. A few hundred bytes
 
 ---
 
@@ -216,10 +218,19 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 - [x] **6.2 Auto-downgrade** — `src/canvas/AutoDowngrade.tsx` on drei's `PerformanceMonitor`: on a sustained decline, High → Medium (glass, vignette, aberration off; fewer particles) → Low (post-processing off) → DPR 1. Shadows are not a rung: the scene has none (D9 lighting). Never steps back up within a visit — flip-flopping would recompile shaders, the stutter it exists to avoid — never persisted, and never overrides a tier the visitor or `?tier=` chose
 - [ ] **6.3 Static tier** — no-WebGL / reduced-motion / user-toggle path serves the Phase 1 build. Verified by disabling WebGL in the browser
 - [ ] **6.4 Mobile pass** — real device testing on a low-end and a mid-tier Android; touch scroll feel; thermal check over 3 minutes
-- [ ] **6.5 Accessibility audit** — axe clean; full keyboard traversal; `Esc` → plain-text view; contrast ≥ 4.5:1 everywhere; screen-reader read-through
-- [ ] **6.6 Cross-browser** — Chrome, Firefox, Safari (macOS + iOS), Edge, Samsung Internet
-- [ ] **6.7 Performance gate** — Lighthouse ≥ 85 desktop / ≥ 70 mobile; all §6 budgets verified in CI
-- [ ] **6.8 Launch** — analytics (Plausible or GoatCounter), OG preview verified on LinkedIn + WhatsApp, custom domain if D6 says yes, resume + LinkedIn updated with the URL
+- [~] **6.5 Accessibility audit** — `npm run verify:a11y` (19 checks, axe-core): zero serious or critical violations on the 3D page, the Static page, a phone and the 404; keyboard reaches everything in document order with a visible focus ring and nothing focusable inside the canvas; **Esc** switches to the plain view for the visit (sessionStorage, not the saved choice), offered also as the second skip link, and Esc inside the contact form stays with the field
+  - Fixed: the TRUUNA screenshot row scrolls sideways on phones but could not be reached from a keyboard (axe `scrollable-region-focusable`); it is now focusable, named, and arrow keys scroll it
+  - axe's contrast rule cannot see the 3D scene; contrast against the rendered scene stays with `verify:phase3`'s pixel measurement (hero and every staged article)
+  - [ ] Screen-reader read-through — needs a person; steps in `DEVICE_TESTING.md` §6
+- [ ] **6.6 Cross-browser** — Chrome, Firefox, Safari (macOS + iOS), Edge, Samsung Internet. Needs devices; steps in `DEVICE_TESTING.md` §5
+- [~] **6.7 Performance gate** — Lighthouse ≥ 85 desktop / ≥ 70 mobile; all §6 budgets verified in CI
+  - [x] CI runs every browser suite before deploy: one matrix job per suite (phase2–5, a11y) in parallel, and `deploy` needs them all. ubuntu-latest's preinstalled Chrome; software GL, hence tiers forced wherever a check compares numbers
+  - [x] `npm run perf:lighthouse` (local, not CI — scores under shared runners are too noisy to gate on). Measured here: **mobile 98 / 99 / 100 / 100** (Performance / Accessibility / Best Practices / SEO; LCP 2.2 s, TBT 30 ms, CLS 0.012). **Desktop 100 / 100 / 100 on the last three; Performance 67–70**
+  - **Desktop Performance is a software-GL artefact, measured, not assumed.** TBT was 1.5–3.2 s run to run, and every frame of the scene under SwiftShader is itself a 130–400 ms long task, so TBT grows with the frame count. The same page without the canvas (mobile) has 30 ms. The one real cost found — a ~1 s synchronous shader compile in `Warmup` — now uses `compileAsync` (parallel compile where the driver supports it). Desktop Performance is advisory in the script unless `LIGHTHOUSE_STRICT=1`, and needs a run on a machine with a GPU (`DEVICE_TESTING.md` §3)
+- [~] **6.8 Launch** — analytics (Plausible or GoatCounter), OG preview verified on LinkedIn + WhatsApp, custom domain if D6 says yes, resume + LinkedIn updated with the URL
+  - [x] OG metadata checked by `verify:phase5`: absolute https image, canonical matches og:url, large Twitter card, image 1200 × 630 as declared and under 300 KB. It was 415 KB — over the size WhatsApp will fetch for a preview — and is now a 91 KB palette PNG, generator updated
+  - [ ] Analytics: the user's choice (Plausible, GoatCounter or none) — needs an account, and is a privacy decision
+  - [ ] Link previews by hand (`DEVICE_TESTING.md` §6); D6 custom domain
 
 ---
 
@@ -378,6 +389,8 @@ Web3Forms gives 5× the free headroom and better spam handling at the same price
 
 | Date | Change |
 |---|---|
+| 2026-11-24 | **Phase 6, automatable part.** CI gates deploy on every browser suite (parallel matrix). `verify:a11y` added (axe-core, keyboard, Esc plain view); fixed a keyboard-unreachable screenshot scroller. `perf:lighthouse` added (lighthouse, chrome-launcher): mobile 98, desktop Performance 67–70 traced to software GL rather than the site, after replacing a ~1 s synchronous shader compile with `compileAsync`. OG image cut from 415 KB to 91 KB. `DEVICE_TESTING.md` now covers phones as Static, other browsers, link previews and a screen-reader pass. New devDependencies: axe-core, lighthouse, chrome-launcher. |
+| 2026-11-24 | **Phase 5, first pass.** 5.1 non-blocking reveal, 5.2 magnetic buttons (custom cursor cut), 5.3 decode, count-up and portrait glare, 5.6 404 page, 5.7 console note. 5.4 waits on D4 and 5.5 on D8. Added `verify:phase5` (29 checks), each feature tested with motion allowed and reduced. Headless Chrome reports no pointer, so hover-only features switched themselves off under test — correct behaviour, but untestable; the suite stands in a desktop mouse by answering only the pointer half of the media query. Entry 79.4 / 180 KB gzip. |
 | 2026-11-23 | **6.1 and 6.2 complete.** Footer graphics toggle (Automatic / High / Medium / Low / Off) and the auto-downgrade ladder. `src/tier.ts` now separates `SUPPORTS_3D` (could the device run it) from `CAN_RENDER_3D` (will it, given the visitor's choice). `verify:phase4` adds toggle and downgrade checks (54 in all); under software GL a detected tier steps down within seconds, and a forced one never does — which is also why the suites force tiers wherever they compare numbers. Found on the way: a downgrade from Medium to Low removes the composer, which changes the renderer's tone mapping and recompiles every material — a one-off hitch, seconds long under software GL, that made the Phase 2 layer-sync check read a stale layer. That check now pins its tier; the hitch itself is the accepted price of a downgrade, paid once per visit at most twice. |
 | 2026-11-23 | **Phase 4 complete except 4.9 (blocked on D3).** 4.1 particle system and the 4.2 name dispersal; L1 screen glow spill; L3 warm practicals; D12 decided — phones are Static and no longer download three.js. Defects caught from captures: the name was mis-projected (flat px scale ignored the camera's tilt) and, at 60k particles, brighter than the headline. Chromatic aberration halved after it fringed the particle letters. Suites updated: the Phase 3 hero draw-call count now allows for the name's one call; phone-with-3D expectations removed from Phase 2 and 3; `verify:phase4` adds particle, morph, spill, practicals and phones-as-Static checks. |
 | 2026-11-23 | **4.8 complete; tiers started (6.1).** Quality store with detection and `?tier=` override; tier-gated post-processing with brightness-selective bloom; glass on L2 (High only); fog on L5; packet count by tier. Two defects caught by looking at captures rather than numbers: ACES tone mapping in the composer washed out every product screenshot (switched to Neutral), and the first glass pass frosted the aashman.in page grey (now clear). Added `verify:phase4` and wired it into `npm run verify`. Software-GL fps on High is ~1, so the suites force tiers rather than trusting detection. 4.1 particles, the L0 name dispersal, L1 glow spill and L3 warm lights remain. |

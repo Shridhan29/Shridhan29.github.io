@@ -57,33 +57,45 @@ In desktop Chrome, in an **Incognito window** (extensions skew the score):
 4. Run once with **Device: Desktop**, then once with **Device: Mobile**.
 5. Note each Performance score, and the values for **LCP**, **TBT** and **CLS**.
 
-## 4. Android phone (about 15 minutes)
+## 4. Android phone (about 10 minutes)
 
-Use a mid-range Android phone. Phones show the hero's stars in 3D and the rest
-of the page as normal content, so this checks that the phone is not strained
-and that the page reads well.
-
-**Connect it for measurement (optional but best):**
-
-1. On the phone: Settings → About phone → tap **Build number** seven times to
-   enable Developer options. Then Developer options → turn on **USB debugging**.
-2. Connect it to the computer by USB and accept the prompt on the phone.
-3. On the computer, open `chrome://inspect/#devices` in Chrome. Open the site in
-   Chrome on the phone; it appears in the list. Click **inspect**.
-4. In that DevTools window, **Performance** tab → record while you scroll the
-   whole page once on the phone → stop. Note any long red frames.
-
-**Without a cable:** open https://shridhan29.github.io/?debug=1 on the phone and
-read `fps` / `ms` from the overlay at the top of the page and while scrolling.
+Use a mid-range Android phone. Phones get the plain 2D page — no 3D at all
+(decision D12) — so this checks that the page reads well and scrolls cleanly.
 
 **Check by eye:**
 
 1. The page fits the screen — no sideways scrolling, nothing cut off.
-2. Scrolling feels smooth; note any stutter and where.
-3. Leave the page open at the top for **3 minutes**. Note whether the phone gets
-   noticeably warm, and whether `fps` drops over that time.
+2. The TRUUNA screenshot row scrolls sideways with a finger.
+3. Scrolling feels smooth; note any stutter and where.
+4. Rotate to landscape and back: nothing jumps or overflows.
 
-## 5. Send back
+**Optional, with a cable:** Settings → About phone → tap **Build number** seven
+times → Developer options → **USB debugging** on. Connect by USB, open
+`chrome://inspect/#devices` on the computer, click **inspect** on the site, and
+record a **Performance** trace while scrolling the whole page once.
+
+## 5. Other browsers (about 15 minutes)
+
+Open https://shridhan29.github.io in each you can reach. In every one: the 3D
+scene appears on desktop (or the plain page on a phone), scrolling moves the
+camera, the footer **Graphics** menu works, **Esc** switches to the plain view,
+and the contact form submits.
+
+- **Safari on a Mac** — also check the hero name in particles and the fade-in.
+- **Safari on an iPhone** — plain page expected; check it fits and scrolls.
+- **Firefox** and **Edge** on desktop.
+- **Samsung Internet** on a Samsung phone, if you have one.
+
+## 6. Link previews and screen readers (about 10 minutes)
+
+1. **LinkedIn:** paste the site URL into https://www.linkedin.com/post-inspector/
+   and confirm the card shows the name, the role and the portrait.
+2. **WhatsApp:** send the URL to yourself; the same card should appear.
+3. **Screen reader:** with VoiceOver (Mac: `Cmd+F5`) or TalkBack (Android), go
+   through the page top to bottom. Note anything read twice, read as gibberish
+   (the hero role line scrambles visually but should be read cleanly), or skipped.
+
+## 7. Send back
 
 Copy this table, fill it in, and paste it into the conversation.
 
@@ -105,8 +117,13 @@ Lighthouse desktop: Performance __  LCP __  TBT __  CLS __
 Lighthouse mobile:  Performance __  LCP __  TBT __  CLS __
 
 Phone: <make/model>, Android <version>, Chrome <version>
-Top of page fps/ms: __ / __
 Fits the screen: yes/no    Smooth scrolling: yes/no (where not)
-After 3 minutes: warm? yes/no   fps then: __
+Screenshot row scrolls: yes/no
+
+Browsers checked: <Safari Mac / Safari iPhone / Firefox / Edge / Samsung Internet>
+Problems: <none / what and where>
+
+LinkedIn preview: ok/broken    WhatsApp preview: ok/broken
+Screen reader: <VoiceOver/TalkBack>, problems: <none / what>
 Performance recording: <long frames? where>
 ```

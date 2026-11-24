@@ -1,10 +1,10 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { Nav } from '@/dom/ui/Nav'
 import { LayerNav } from '@/dom/ui/LayerNav'
 import { DebugOverlay } from '@/dom/ui/DebugOverlay'
 import { SceneBoundary } from '@/dom/SceneBoundary'
 import { DEBUG } from '@/debug'
-import { CAN_RENDER_3D } from '@/tier'
+import { CAN_RENDER_3D, enterPlainView } from '@/tier'
 import { Hero } from '@/dom/sections/Hero'
 import { About } from '@/dom/sections/About'
 import { Projects } from '@/dom/sections/Projects'
@@ -22,6 +22,21 @@ export default function App() {
   // DOM below is the whole site, complete on its own.
   const canRender3D = CAN_RENDER_3D
 
+  // Esc: the plain view (6.5, ARCHITECTURE §7) — the same complete 2D page the
+  // Static tier serves, for this visit. Not while typing in the contact form,
+  // where Esc belongs to the field.
+  useEffect(() => {
+    if (!canRender3D) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return
+      const t = e.target as HTMLElement | null
+      if (t?.closest('input, textarea, select, [contenteditable="true"]')) return
+      enterPlainView()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [canRender3D])
+
   return (
     <>
       <a
@@ -30,6 +45,17 @@ export default function App() {
       >
         Skip to content
       </a>
+      {canRender3D && (
+        // Second stop for keyboard users: the same switch Esc makes, said out loud.
+        <button
+          type="button"
+          onClick={enterPlainView}
+          data-plain-view
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-44 focus:z-60 focus:rounded focus:bg-bone focus:px-4 focus:py-2 focus:text-void"
+        >
+          Plain view, no 3D (Esc)
+        </button>
+      )}
 
       {canRender3D && (
         <SceneBoundary>

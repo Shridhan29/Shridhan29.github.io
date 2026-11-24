@@ -66,8 +66,13 @@ function ShotList({
         (phone
           ? 'mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 lg:grid lg:grid-cols-5 lg:gap-6 lg:overflow-visible'
           : 'mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:gap-6') +
-        (staged ? ' lg:hidden scene-off:lg:grid' : '')
+        (staged ? ' lg:hidden scene-off:lg:grid' : '') +
+        ' focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent'
       }
+      // A row that scrolls sideways must be reachable without a pointer: focus
+      // it and the arrow keys scroll it (6.5, axe scrollable-region-focusable).
+      tabIndex={phone ? 0 : undefined}
+      aria-label={phone ? `${project.name} screens, scrollable` : undefined}
     >
       {project.shots.map((shot, i) => (
         // `relative` anchors the sr-only caption (position: absolute) inside the

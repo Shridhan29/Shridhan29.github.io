@@ -1,5 +1,11 @@
 import { create } from 'zustand'
-import { type GraphicsPreference, PREFERENCE_KEY, readPreference } from '@/tier'
+import {
+  type GraphicsPreference,
+  PLAIN_VIEW_KEY,
+  PREFERENCE_KEY,
+  readPlainView,
+  readPreference,
+} from '@/tier'
 
 /**
  * Rendering quality for visits that get the 3D scene (ARCHITECTURE §7).
@@ -72,9 +78,17 @@ const override = readOverride()
 export const useQualityStore = create<QualityState>((set, get) => ({
   tier: override ?? detectTier(),
   source: override ? 'override' : 'detected',
-  preference: typeof window === 'undefined' ? 'auto' : readPreference(),
+  // The plain view shows as Off, so the toggle tells the truth about the page.
+  preference:
+    typeof window === 'undefined' ? 'auto' : readPlainView() ? 'static' : readPreference(),
   setPreference: (preference) => {
     const reload = (preference === 'static') !== (get().preference === 'static')
+    try {
+      // Any explicit choice ends this visit's plain view.
+      window.sessionStorage.removeItem(PLAIN_VIEW_KEY)
+    } catch {
+      // Nothing to clear.
+    }
     try {
       if (preference === 'auto') window.localStorage.removeItem(PREFERENCE_KEY)
       else window.localStorage.setItem(PREFERENCE_KEY, preference)

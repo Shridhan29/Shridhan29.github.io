@@ -127,6 +127,12 @@ await step('Phase 3 layers + contrast (verify:phase3)', suite('verify:phase3'), 
 await step('Phase 4 tiers + effects (verify:phase4)', suite('verify:phase4'), {
   needs: 'build + bundle and model budgets',
 })
+await step('Phase 5 polish (verify:phase5)', suite('verify:phase5'), {
+  needs: 'build + bundle and model budgets',
+})
+await step('accessibility (verify:a11y)', suite('verify:a11y'), {
+  needs: 'build + bundle and model budgets',
+})
 
 // -------------------------------------------------------------------- live --
 

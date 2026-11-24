@@ -83,7 +83,10 @@ const ogText = Buffer.from(`
 
 await sharp(ogText)
   .composite([{ input: ogPortrait, left: 1200 - ogPortraitW, top: 0 }])
-  .png()
+  // Palette PNG: the card is mostly flat colour and text, so 256 colours lose
+  // nothing visible, and it lands well under the ~300 KB that WhatsApp's link
+  // preview will fetch. Full-colour it was 415 KB and the preview was dropped.
+  .png({ palette: true, quality: 90, effort: 10 })
   .toFile(`${OUT}/og.png`)
 console.log('  og  1200x630')
 

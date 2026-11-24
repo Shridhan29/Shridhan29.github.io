@@ -7,7 +7,8 @@
  *  - it is a touch-first screen narrower than the stages (decision D12). Every
  *    layer below the hero draws into a stage that needs ≥ 1024 px, so a phone
  *    would download three.js and start a GPU context to show a starfield, or
- *  - the visitor turned graphics off with the footer toggle (6.1).
+ *  - the visitor turned graphics off with the footer toggle (6.1), or asked for
+ *    the plain view for this visit with Esc or the skip link (6.5).
  *
  * Read by App to mount the canvas, and by any section that makes room for a 3D
  * stage — so a stage is never left empty. Rotating a tablet later does not
@@ -32,6 +33,36 @@ export function readPreference(): GraphicsPreference {
   }
 }
 
+/** sessionStorage key for the plain view (6.5): Esc, or the skip link, for this visit only. */
+export const PLAIN_VIEW_KEY = 'plain-view'
+
+/** Whether this visit asked for the plain view. Cleared when the tab closes. */
+export function readPlainView(): boolean {
+  try {
+    return window.sessionStorage.getItem(PLAIN_VIEW_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Switches this visit to the plain view and reloads into it. Not saved: the
+ * next visit gets the scene again, unless the footer toggle said otherwise.
+ */
+export function enterPlainView() {
+  try {
+    window.sessionStorage.setItem(PLAIN_VIEW_KEY, '1')
+  } catch {
+    // Without storage the reload would come back in 3D; fall back to the saved choice.
+    try {
+      window.localStorage.setItem(PREFERENCE_KEY, 'static')
+    } catch {
+      return
+    }
+  }
+  window.location.reload()
+}
+
 /** Whether this device could run the scene at all — the toggle is offered only then. */
 export const SUPPORTS_3D =
   typeof window !== 'undefined' &&
@@ -45,4 +76,4 @@ export const SUPPORTS_3D =
     }
   })()
 
-export const CAN_RENDER_3D = SUPPORTS_3D && readPreference() !== 'static'
+export const CAN_RENDER_3D = SUPPORTS_3D && readPreference() !== 'static' && !readPlainView()
