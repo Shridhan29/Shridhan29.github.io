@@ -284,6 +284,95 @@ try {
     // A touch tablet wide enough for the stages keeps the scene.
     const tablet = await probe({ width: 1180, height: 820, isMobile: true, hasTouch: true })
     check('touch tablet at ≥ 1024 px: the scene still runs', tablet.canvas && tablet.three)
+
+    const phonePage = await browser.newPage()
+    await phonePage.setViewport(PHONE)
+    await phonePage.goto(`${preview.base}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
+    check(
+      'phone: no graphics toggle (there is nothing to choose)',
+      !(await phonePage.$('[data-graphics-toggle]')),
+    )
+    await phonePage.close()
+  }
+
+  section('Graphics toggle (6.1)')
+  {
+    await closeBrowser(browser)
+    browser = await launchBrowser()
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1440, height: 900 })
+    await page.goto(`${preview.base}/?debug=1`, { waitUntil: 'networkidle0', timeout: 60_000 })
+    const select = '[data-graphics-toggle]'
+    check(
+      'the footer offers a graphics toggle, on Automatic',
+      (await page.$eval(select, (el) => el.value).catch(() => null)) === 'auto',
+    )
+
+    await page.select(select, 'low')
+    await sleep(500)
+    const low = await overlay(page)
+    const saved = await page.evaluate(() => localStorage.getItem('quality-tier'))
+    check(
+      'choosing Low applies it at once and saves it',
+      low.tier === 'low' && low.source === 'override' && saved === 'low',
+      `${low.tier} (${low.source}), saved ${saved}`,
+    )
+
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'networkidle0' }),
+      page.select(select, 'static'),
+    ])
+    await sleep(1000)
+    check(
+      'choosing Off reloads into the 2D page: no canvas',
+      !(await page.$('canvas')) && (await page.$eval(select, (el) => el.value)) === 'static',
+    )
+
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'networkidle0' }),
+      page.select(select, 'auto'),
+    ])
+    await sleep(1500)
+    check(
+      'choosing Automatic again brings the scene back',
+      !!(await page.$('canvas')) &&
+        (await page.evaluate(() => localStorage.getItem('quality-tier'))) === null,
+    )
+    await page.close()
+  }
+
+  section('Auto-downgrade (6.2)')
+  {
+    // Software GL renders a few frames a second, far below any bound, so a
+    // detected tier must step down; a forced one must not.
+    await closeBrowser(browser)
+    browser = await launchBrowser()
+    const watch = async (query) => {
+      const page = await browser.newPage()
+      await page.setViewport({ width: 1440, height: 900 })
+      await page.goto(`${preview.base}/?debug=1${query}`, {
+        waitUntil: 'networkidle0',
+        timeout: 60_000,
+      })
+      const start = await overlay(page)
+      await sleep(20_000)
+      const end = await overlay(page)
+      await page.close()
+      return { start, end }
+    }
+
+    const detected = await watch('')
+    check(
+      'a detected tier steps down when the frame rate cannot hold',
+      detected.end.source === 'auto' && (detected.end.downgrades ?? 0) >= 1,
+      `${detected.start.tier} → ${detected.end.tier} (${detected.end.source}), ${detected.end.downgrades ?? 0} step(s)`,
+    )
+    const forced = await watch('&tier=high')
+    check(
+      'a forced tier is never stepped down',
+      forced.end.tier === 'high' && forced.end.source === 'override' && !forced.end.downgrades,
+      `${forced.end.tier} (${forced.end.source})`,
+    )
   }
 } catch (err) {
   check('runtime suite ran', false, err instanceof Error ? err.message : String(err))

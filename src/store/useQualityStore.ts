@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { type GraphicsPreference, PREFERENCE_KEY, readPreference } from '@/tier'
 
 /**
  * Rendering quality for visits that get the 3D scene (ARCHITECTURE §7).
@@ -14,8 +15,6 @@ import { create } from 'zustand'
 export type QualityTier = 'low' | 'medium' | 'high'
 
 export const TIERS: readonly QualityTier[] = ['low', 'medium', 'high']
-
-const STORAGE_KEY = 'quality-tier'
 
 const isTier = (value: unknown): value is QualityTier =>
   typeof value === 'string' && (TIERS as readonly string[]).includes(value)
@@ -42,36 +41,61 @@ function readOverride(): QualityTier | null {
   if (typeof window === 'undefined') return null
   const forced = new URLSearchParams(window.location.search).get('tier')
   if (isTier(forced)) return forced
-  try {
-    const saved = window.localStorage.getItem(STORAGE_KEY)
-    return isTier(saved) ? saved : null
-  } catch {
-    // Storage can be blocked (private windows, cleared site data); detection still works.
-    return null
-  }
+  const saved = readPreference()
+  return isTier(saved) ? saved : null
 }
 
 type QualityState = {
   tier: QualityTier
-  /** Where the tier came from, shown in the debug overlay. */
-  source: 'detected' | 'override'
-  /** Saves a manual choice; `null` clears it and returns to detection. */
-  setTier: (tier: QualityTier | null) => void
+  /**
+   * Where the tier came from, shown in the debug overlay: detected at boot, a
+   * visitor's or a URL's override, or stepped down automatically (6.2).
+   */
+  source: 'detected' | 'override' | 'auto'
+  /** The footer toggle's value. */
+  preference: GraphicsPreference
+  /**
+   * Saves the visitor's choice. Turning graphics off or back on reloads the
+   * page, since whether the canvas exists at all is decided once at startup.
+   */
+  setPreference: (preference: GraphicsPreference) => void
+  /**
+   * One step down, when the frame rate cannot hold (6.2). Never below Low, never
+   * persisted, and never over a choice the visitor or the URL made: a forced
+   * tier stays forced. Returns whether anything changed.
+   */
+  downgrade: () => boolean
 }
 
 const override = readOverride()
 
-export const useQualityStore = create<QualityState>((set) => ({
+export const useQualityStore = create<QualityState>((set, get) => ({
   tier: override ?? detectTier(),
   source: override ? 'override' : 'detected',
-  setTier: (tier) => {
+  preference: typeof window === 'undefined' ? 'auto' : readPreference(),
+  setPreference: (preference) => {
+    const reload = (preference === 'static') !== (get().preference === 'static')
     try {
-      if (tier) window.localStorage.setItem(STORAGE_KEY, tier)
-      else window.localStorage.removeItem(STORAGE_KEY)
+      if (preference === 'auto') window.localStorage.removeItem(PREFERENCE_KEY)
+      else window.localStorage.setItem(PREFERENCE_KEY, preference)
     } catch {
       // Not persisted; the choice still applies for this visit.
     }
-    set(tier ? { tier, source: 'override' } : { tier: detectTier(), source: 'detected' })
+    if (reload) {
+      window.location.reload()
+      return
+    }
+    set(
+      preference === 'auto' || preference === 'static'
+        ? { preference, tier: detectTier(), source: 'detected' }
+        : { preference, tier: preference, source: 'override' },
+    )
+  },
+  downgrade: () => {
+    const { tier, source } = get()
+    if (source === 'override' || tier === 'low') return false
+    set({ tier: tier === 'high' ? 'medium' : 'low', source: 'auto' })
+    return true
   },
 }))
 

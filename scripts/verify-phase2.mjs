@@ -195,7 +195,9 @@ try {
   for (const [name, viewport] of [['1440 px', { width: 1440, height: 900 }]]) {
     const synced = await browser.newPage()
     await synced.setViewport(viewport)
-    await synced.goto(`${BASE}/?debug=1`, NAV)
+    // Pinned tier: an auto-downgrade mid-check recompiles every shader, and under
+    // software GL that stall outlasts the wait below. This checks stops, not tiers.
+    await synced.goto(`${BASE}/?debug=1&tier=low`, NAV)
     const misses = []
     for (const { label, section: id } of pairs) {
       await synced.evaluate((id) => {

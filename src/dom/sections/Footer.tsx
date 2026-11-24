@@ -1,4 +1,5 @@
 import { profile } from '@/data/profile'
+import { GraphicsToggle } from '@/dom/ui/GraphicsToggle'
 
 export function Footer() {
   return (
@@ -8,16 +9,19 @@ export function Footer() {
           © {new Date().getFullYear()} {profile.fullName}. Built with React, Three.js and too much
           attention to bundle size.
         </p>
-        <p className="font-mono">
-          <a
-            href={profile.links.github}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="hover:text-bone"
-          >
-            Source on GitHub ↗
-          </a>
-        </p>
+        <div className="flex flex-wrap items-center gap-6">
+          <GraphicsToggle />
+          <p className="font-mono">
+            <a
+              href={profile.links.github}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="hover:text-bone"
+            >
+              Source on GitHub ↗
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   )
