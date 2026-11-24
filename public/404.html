@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#05060a" />
+    <meta name="robots" content="noindex" />
+    <title>Not found — Shridhan Vidhate</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!--
+      GitHub Pages serves this for any path it cannot find. Self-contained on
+      purpose: no app bundle, no three.js, no fonts to fetch. Same palette as the
+      site (src/styles/index.css), so it reads as part of it.
+    -->
+    <style>
+      :root {
+        --void: #05060a;
+        --slate: #151925;
+        --mist: #8b93a7;
+        --bone: #e8eaf0;
+        --accent: #4d7cfe;
+        --ember: #ff8a3d;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--void);
+        color: var(--bone);
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+      }
+      body {
+        display: grid;
+        min-height: 100dvh;
+        place-items: center;
+        padding: 2rem clamp(1.25rem, 4.5vw, 7rem);
+        overflow: hidden;
+      }
+      /* A thin starfield in CSS, so the page still feels like the top of the site. */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image:
+          radial-gradient(1px 1px at 12% 18%, #e8eaf080, transparent),
+          radial-gradient(1px 1px at 78% 12%, #e8eaf066, transparent),
+          radial-gradient(1px 1px at 34% 72%, #4d7cfe88, transparent),
+          radial-gradient(1px 1px at 88% 64%, #e8eaf055, transparent),
+          radial-gradient(1.5px 1.5px at 56% 38%, #e8eaf077, transparent),
+          radial-gradient(1px 1px at 22% 88%, #e8eaf04d, transparent),
+          radial-gradient(1px 1px at 66% 86%, #e8eaf066, transparent);
+        pointer-events: none;
+      }
+      main {
+        position: relative;
+        max-width: 38rem;
+      }
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin: 0 0 1.25rem;
+        color: var(--mist);
+        font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+        font-size: 0.75rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+      .eyebrow::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--ember);
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(2.35rem, 6vw, 4.5rem);
+        font-weight: 600;
+        line-height: 1.03;
+        letter-spacing: -0.03em;
+      }
+      p {
+        margin: 1.5rem 0 0;
+        color: var(--mist);
+        font-size: 1.125rem;
+        line-height: 1.6;
+      }
+      code {
+        color: var(--bone);
+        font-family: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+        font-size: 0.95em;
+        word-break: break-all;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 2.25rem;
+      }
+      a {
+        border-radius: 999px;
+        padding: 0.65rem 1.25rem;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition:
+          opacity 0.2s,
+          border-color 0.2s,
+          color 0.2s;
+      }
+      a.primary {
+        background: var(--bone);
+        color: var(--void);
+        font-weight: 500;
+      }
+      a.primary:hover {
+        opacity: 0.85;
+      }
+      a.secondary {
+        border: 1px solid var(--slate);
+        color: var(--bone);
+      }
+      a.secondary:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">404 · Layer not found</p>
+      <h1>This page fell through the stack.</h1>
+      <p>
+        Nothing lives at <code id="path">this address</code>. It may have moved, or never existed.
+      </p>
+      <div class="actions">
+        <a class="primary" href="/">Back to the top</a>
+        <a class="secondary" href="/#work">See the work</a>
+      </div>
+    </main>
+    <script>
+      // Show the path that was asked for; textContent, so nothing in it is parsed as markup.
+      document.getElementById('path').textContent = location.pathname
+    </script>
+  </body>
+</html>

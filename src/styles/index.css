@@ -141,3 +141,30 @@ body {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
 }
+
+/* Pointer-following light over the portrait (5.3, `Glare`). Only where a fine
+   pointer can hover, and not with reduced motion. Kept well under white so it
+   reads as light on a print, not a highlight on a button. */
+.glare {
+  position: relative;
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .glare::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+    background: radial-gradient(
+      320px circle at var(--glare-x, 50%) var(--glare-y, 50%),
+      rgb(232 234 240 / 0.14),
+      transparent 60%
+    );
+    mix-blend-mode: soft-light;
+  }
+  .glare:hover::after {
+    opacity: 1;
+  }
+}
