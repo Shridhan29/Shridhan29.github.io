@@ -53,7 +53,8 @@ export const CHROME_CANDIDATES = [
 
 export const CHROME = process.env.CHROME_PATH ?? CHROME_CANDIDATES.find((p) => existsSync(p))
 
-export function launchBrowser() {
+/** `extraArgs` for a suite that needs a different browser, e.g. one without WebGL. */
+export function launchBrowser(extraArgs = []) {
   if (!CHROME) {
     throw new Error(`no Chrome found; set CHROME_PATH (looked in: ${CHROME_CANDIDATES.join(', ')})`)
   }
@@ -65,6 +66,7 @@ export function launchBrowser() {
       // Software WebGL, so this runs the same on a CI box with no GPU.
       '--enable-unsafe-swiftshader',
       '--use-angle=swiftshader',
+      ...extraArgs,
     ],
   })
 }

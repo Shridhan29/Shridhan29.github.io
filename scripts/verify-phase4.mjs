@@ -9,6 +9,7 @@
  */
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import sharp from 'sharp'
 import { eagerAssets } from './lib/bundle.mjs'
 import {
   PHONE,
@@ -106,6 +107,23 @@ check(
   !/BloomEffect|EffectComposer|KawaseBlur/.test(eagerCode),
 )
 
+const lighting = await read('src/canvas/Lighting.tsx')
+const moods = await read('src/canvas/moods.ts')
+const layerData = await read('src/canvas/layers.ts')
+check(
+  '4.9: one mood per layer',
+  (moods.match(/\{ sky: '#/g) ?? []).length === (layerData.match(/^ {4}id: '/gm) ?? []).length,
+)
+check(
+  '4.9: the sky is a clear colour, not a background mesh (no draw call)',
+  /scene\.background = sky/.test(lighting) && /const sky = new Color\(\)/.test(lighting),
+)
+check(
+  '4.9: every studio is baked at 64 px, so swapping one never recompiles a shader',
+  /fromScene\(studio, 0, 0\.1, 20, \{ size: 64 \}\)/.test(lighting) &&
+    (lighting.match(/fromScene\(/g) ?? []).length === 1,
+)
+
 // --------------------------------------------------------------- runtime --
 
 /** Reads the ?debug=1 overlay as name → value. */
@@ -134,6 +152,30 @@ const scrollTo = (page, { article, stage }) =>
     article,
     stage,
   )
+
+/** CIE L*a*b* of an sRGB colour. */
+function lab([r, g, b]) {
+  const lin = (c) => ((c /= 255) <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+  const [R, G, B] = [lin(r), lin(g), lin(b)]
+  const f = (v) => (v > 0.008856 ? Math.cbrt(v) : 7.787 * v + 16 / 116)
+  const X = f((R * 0.4124 + G * 0.3576 + B * 0.1805) / 0.95047)
+  const Y = f(R * 0.2126 + G * 0.7152 + B * 0.0722)
+  const Z = f((R * 0.0193 + G * 0.1192 + B * 0.9505) / 1.08883)
+  return [116 * Y - 16, 500 * (X - Y), 200 * (Y - Z)]
+}
+const deltaE = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
+
+/** Mean colour of what the scene draws, with the page's text and chrome hidden. */
+async function sceneColour(page) {
+  const style = await page.addStyleTag({
+    content: 'main, header, footer, nav, [data-debug] { visibility: hidden !important }',
+  })
+  await sleep(400)
+  const shot = await page.screenshot()
+  await style.evaluate((el) => el.remove())
+  const { channels } = await sharp(shot).stats()
+  return lab(channels.slice(0, 3).map((c) => c.mean))
+}
 
 const preview = await startPreview(4176)
 let browser
@@ -221,6 +263,64 @@ try {
     await page.close()
   }
 
+  section('Palette (4.9)')
+  {
+    // Low tier: no bloom or vignette, so the colour measured is the mood's own.
+    await closeBrowser(browser)
+    browser = await launchBrowser()
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1440, height: 900 })
+    await page.goto(`${preview.base}/?debug=1&tier=low`, {
+      waitUntil: 'networkidle0',
+      timeout: 60_000,
+    })
+    // Ground is measured at its first stage: the kiosk sits low in the DMS
+    // article, where the camera has already handed over to Core.
+    const stops = STOPS.map((s) => (s.name === 'Ground' ? { ...s, stage: 'ground-pos' } : s))
+    const colours = []
+    const settled = []
+    for (const [i, stop] of stops.entries()) {
+      await scrollTo(page, stop)
+      await sleep(6000)
+      const o = await overlay(page)
+      settled.push(o.palette)
+      if (Math.abs((o.palette ?? -1) - i) > 0.05) continue
+      colours.push({ name: stop.name, lab: await sceneColour(page) })
+    }
+    check(
+      'the mood settles on each layer while its article is read',
+      settled.every((v, i) => Math.abs((v ?? -1) - i) <= 0.05),
+      settled.join(', '),
+    )
+    const gaps = colours.slice(1).map((c, i) => ({
+      pair: `${colours[i].name}→${c.name}`,
+      d: deltaE(colours[i].lab, c.lab),
+    }))
+    check(
+      'neighbouring layers look different: scene colour ΔE ≥ 8',
+      colours.length === stops.length && gaps.every((g) => g.d >= 8),
+      gaps.map((g) => `${g.pair} ${g.d.toFixed(1)}`).join(', '),
+    )
+
+    // The hand-over is a blend, never a cut: going from Device to Surface the
+    // mood passes through the values in between, in order.
+    await scrollTo(page, stops[1])
+    await sleep(5000)
+    await scrollTo(page, stops[2])
+    const path = []
+    for (let i = 0; i < 24; i++) {
+      await sleep(150)
+      path.push((await overlay(page)).palette)
+    }
+    const between = path.filter((v) => v > 1.02 && v < 1.98)
+    check(
+      'between layers the mood blends, with no jump',
+      between.length >= 2 && path.every((v, i) => i === 0 || v >= path[i - 1] - 0.001),
+      path.join(' → '),
+    )
+    await page.close()
+  }
+
   section('Tier selection')
   {
     await closeBrowser(browser)
@@ -293,6 +393,37 @@ try {
       !(await phonePage.$('[data-graphics-toggle]')),
     )
     await phonePage.close()
+  }
+
+  section('No WebGL: the Static page (6.3)')
+  {
+    await closeBrowser(browser)
+    browser = await launchBrowser(['--disable-webgl', '--disable-3d-apis'])
+    const page = await browser.newPage()
+    const errors = []
+    const scripts = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+    page.on('request', (r) => r.resourceType() === 'script' && scripts.push(r.url()))
+    await page.setViewport({ width: 1440, height: 900 })
+    await page.goto(`${preview.base}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
+    await sleep(1500)
+    const view = await page.evaluate(() => ({
+      webgl: !!document.createElement('canvas').getContext('webgl2'),
+      canvas: !!document.querySelector('canvas'),
+      toggle: !!document.querySelector('[data-graphics-toggle]'),
+      text: document.querySelector('main')?.innerText.length ?? 0,
+    }))
+    check('the browser really has no WebGL', !view.webgl)
+    check('no WebGL: no canvas', !view.canvas)
+    check(
+      'no WebGL: three.js is never downloaded',
+      !scripts.some((u) => /\/three-[^/]+\.js$/.test(u)),
+    )
+    check('no WebGL: no graphics toggle', !view.toggle)
+    check('no WebGL: all the content is there', view.text > 2000, `${view.text} characters`)
+    check('no WebGL: no page or console errors', !errors.length, errors.slice(0, 2).join(' | '))
+    await page.close()
   }
 
   section('Graphics toggle (6.1)')
