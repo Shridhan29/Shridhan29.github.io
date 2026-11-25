@@ -62,7 +62,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
   return (
     <article id={project.id} className="card reveal scroll-mt-24 p-5 sm:p-8 md:p-10 xl:p-14">
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="font-mono text-xs tracking-[0.2em] text-accent">
+        <span className="font-mono text-xs tracking-[0.2em] text-accent-soft">
           {String(index + 1).padStart(2, '0')}
           <span className="text-mist"> / {String(projects.length).padStart(2, '0')}</span>
         </span>

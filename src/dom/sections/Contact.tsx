@@ -168,7 +168,9 @@ export function Contact() {
 
           <p aria-live="polite" className="min-h-5 text-sm">
             {status === 'sent' && (
-              <span className="text-accent">Thanks — that reached my inbox. I'll reply soon.</span>
+              <span className="text-accent-soft">
+                Thanks — that reached my inbox. I'll reply soon.
+              </span>
             )}
             {status === 'error' && (
               <span className="text-ember">
