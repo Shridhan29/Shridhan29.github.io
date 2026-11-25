@@ -152,7 +152,7 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 
 ---
 
-## Phase 4 — Signature Effects
+## Phase 4 — Signature Effects ✅ COMPLETE
 *Goal: the "insane" pass. One memorable effect per layer, and nothing more. Est. 4 days.*
 
 - [x] **4.1 Particle system** — `src/canvas/shared/NameField.tsx`: one persistent `Points` buffer, 8k / 25k / 60k particles on Low / Medium / High, one draw call on every tier. Each particle carries a target (in the formed name) and a scatter position (in the starfield's shell); the vertex shader morphs between them on `uMorph`, staggered per particle, so the morph costs no CPU work per frame
@@ -196,7 +196,7 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 
 ---
 
-## Phase 5 — Polish
+## Phase 5 — Polish ✅ COMPLETE
 *Goal: the details that get it nominated. Est. 3 days.*
 
 - [x] **5.1 Preloader** — deliberately not a blocking screen: the page is readable the moment it paints, which is what Lighthouse and a recruiter both measure. The canvas fades in behind it once `Warmup` has compiled every shader and two real frames have drawn, so the reveal never shows programs compiling. A 1 px accent line at the top follows drei's `useProgress` — real texture downloads as staged layers load, never a timer. Both live in the lazy chunk
@@ -213,8 +213,8 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
   - [x] Section-entry reveals: already in place since Phase 1 as a CSS scroll-driven animation (no JS; browsers without view timelines show the content). Fixed its range: it was measured over `cover`, which scales with height, so the 5300 px Work section reached full opacity only 1600 px in and dimmed the first project inside it. Now `entry 5%–45%`, at most a viewport long
   - `verify:phase5`: hover draws the underline, every link ruled at rest, every section reveals fully, nothing in the first viewport waits, CLS over a full read < 0.05, the form's three states, no reveals under reduced motion
   - [-] Scroll hint: cut. At 1440 × 900 the hero already fills the viewport to its stats row, so a hint pushes the stats below the fold; the layer dots on the right already say there is more below
-- [ ] **5.4 Sound design** *(needs D4)* — ambient bed per layer + UI ticks via Howler.js; muted by default, persistent toggle, respects `prefers-reduced-motion`
-- [ ] **5.5 Collectibles** — 5 hidden objects, one per layer; `useDiscoveryStore` persisted to `localStorage`; all five unlock the resume download with a small celebration
+- [-] **5.4 Sound design** *(cut by D4)* — ambient bed per layer + UI ticks via Howler.js; muted by default, persistent toggle, respects `prefers-reduced-motion`
+- [-] **5.5 Collectibles** *(cut by D8)* — 5 hidden objects, one per layer; `useDiscoveryStore` persisted to `localStorage`; all five unlock the resume download with a small celebration
 - [x] **5.6 404 page** — `public/404.html`, which GitHub Pages serves for any unknown path. Self-contained: inline styles in the site's palette, a CSS starfield, no app bundle. Shows the path asked for (as text, never markup) and routes back to the top and to the work
 - [x] **5.7 Easter egg** — a styled note in the console for whoever opens it: the repo link and the `?debug=1` / `?tier=` switches. A few hundred bytes
 
@@ -242,8 +242,10 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
   - **Desktop Performance is a software-GL artefact, measured, not assumed.** TBT was 1.5–3.2 s run to run, and every frame of the scene under SwiftShader is itself a 130–400 ms long task, so TBT grows with the frame count. The same page without the canvas (mobile) has 30 ms. The one real cost found — a ~1 s synchronous shader compile in `Warmup` — now uses `compileAsync` (parallel compile where the driver supports it). Desktop Performance is advisory in the script unless `LIGHTHOUSE_STRICT=1`, and needs a run on a machine with a GPU (`DEVICE_TESTING.md` §3)
 - [~] **6.8 Launch** — analytics (Plausible or GoatCounter), OG preview verified on LinkedIn + WhatsApp, custom domain if D6 says yes, resume + LinkedIn updated with the URL
   - [x] OG metadata checked by `verify:phase5`: absolute https image, canonical matches og:url, large Twitter card, image 1200 × 630 as declared and under 300 KB. It was 415 KB — over the size WhatsApp will fetch for a preview — and is now a 91 KB palette PNG, generator updated
-  - [ ] Analytics: the user's choice (Plausible, GoatCounter or none) — needs an account, and is a privacy decision
-  - [ ] Link previews by hand (`DEVICE_TESTING.md` §6); D6 custom domain
+  - [x] Analytics: GoatCounter, wired and off until switched on. `src/analytics.ts` loads its ~3 KB script after idle, only when the build has a site code (`VITE_GOATCOUNTER`, from the repository variable `GOATCOUNTER_CODE`); never for Do Not Track, Global Privacy Control, localhost, `?debug` or automated browsers. No cookies, so no consent banner. Résumé and Play Store links carry `data-goatcounter-click`, so downloads are counted as events. `verify:phase5` checks the gates and that a build without a code mentions no endpoint
+  - [ ] To switch on: create a free GoatCounter site, then set the repository variable `GOATCOUNTER_CODE` to its code (Settings → Secrets and variables → Actions → Variables) and redeploy
+  - [ ] Link previews by hand (`DEVICE_TESTING.md` §6)
+  - [-] Custom domain: not now (D6)
 
 ---
 
@@ -271,11 +273,11 @@ Nothing here blocks Phase 0. Items marked **[!]** block the phase named beside t
 | D1 | Tone | 1.2, 4.9 | **DECIDED: cinematic-serious.** Dark, restrained, moody lighting. Reads senior; suits the descent concept. |
 | D2 | Audience | 1.2 | **DECIDED: Indian product companies, primary — written so it does not block remote.** Keep the LinkedIn CTA level with the resume download and one "open to remote" line; omit async/timezone copy. |
 | D3 | Colour direction | 4.9 | **Default applied 2026-11-24:** a palette per layer derived from D1 (`src/canvas/moods.ts`). Still open to override: change the table, keep `verify:phase3` contrast and `verify:phase4` separation passing. |
-| D4 | Ambient sound, muted by default? | 5.4 | Open — defer to Phase 5. |
+| D4 | Ambient sound, muted by default? | 5.4 | **DECIDED 2026-11-25: no sound.** Recruiters read portfolios at work, muted, and browsers block autoplay; a muted-by-default bed would be heard by almost no one while costing a toggle, assets and upkeep. The 5.4 budget went to finishing 4.9 and 5.3. |
 | D5 | Publish the phone number? | 1.1 | **DECIDED: no.** Email + contact form only. Number stays in the resume PDF. |
-| D6 | Custom domain? | 6.8 | Open — defer to Phase 6; affects DNS only, not the build. |
+| D6 | Custom domain? | 6.8 | **DECIDED 2026-11-25: not now.** `shridhan29.github.io` is free, already on the résumé and indexed; a domain adds a yearly cost and a renewal to remember. Revisit if one is bought: the build is domain-agnostic except `index.html` metadata, `robots.txt` and `sitemap.xml`. |
 | D7 | 3D asset source | 3.1–3.6 | **DECIDED: CC0 kits + procedural geometry.** Poly Haven / Quaternius assets plus code-generated shapes. No Blender modelling required; bakes come from the kits or are faked with baked-look materials. |
-| D8 | Collectibles: five or six? | 5.5 | Open — the plan says "five hidden objects, one per layer", but there are six layers. Either one per layer (six) or skip one layer (five; L0 is the natural candidate, since it is the hero). Defer to Phase 5. |
+| D8 | Collectibles: five or six? | 5.5 | **DECIDED 2026-11-25: neither — cut.** The plan gated the résumé download behind finding all of them, and the résumé is the one thing a recruiter must never have to work for. As an ungated extra it would be a game few would find, hiding objects across six layers, against D1's restraint. The console note (5.7) stays as the easter egg. |
 | D9 | Environment lighting within 200 KB | 3.1–3.6 | **DECIDED 2026-09-17: (a) procedural light panels** rendered into a 64 px environment map — 0 KB, art-directable per layer. A 1k Poly Haven HDRI measured 1.3–1.6 MB, and one per layer would have been ~9 MB. |
 | D10 | How the 3D journey lines up with the page | 2.6, 3.2–3.6 | **DECIDED 2026-09-17: follow the page order.** Each layer arrives with its article; layer order is Orbit, Device (TRUUNA), Surface (aashman.in), Ground (DMS + Urja), Core (About/Skills), Cloud (Experience). The page is unchanged; the descent no longer ends at hardware. |
 | D11 | Third-party component libraries | 5.2, 5.3 | **DECIDED 2026-09-17: React Bits, selectively; Aceternity UI, no.** React Bits matches the stack (React 19, Tailwind v4, TS) and its licence (MIT + Commons Clause) allows use inside the site; take only `Magnet`, `ScrambledText`/`DecryptedText`, a `CountUp`-style counter and `SpotlightCard`/`GlareHover`. Rejected: all React Bits backgrounds (each opens a second WebGL context via `ogl`, breaking the one-canvas rule) and cursor gimmicks. Aceternity rejected: its signature effects are the generic glow-and-gradient look D1 avoids, Globe and Macbook Scroll duplicate L0 and L1, it assumes Next.js, and its licence forbids redistributing source files, which a public repo arguably does. |
@@ -402,6 +404,8 @@ Web3Forms gives 5× the free headroom and better spam handling at the same price
 
 | Date | Change |
 |---|---|
+| 2026-11-25 | **UI refresh; every project screenshot visible.** On desktop the 3D stage used to replace each project's screenshot row, and showed one tilted screen (aashman.in stacked six panes, so five were hidden); web shots were also cropped to a fixed 1843×954 box, which cut the 1284×959 DMS point-of-sale shot. Now every project has a gallery at every width: phone screens in handset frames, web screens in browser frames two to a row, each at its true proportions (letterboxed, never cropped), all opening in a native `<dialog>` lightbox with arrow keys and focus return. The 3D stage stays as a showcase above it. Esc in the lightbox no longer triggers the Esc plain-view shortcut. Projects become numbered cards; new tokens (`line`, `line-strong`, `accent-soft`) and shared `.card`, `.chip`, `.btn-primary`, `.btn-ghost`, `.field` styles; Skills, Experience, Contact, hero stats and the nav restyled to match. `verify:phase3` updated: a staged project must now show its stage *and* its full gallery. |
+| 2026-11-25 | **Decisions D4, D6 and D8 closed; analytics wired.** No sound (5.4 cut), no collectibles (5.5 cut: the résumé is never gated), no custom domain for now. GoatCounter added behind a build-time site code, so it is off until the repository variable is set; privacy signals and automated browsers are never counted. Phase 5 is complete. What remains needs a person: device, browser, screen-reader and link-preview checks, desktop Lighthouse on a GPU, and creating the GoatCounter site. |
 | 2026-11-24 | **4.9, 5.3 and 6.3 complete.** Per-layer moods (own studio environment per layer, scroll-eased sky; no draw calls added) on D3's default. Links and buttons given one set of states; the contact form's sending state is marked busy. Found and fixed the section reveal dimming the first project (range scaled with the 5300 px Work section). No-WebGL path verified in a real browser. First CI run with the verify gate: all six jobs green, about 5 minutes. |
 | 2026-11-24 | **Phase 6, automatable part.** CI gates deploy on every browser suite (parallel matrix). `verify:a11y` added (axe-core, keyboard, Esc plain view); fixed a keyboard-unreachable screenshot scroller. `perf:lighthouse` added (lighthouse, chrome-launcher): mobile 98, desktop Performance 67–70 traced to software GL rather than the site, after replacing a ~1 s synchronous shader compile with `compileAsync`. OG image cut from 415 KB to 91 KB. `DEVICE_TESTING.md` now covers phones as Static, other browsers, link previews and a screen-reader pass. New devDependencies: axe-core, lighthouse, chrome-launcher. |
 | 2026-11-24 | **Phase 5, first pass.** 5.1 non-blocking reveal, 5.2 magnetic buttons (custom cursor cut), 5.3 decode, count-up and portrait glare, 5.6 404 page, 5.7 console note. 5.4 waits on D4 and 5.5 on D8. Added `verify:phase5` (29 checks), each feature tested with motion allowed and reduced. Headless Chrome reports no pointer, so hover-only features switched themselves off under test — correct behaviour, but untestable; the suite stands in a desktop mouse by answering only the pointer half of the media query. Entry 79.4 / 180 KB gzip. |

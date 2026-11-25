@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { startAnalytics } from './analytics'
 import './styles/index.css'
 
 // 5.7: a note for whoever opens the console — likely someone hiring, or curious.
@@ -15,3 +16,5 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 )
+
+startAnalytics()

@@ -24,7 +24,7 @@ export function Nav() {
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
         scrolled
-          ? 'border-b border-slate/70 bg-void/85 backdrop-blur-md'
+          ? 'border-b border-line bg-void/80 backdrop-blur-md'
           : 'border-b border-transparent'
       }`}
     >
@@ -36,10 +36,13 @@ export function Nav() {
             .
           </span>
         </a>
-        <ul className="flex items-center gap-5 text-sm text-mist md:gap-7">
+        <ul className="flex items-center gap-1 text-sm text-mist sm:gap-2">
           {LINKS.map((l) => (
             <li key={l.href} className={l.always ? '' : 'hidden sm:block'}>
-              <a href={l.href} className="transition-colors hover:text-bone">
+              <a
+                href={l.href}
+                className="rounded-full px-3 py-1.5 transition-colors hover:bg-white/[0.06] hover:text-bone"
+              >
                 {l.label}
               </a>
             </li>
@@ -47,7 +50,8 @@ export function Nav() {
           <li>
             <a
               href={profile.resume}
-              className="btn rounded-full border border-slate px-4 py-1.5 text-sm text-bone hover:border-accent hover:text-accent"
+              data-goatcounter-click="resume-nav"
+              className="btn btn-ghost ml-1 !px-4 !py-1.5"
             >
               Résumé
             </a>

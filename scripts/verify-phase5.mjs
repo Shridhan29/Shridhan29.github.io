@@ -8,7 +8,7 @@
  * motion allowed and with reduced motion, because every one of them must fall
  * back to the plain page. Requires a production build in dist/ and Chrome.
  */
-import { readFile, stat } from 'node:fs/promises'
+import { readdir, readFile, stat } from 'node:fs/promises'
 import sharp from 'sharp'
 import { closeBrowser, createReport, launchBrowser, sleep, startPreview } from './lib/harness.mjs'
 
@@ -86,6 +86,32 @@ check(
     (await stat(ogFile)
       .then((s) => s.size)
       .catch(() => Infinity))) < 300_000,
+)
+
+section('Analytics (6.8)')
+
+const analytics = await readFile('src/analytics.ts', 'utf8')
+check('analytics are off unless the build is given a site code', /if \(!CODE \|\|/.test(analytics))
+check(
+  'Do Not Track, Global Privacy Control and automated browsers are never counted',
+  /doNotTrack === '1'/.test(analytics) &&
+    /globalPrivacyControl/.test(analytics) &&
+    /webdriver/.test(analytics),
+)
+const builtJs = (
+  await Promise.all(
+    (await readdir('dist/assets'))
+      .filter((f) => f.endsWith('.js'))
+      .map((f) => readFile(`dist/assets/${f}`, 'utf8')),
+  )
+).join('\n')
+check(
+  process.env.VITE_GOATCOUNTER
+    ? 'this build carries the site code it was given'
+    : 'a build without a site code never mentions a counting endpoint',
+  process.env.VITE_GOATCOUNTER
+    ? builtJs.includes(process.env.VITE_GOATCOUNTER) && /\.goatcounter\.com\/count/.test(builtJs)
+    : !/\.goatcounter\.com\/count/.test(builtJs),
 )
 
 // --------------------------------------------------------------- runtime --

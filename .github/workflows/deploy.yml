@@ -43,6 +43,9 @@ jobs:
       # Also runs the bundle-budget check (ARCHITECTURE.md §6).
       - name: Build
         run: npm run build
+        env:
+          # Analytics stay off until the repository variable is set (src/analytics.ts).
+          VITE_GOATCOUNTER: ${{ vars.GOATCOUNTER_CODE }}
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

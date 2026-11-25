@@ -28,23 +28,24 @@ export function Hero() {
           </p>
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
-            <a
-              ref={primary}
-              href="#work"
-              className="btn rounded-full bg-bone px-5 py-2.5 text-sm font-medium text-void hover:opacity-85"
-            >
-              See the work
+            <a ref={primary} href="#work" className="btn btn-primary">
+              See the work <span aria-hidden>↓</span>
             </a>
             <a
               ref={store}
               href={profile.links.playStore}
+              data-goatcounter-click="play-store-hero"
               target="_blank"
               rel="noreferrer noopener"
-              className="btn rounded-full border border-slate px-5 py-2.5 text-sm text-bone hover:border-accent hover:text-accent"
+              className="btn btn-ghost"
             >
               TRUUNA on Google Play <span className="link-arrow">↗</span>
             </a>
-            <a href={profile.resume} className="link mx-2 my-2.5 text-sm text-mist hover:text-bone">
+            <a
+              href={profile.resume}
+              data-goatcounter-click="resume-hero"
+              className="link mx-2 my-2.5 text-sm text-mist hover:text-bone"
+            >
               Résumé (PDF)
             </a>
           </div>
@@ -54,7 +55,7 @@ export function Hero() {
           data-hero-portrait
           className="order-first max-w-[260px] md:order-none md:max-w-[420px] md:justify-self-end xl:max-w-[520px]"
         >
-          <Glare className="rounded-lg">
+          <Glare className="rounded-2xl shadow-[0_40px_80px_-40px_rgb(0_0_0/0.9)]">
             <Picture
               base="/img/portrait"
               widths={[480, 960]}
@@ -63,15 +64,15 @@ export function Hero() {
               priority
               sizes="(max-width: 768px) 260px, (max-width: 1280px) 420px, 520px"
               alt={`${profile.fullName}, ${profile.role}`}
-              className="w-full rounded-lg border border-slate/80 object-cover"
+              className="w-full rounded-2xl border border-line object-cover"
             />
           </Glare>
         </div>
       </div>
 
-      <dl className="hidden shrink-0 grid-cols-4 gap-6 border-t border-slate/60 pt-6 lg:grid xl:gap-12">
+      <dl className="hidden shrink-0 grid-cols-4 gap-4 lg:grid xl:gap-6">
         {profile.stats.map((s) => (
-          <div key={s.label}>
+          <div key={s.label} className="card rounded-2xl px-5 py-4 xl:px-6 xl:py-5">
             <dt className="sr-only">{s.label}</dt>
             <dd>
               <span className="font-mono text-2xl text-bone xl:text-3xl">

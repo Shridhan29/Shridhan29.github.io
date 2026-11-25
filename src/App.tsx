@@ -24,13 +24,15 @@ export default function App() {
 
   // Esc: the plain view (6.5, ARCHITECTURE §7) — the same complete 2D page the
   // Static tier serves, for this visit. Not while typing in the contact form,
-  // where Esc belongs to the field.
+  // where Esc belongs to the field, nor while a dialog is open.
   useEffect(() => {
     if (!canRender3D) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented) return
       const t = e.target as HTMLElement | null
       if (t?.closest('input, textarea, select, [contenteditable="true"]')) return
+      // In an open dialog (the screenshot lightbox), Esc closes the dialog.
+      if (document.querySelector('dialog[open]')) return
       enterPlainView()
     }
     window.addEventListener('keydown', onKey)

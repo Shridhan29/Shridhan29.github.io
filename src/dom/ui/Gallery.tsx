@@ -1,0 +1,230 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { Project, Shot } from '@/data/projects'
+import { Picture } from './Picture'
+
+/** Intrinsic size of a screenshot: its own, or the default for its kind. */
+function sizeOf(shot: Shot): [number, number] {
+  return shot.size ?? (shot.kind === 'phone' ? [1080, 1920] : [1600, 828])
+}
+
+/**
+ * Every screenshot of a project, at its true proportions: nothing is cropped.
+ *
+ * Phone screens sit in a row of handset frames (a sideways scroller on narrow
+ * screens). Web screens sit in browser frames, two to a row, large enough to
+ * read. Any of them opens full size in a lightbox.
+ */
+export function Gallery({ project }: { project: Project }) {
+  const [open, setOpen] = useState<number | null>(null)
+  const phone = project.shots[0]?.kind === 'phone'
+
+  return (
+    <>
+      {phone ? (
+        <PhoneRow project={project} onOpen={setOpen} />
+      ) : (
+        <WebGrid project={project} onOpen={setOpen} />
+      )}
+      <Lightbox project={project} index={open} onChange={setOpen} />
+    </>
+  )
+}
+
+type RowProps = { project: Project; onOpen: (i: number) => void }
+
+function PhoneRow({ project, onOpen }: RowProps) {
+  return (
+    <ul
+      className="gallery-scroller -mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pt-1 pb-4 md:gap-6 lg:grid lg:grid-cols-5 lg:overflow-visible lg:pb-1"
+      // A row that scrolls sideways must be reachable without a pointer: focus
+      // it and the arrow keys scroll it (6.5, axe scrollable-region-focusable).
+      tabIndex={0}
+      aria-label={`${project.name} screens, scrollable`}
+    >
+      {project.shots.map((shot, i) => (
+        // `relative` keeps anything absolutely positioned inside the scroller,
+        // so nothing escapes overflow-x and widens the page on phones.
+        <li
+          key={shot.slug}
+          className="relative w-[46vw] max-w-[200px] shrink-0 snap-start lg:w-auto lg:max-w-none"
+        >
+          <figure className="group">
+            <button
+              type="button"
+              onClick={() => onOpen(i)}
+              aria-label={`Enlarge: ${shot.alt}`}
+              className="shot-frame block w-full rounded-[1.4rem] p-1.5"
+            >
+              <Picture
+                base={`/img/${project.dir}/${shot.slug}`}
+                widths={project.widths}
+                width={sizeOf(shot)[0]}
+                height={sizeOf(shot)[1]}
+                alt={shot.alt}
+                sizes="(max-width: 1024px) 46vw, 18vw"
+                className="aspect-[1080/1920] w-full rounded-[1.05rem] bg-ink object-contain"
+              />
+            </button>
+            <figcaption className="mt-3 px-1 text-xs leading-snug text-mist">{shot.alt}</figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function WebGrid({ project, onOpen }: RowProps) {
+  return (
+    <ul className="grid gap-5 sm:grid-cols-2 lg:gap-6">
+      {project.shots.map((shot, i) => {
+        const [w, h] = sizeOf(shot)
+        return (
+          <li key={shot.slug}>
+            <figure className="group flex h-full flex-col">
+              <button
+                type="button"
+                onClick={() => onOpen(i)}
+                aria-label={`Enlarge: ${shot.alt}`}
+                className="shot-frame flex w-full flex-1 flex-col overflow-hidden rounded-xl text-left"
+              >
+                <span
+                  aria-hidden
+                  className="flex items-center gap-1.5 border-b border-line px-3 py-2"
+                >
+                  <span className="size-2 rounded-full bg-line" />
+                  <span className="size-2 rounded-full bg-line" />
+                  <span className="size-2 rounded-full bg-line" />
+                </span>
+                {/* Letterboxed, never cropped: the frame keeps the common browser
+                    shape and a screenshot of any other shape fits inside it. */}
+                <span className="my-auto block bg-ink">
+                  <Picture
+                    base={`/img/${project.dir}/${shot.slug}`}
+                    widths={project.widths}
+                    width={w}
+                    height={h}
+                    alt={shot.alt}
+                    sizes="(max-width: 640px) 92vw, 44vw"
+                    className="aspect-[1600/828] h-auto w-full object-contain"
+                  />
+                </span>
+              </button>
+              <figcaption className="mt-2.5 px-0.5 text-xs leading-snug text-mist">
+                {shot.alt}
+              </figcaption>
+            </figure>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+/**
+ * Full-size view on a native <dialog>: focus is trapped and restored, Esc
+ * closes it, and the page behind is inert — all by the browser. Arrow keys step
+ * through the project's screenshots.
+ */
+function Lightbox({
+  project,
+  index,
+  onChange,
+}: {
+  project: Project
+  index: number | null
+  onChange: (i: number | null) => void
+}) {
+  const ref = useRef<HTMLDialogElement>(null)
+  const opener = useRef<HTMLElement | null>(null)
+  const count = project.shots.length
+
+  useEffect(() => {
+    const dialog = ref.current
+    if (!dialog) return
+    if (index !== null && !dialog.open) {
+      opener.current = document.activeElement as HTMLElement | null
+      dialog.showModal()
+    }
+    if (index === null) {
+      if (dialog.open) dialog.close()
+      // Back to the thumbnail that opened it, so keyboard users keep their place.
+      opener.current?.focus({ preventScroll: true })
+      opener.current = null
+    }
+  }, [index])
+
+  const step = useCallback(
+    (d: number) => onChange(index === null ? null : (index + d + count) % count),
+    [index, count, onChange],
+  )
+
+  const shot = index === null ? null : project.shots[index]
+  const phone = shot?.kind === 'phone'
+
+  return (
+    <dialog
+      ref={ref}
+      data-lenis-prevent
+      aria-label={`${project.name} screenshots`}
+      onClose={() => onChange(null)}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowRight') step(1)
+        if (e.key === 'ArrowLeft') step(-1)
+      }}
+      // A click on the backdrop lands on the dialog element itself.
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onChange(null)
+      }}
+      className="lightbox m-auto max-h-none max-w-none bg-transparent p-0 text-bone"
+    >
+      {shot && (
+        <div className="flex h-dvh w-screen flex-col items-center justify-center gap-4 p-4 md:p-10">
+          <div className="flex w-full max-w-6xl items-center justify-between font-mono text-xs text-mist">
+            <span>
+              {project.name} · {index! + 1} / {count}
+            </span>
+            <button
+              type="button"
+              onClick={() => onChange(null)}
+              className="btn rounded-full border border-line px-3 py-1.5 text-bone hover:border-accent"
+            >
+              Close <span aria-hidden>✕</span>
+            </button>
+          </div>
+          <div className="flex min-h-0 w-full max-w-6xl flex-1 items-center justify-center">
+            <Picture
+              key={shot.slug}
+              base={`/img/${project.dir}/${shot.slug}`}
+              widths={project.widths}
+              width={sizeOf(shot)[0]}
+              height={sizeOf(shot)[1]}
+              alt={shot.alt}
+              priority
+              sizes={phone ? '50vh' : '90vw'}
+              className={`max-h-full w-auto max-w-full rounded-lg border border-line object-contain ${phone ? 'h-full' : ''}`}
+            />
+          </div>
+          <div className="flex w-full max-w-6xl items-center justify-between gap-4">
+            <button
+              type="button"
+              onClick={() => step(-1)}
+              aria-label="Previous screenshot"
+              className="btn rounded-full border border-line px-4 py-2 text-sm hover:border-accent"
+            >
+              ←
+            </button>
+            <p className="text-center text-sm text-mist">{shot.alt}</p>
+            <button
+              type="button"
+              onClick={() => step(1)}
+              aria-label="Next screenshot"
+              className="btn rounded-full border border-line px-4 py-2 text-sm hover:border-accent"
+            >
+              →
+            </button>
+          </div>
+        </div>
+      )}
+    </dialog>
+  )
+}

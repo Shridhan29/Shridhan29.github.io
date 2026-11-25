@@ -3,7 +3,7 @@ import { GraphicsToggle } from '@/dom/ui/GraphicsToggle'
 
 export function Footer() {
   return (
-    <footer className="border-t border-slate/60 py-10">
+    <footer className="border-t border-line py-10">
       <div className="flex flex-col gap-4 text-xs text-mist/85 sm:flex-row sm:items-center sm:justify-between">
         <p>
           © {new Date().getFullYear()} {profile.fullName}. Built with React, Three.js and too much

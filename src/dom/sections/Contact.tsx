@@ -50,29 +50,28 @@ export function Contact() {
     }
   }
 
-  const field =
-    'w-full rounded-md border border-slate bg-ink px-3.5 py-2.5 text-sm text-bone placeholder:text-mist/80 focus:border-accent focus:outline-none'
+  const field = 'field'
 
   return (
     <Section id="contact" label="Contact" title="Building something that has to work in the field?">
-      <div className="grid gap-12 md:grid-cols-2 md:gap-16 xl:max-w-6xl xl:gap-24">
+      <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:gap-14 xl:gap-20">
         <div>
-          <p className="measure text-[0.95rem] leading-relaxed text-mist">
+          <p className="measure text-base leading-relaxed text-mist md:text-lg">
             I'm open to software development roles — in Pune, or remote. The fastest way to reach me
             is the form, or email if you'd rather skip it.
           </p>
 
-          <ul className="mt-8 space-y-4 text-sm">
-            <li>
-              <span className="block font-mono text-xs tracking-[0.16em] text-mist/80 uppercase">
+          <ul className="mt-8 divide-y divide-line border-y border-line text-sm">
+            <li className="py-4">
+              <span className="mb-1.5 block font-mono text-xs tracking-[0.16em] text-mist uppercase">
                 Email
               </span>
               <a href={`mailto:${profile.email}`} className="link text-bone">
                 {profile.email}
               </a>
             </li>
-            <li>
-              <span className="block font-mono text-xs tracking-[0.16em] text-mist/80 uppercase">
+            <li className="py-4">
+              <span className="mb-1.5 block font-mono text-xs tracking-[0.16em] text-mist uppercase">
                 Elsewhere
               </span>
               <span className="flex flex-wrap gap-4">
@@ -92,13 +91,17 @@ export function Contact() {
                 >
                   LinkedIn <span className="link-arrow">↗</span>
                 </a>
-                <a href={profile.resume} className="link text-bone">
+                <a
+                  href={profile.resume}
+                  className="link text-bone"
+                  data-goatcounter-click="resume-contact"
+                >
                   Résumé (PDF)
                 </a>
               </span>
             </li>
-            <li>
-              <span className="block font-mono text-xs tracking-[0.16em] text-mist/80 uppercase">
+            <li className="py-4">
+              <span className="mb-1.5 block font-mono text-xs tracking-[0.16em] text-mist uppercase">
                 Based in
               </span>
               <span className="text-mist">{profile.location}</span>
@@ -106,9 +109,9 @@ export function Contact() {
           </ul>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="card space-y-5 p-5 sm:p-8 md:p-10">
           <div>
-            <label htmlFor="name" className="mb-1.5 block text-xs text-mist">
+            <label htmlFor="name" className="mb-2 block text-sm font-medium text-bone/90">
               Name
             </label>
             <input
@@ -121,7 +124,7 @@ export function Contact() {
             />
           </div>
           <div>
-            <label htmlFor="email" className="mb-1.5 block text-xs text-mist">
+            <label htmlFor="email" className="mb-2 block text-sm font-medium text-bone/90">
               Email
             </label>
             <input
@@ -135,7 +138,7 @@ export function Contact() {
             />
           </div>
           <div>
-            <label htmlFor="message" className="mb-1.5 block text-xs text-mist">
+            <label htmlFor="message" className="mb-2 block text-sm font-medium text-bone/90">
               Message
             </label>
             <textarea
@@ -158,7 +161,7 @@ export function Contact() {
             type="submit"
             disabled={status === 'sending'}
             aria-busy={status === 'sending'}
-            className="btn rounded-full bg-bone px-5 py-2.5 text-sm font-medium text-void hover:opacity-85 disabled:opacity-50"
+            className="btn btn-primary w-full justify-center disabled:opacity-50 sm:w-auto"
           >
             {status === 'sending' ? 'Sending…' : 'Send message'}
           </button>

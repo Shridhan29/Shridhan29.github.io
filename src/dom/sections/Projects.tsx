@@ -1,9 +1,9 @@
 import { projects, type Project } from '@/data/projects'
 import { Section } from '@/dom/ui/Section'
-import { Picture } from '@/dom/ui/Picture'
+import { Gallery } from '@/dom/ui/Gallery'
 import { CAN_RENDER_3D } from '@/tier'
 
-/** Projects whose screenshots a 3D layer shows on desktop, and the stage it draws into. */
+/** Projects a 3D layer illustrates on desktop, and the stage it draws into. */
 type Stage = 'device' | 'surface' | 'ground-pos' | 'ground-kiosk'
 
 const STAGES: Partial<Record<string, Stage>> = {
@@ -16,146 +16,94 @@ const STAGES: Partial<Record<string, Stage>> = {
 /** A phone or a kiosk is tall; a stack of windows or a countertop is wide. */
 const TALL = new Set<Stage>(['device', 'ground-kiosk'])
 
-function Shots({ project }: { project: Project }) {
-  const phone = project.shots[0]?.kind === 'phone'
-  // On desktop with 3D, a layer draws these screenshots into a stage. There, the
-  // image row is display: none — so its lazy images are never fetched — and
-  // screen readers get the same descriptions as a plain list. Phones, tablets
-  // and the Static tier keep the row.
+/**
+ * The 3D showcase: an empty, decorative box the project's layer draws into on
+ * desktop. The screenshots themselves are always in the gallery below it, so
+ * nothing depends on the scene to be seen.
+ */
+function Showcase({ project }: { project: Project }) {
   const stage = CAN_RENDER_3D ? STAGES[project.id] : undefined
-  const staged = !!stage
+  if (!stage) return null
   return (
-    <>
-      {staged && (
-        <>
-          <div
-            data-stage={stage}
-            aria-hidden
-            className={`mt-10 hidden lg:block scene-off:hidden ${
-              stage && TALL.has(stage)
-                ? 'h-[min(78vh,760px)] min-h-[520px]'
-                : 'h-[min(64vh,620px)] min-h-[420px]'
-            }`}
-          />
-          <ul data-shot-captions className="hidden lg:block lg:sr-only scene-off:hidden">
-            {project.shots.map((shot) => (
-              <li key={shot.slug}>{shot.alt}</li>
-            ))}
-          </ul>
-        </>
-      )}
-      <ShotList project={project} phone={phone} staged={staged} />
-    </>
+    <div
+      data-stage={stage}
+      aria-hidden
+      className={`mt-10 hidden lg:block scene-off:hidden ${
+        TALL.has(stage) ? 'h-[min(72vh,680px)] min-h-[500px]' : 'h-[min(58vh,560px)] min-h-[400px]'
+      }`}
+    />
   )
 }
 
-function ShotList({
-  project,
-  phone,
-  staged,
-}: {
-  project: Project
-  phone: boolean
-  staged: boolean
-}) {
+function Bullets({ items, tone }: { items: string[]; tone: 'accent' | 'muted' }) {
   return (
-    <ul
-      className={
-        // Phone shots scroll horizontally where they do not fit and lay out as a
-        // plain row once the shell is wide enough to hold all five.
-        (phone
-          ? 'mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 lg:grid lg:grid-cols-5 lg:gap-6 lg:overflow-visible'
-          : 'mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:gap-6') +
-        (staged ? ' lg:hidden scene-off:lg:grid' : '') +
-        ' focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent'
-      }
-      // A row that scrolls sideways must be reachable without a pointer: focus
-      // it and the arrow keys scroll it (6.5, axe scrollable-region-focusable).
-      tabIndex={phone ? 0 : undefined}
-      aria-label={phone ? `${project.name} screens, scrollable` : undefined}
-    >
-      {project.shots.map((shot, i) => (
-        // `relative` anchors the sr-only caption (position: absolute) inside the
-        // scroller. Without it the captions escape overflow-x and widen the whole
-        // page on phones, so mobile browsers zoom the site out.
+    <ul className="space-y-3 xl:grid xl:grid-cols-2 xl:gap-x-10 xl:gap-y-4 xl:space-y-0">
+      {items.map((h) => (
         <li
-          key={shot.slug}
-          className={phone ? 'relative w-[168px] shrink-0 snap-start lg:w-auto' : ''}
+          key={h.slice(0, 24)}
+          className={`flex gap-3 leading-relaxed ${
+            tone === 'accent' ? 'text-[0.95rem] text-bone/85' : 'text-[0.9rem] text-mist'
+          }`}
         >
-          <figure>
-            <Picture
-              base={`/img/${project.dir}/${shot.slug}`}
-              widths={project.widths}
-              width={phone ? 1080 : 1843}
-              height={phone ? 1920 : 954}
-              alt={shot.alt}
-              // Eager loading would fetch it even while the row is display: none.
-              priority={i === 0 && project.featured && !staged}
-              sizes={
-                phone
-                  ? '(max-width: 1024px) 168px, 19vw'
-                  : '(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw'
-              }
-              className={`w-full rounded-md border border-slate/70 bg-ink ${phone ? '' : 'aspect-[1843/954] object-cover object-top'}`}
-            />
-            <figcaption className="sr-only">{shot.alt}</figcaption>
-          </figure>
+          <span
+            aria-hidden
+            className={`mt-[0.6rem] size-1.5 shrink-0 rounded-full ${
+              tone === 'accent' ? 'bg-accent' : 'bg-line-strong'
+            }`}
+          />
+          {h}
         </li>
       ))}
     </ul>
   )
 }
 
-function ProjectBlock({ project }: { project: Project }) {
+function ProjectCard({ project, index }: { project: Project; index: number }) {
   return (
-    <article
-      id={project.id}
-      className="reveal scroll-mt-24 border-t border-slate/60 py-12 first:border-t-0 first:pt-0 md:py-16 xl:py-24"
-    >
-      <div className="grid gap-8 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.5fr)] md:gap-14 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,2fr)] xl:gap-20">
-        <div className="md:sticky md:top-24 md:self-start">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h3 className="t-project font-semibold">{project.name}</h3>
-            {project.featured && (
-              <span className="rounded-full border border-ember/50 px-2 py-0.5 font-mono text-[0.65rem] tracking-wider text-ember uppercase">
-                Live on Google Play
-              </span>
-            )}
-          </div>
-          <p className="mt-1.5 text-sm text-accent">{project.tagline}</p>
-          <p className="mt-4 text-[0.95rem] leading-relaxed text-mist">{project.hook}</p>
+    <article id={project.id} className="card reveal scroll-mt-24 p-5 sm:p-8 md:p-10 xl:p-14">
+      <header className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="font-mono text-xs tracking-[0.2em] text-accent">
+          {String(index + 1).padStart(2, '0')}
+          <span className="text-mist"> / {String(projects.length).padStart(2, '0')}</span>
+        </span>
+        {project.featured && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-ember/40 bg-ember/10 px-2.5 py-0.5 font-mono text-[0.65rem] tracking-wider text-ember uppercase">
+            <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-ember" />
+            Live on Google Play
+          </span>
+        )}
+      </header>
 
-          <dl className="mt-6 space-y-2 font-mono text-xs text-mist">
-            <div className="flex gap-3">
-              <dt className="w-14 shrink-0">Period</dt>
-              <dd>{project.period}</dd>
-            </div>
-            <div className="flex gap-3">
-              <dt className="w-14 shrink-0">Role</dt>
-              <dd>{project.role}</dd>
-            </div>
+      <div className="mt-5 grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.6fr)] lg:gap-14 xl:gap-20">
+        <div>
+          <h3 className="t-project font-semibold">{project.name}</h3>
+          <p className="mt-2 text-[0.95rem] font-medium text-accent-soft">{project.tagline}</p>
+          <p className="mt-4 leading-relaxed text-mist">{project.hook}</p>
+
+          <dl className="mt-7 grid grid-cols-[auto_1fr] gap-x-5 gap-y-2.5 border-t border-line pt-5 text-sm">
+            <dt className="font-mono text-xs tracking-[0.14em] text-mist uppercase">Period</dt>
+            <dd className="text-bone/90">{project.period}</dd>
+            <dt className="font-mono text-xs tracking-[0.14em] text-mist uppercase">Role</dt>
+            <dd className="text-bone/90">{project.role}</dd>
           </dl>
 
-          <ul className="mt-5 flex flex-wrap gap-1.5">
+          <ul className="mt-6 flex flex-wrap gap-2" aria-label="Stack">
             {project.stack.map((s) => (
-              <li
-                key={s}
-                className="rounded border border-slate/70 px-2 py-0.5 text-[0.72rem] text-bone/85"
-              >
+              <li key={s} className="chip">
                 {s}
               </li>
             ))}
           </ul>
 
           {project.links.length > 0 && (
-            <ul className="mt-5 flex flex-wrap gap-4">
+            <ul className="mt-7 flex flex-wrap gap-3">
               {project.links.map((l) => (
                 <li key={l.href}>
                   <a
                     href={l.href}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="link text-sm text-bone"
+                    className="btn btn-ghost"
                   >
                     {l.label} <span className="link-arrow">↗</span>
                   </a>
@@ -165,43 +113,40 @@ function ProjectBlock({ project }: { project: Project }) {
           )}
         </div>
 
-        {/* min-w-0: the phone-shot strip is a flex row of fixed-width items, so
-            without this its min-content width forces the grid open and starves
-            the left column. */}
         <div className="min-w-0">
-          <ul className="space-y-3 xl:grid xl:grid-cols-2 xl:gap-x-12 xl:gap-y-3 xl:space-y-0">
-            {project.highlights.map((h) => (
-              <li
-                key={h.slice(0, 24)}
-                className="flex gap-3 text-[0.92rem] leading-relaxed text-mist xl:text-[0.98rem]"
-              >
-                <span aria-hidden className="mt-2.5 size-1 shrink-0 rounded-full bg-accent" />
-                {h}
-              </li>
-            ))}
-          </ul>
+          <h4 className="mb-4 font-mono text-xs tracking-[0.16em] text-mist uppercase">
+            Highlights
+          </h4>
+          <Bullets items={project.highlights} tone="accent" />
 
-          <details className="group mt-6 border-t border-slate/60 pt-4">
-            <summary className="cursor-pointer list-none font-mono text-xs tracking-[0.14em] text-mist uppercase transition-colors hover:text-bone">
-              <span className="inline-block transition-transform group-open:rotate-90">›</span>{' '}
+          <details className="group mt-8 rounded-xl border border-line bg-void/40 px-5 py-4 open:pb-5">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-mono text-xs tracking-[0.14em] text-mist uppercase transition-colors hover:text-bone">
               Engineering detail
+              <span
+                aria-hidden
+                className="grid size-6 place-items-center rounded-full border border-line text-sm transition-transform group-open:rotate-45"
+              >
+                +
+              </span>
             </summary>
-            <ul className="mt-4 space-y-3 xl:grid xl:grid-cols-2 xl:gap-x-12 xl:gap-y-3 xl:space-y-0">
-              {project.depth.map((d) => (
-                <li
-                  key={d.slice(0, 24)}
-                  className="flex gap-3 text-[0.88rem] leading-relaxed text-mist/85"
-                >
-                  <span aria-hidden className="mt-2.5 size-1 shrink-0 rounded-full bg-slate" />
-                  {d}
-                </li>
-              ))}
-            </ul>
+            <div className="mt-5">
+              <Bullets items={project.depth} tone="muted" />
+            </div>
           </details>
         </div>
       </div>
 
-      <Shots project={project} />
+      <Showcase project={project} />
+
+      <div className="mt-10 border-t border-line pt-8">
+        <h4 className="mb-5 flex items-center justify-between font-mono text-xs tracking-[0.16em] text-mist uppercase">
+          Screens
+          <span className="tracking-normal normal-case">
+            {project.shots.length} · select to enlarge
+          </span>
+        </h4>
+        <Gallery project={project} />
+      </div>
     </article>
   )
 }
@@ -209,9 +154,11 @@ function ProjectBlock({ project }: { project: Project }) {
 export function Projects() {
   return (
     <Section id="work" label="Work" title="Four things I built and shipped.">
-      {projects.map((p) => (
-        <ProjectBlock key={p.id} project={p} />
-      ))}
+      <div className="space-y-8 md:space-y-12">
+        {projects.map((p, i) => (
+          <ProjectCard key={p.id} project={p} index={i} />
+        ))}
+      </div>
     </Section>
   )
 }

@@ -388,7 +388,7 @@ try {
 
   /**
    * Layers that draw a project's screenshots into a stage the article reserves
-   * on desktop, in place of its screenshot row.
+   * on desktop, above its screenshot gallery (which is always shown).
    */
   const STAGED = [
     // prettier-ignore
@@ -444,7 +444,7 @@ try {
     )
     check('the page still renders its content', state.text > 2000, `${state.text} characters`)
     check(
-      'no empty stages; screenshot rows shown instead',
+      'no empty stages; screenshot galleries still shown',
       state.shownStages === 0 && state.rowHeight > 100 && state.sceneOff,
       `${state.shownStages} stages shown, TRUUNA row ${Math.round(state.rowHeight)} px`,
     )
@@ -494,7 +494,6 @@ try {
     title,
     article,
     name,
-    dir,
     stage,
     shots,
     subject,
@@ -538,18 +537,7 @@ try {
       const open = async (viewport, { webgl = true } = {}) => {
         const page = await browser.newPage()
         const errors = []
-        const rowRequests = []
         page.on('pageerror', (e) => errors.push(e.message))
-        // The row's own images are AVIF; the layer's textures are WebP.
-        page.on('request', (r) => {
-          if (
-            dir &&
-            r.url().includes(`/img/`) &&
-            r.url().endsWith('.avif') &&
-            r.url().includes(`/${dir}/`)
-          )
-            rowRequests.push(r.url())
-        })
         if (!webgl) {
           await page.evaluateOnNewDocument(() => {
             const original = HTMLCanvasElement.prototype.getContext
@@ -576,7 +564,7 @@ try {
           stage,
         )
         await sleep(4000)
-        return { page, errors, rowRequests }
+        return { page, errors }
       }
 
       const layout = (page) =>
@@ -608,23 +596,19 @@ try {
         )
 
       {
-        const { page, errors, rowRequests } = await open({ width: 1440, height: 900 })
+        const { page, errors } = await open({ width: 1440, height: 900 })
         const view = await layout(page)
         check('1440 px: no page errors', !errors.length, errors.slice(0, 2).join(' | '))
         if (shots) {
           check(
-            `1440 px: ${name} gets a stage in place of its screenshot row`,
-            !!view.stage && !view.rowVisible,
+            `1440 px: ${name} gets a stage and its full screenshot gallery`,
+            !!view.stage && view.rowVisible && view.images === shots,
+            `${view.images} of ${shots} screenshots`,
           )
           check(
-            '1440 px: screen readers get each screenshot described once',
-            view.captions === shots,
-            `${view.captions} of ${shots} descriptions`,
-          )
-          check(
-            '1440 px: the hidden screenshot row downloads nothing',
-            !rowRequests.length,
-            rowRequests.slice(0, 2).join(', '),
+            '1440 px: no hidden duplicate screenshot descriptions',
+            view.captions === 0,
+            `${view.captions} hidden descriptions`,
           )
         } else {
           check(`1440 px: ${name} gets a stage`, !!view.stage)
@@ -840,7 +824,7 @@ try {
         const { page } = await open(viewport, { webgl })
         const view = await layout(page)
         check(
-          shots ? `${label}: no stage; the screenshot row is shown` : `${label}: no stage`,
+          shots ? `${label}: no stage; the screenshot gallery is shown` : `${label}: no stage`,
           !view.stage &&
             view.captions === 0 &&
             (!shots || (view.rowVisible && view.images === shots)),

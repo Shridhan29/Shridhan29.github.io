@@ -3,6 +3,8 @@ export type Shot = {
   alt: string
   /** Phone screenshots render in a device frame; web ones in a browser chrome. */
   kind: 'phone' | 'web'
+  /** Intrinsic size, where it differs from the kind's default (1080×1920 or 1600×828). */
+  size?: [number, number]
 }
 
 export type Project = {
@@ -144,9 +146,15 @@ export const projects: Project[] = [
         slug: '02-point-of-sale',
         alt: 'Point of sale screen with RFID scanner and customer selection',
         kind: 'web',
+        size: [1284, 959],
       },
-      { slug: '03-dashboard', alt: 'Dairy management dashboard', kind: 'web' },
-      { slug: '04-admin', alt: 'Admin view with a notification dialog', kind: 'web' },
+      { slug: '03-dashboard', alt: 'Dairy management dashboard', kind: 'web', size: [1600, 823] },
+      {
+        slug: '04-admin',
+        alt: 'Admin view with a notification dialog',
+        kind: 'web',
+        size: [1600, 823],
+      },
       { slug: '01-login', alt: 'Dairy POS login screen', kind: 'web' },
     ],
   },
