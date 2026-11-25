@@ -67,10 +67,7 @@ export function Contact() {
               <span className="block font-mono text-xs tracking-[0.16em] text-mist/80 uppercase">
                 Email
               </span>
-              <a
-                href={`mailto:${profile.email}`}
-                className="text-bone underline decoration-slate underline-offset-4 hover:decoration-accent"
-              >
+              <a href={`mailto:${profile.email}`} className="link text-bone">
                 {profile.email}
               </a>
             </li>
@@ -83,22 +80,19 @@ export function Contact() {
                   href={profile.links.github}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="text-bone underline decoration-slate underline-offset-4 hover:decoration-accent"
+                  className="link text-bone"
                 >
-                  GitHub ↗
+                  GitHub <span className="link-arrow">↗</span>
                 </a>
                 <a
                   href={profile.links.linkedin}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="text-bone underline decoration-slate underline-offset-4 hover:decoration-accent"
+                  className="link text-bone"
                 >
-                  LinkedIn ↗
+                  LinkedIn <span className="link-arrow">↗</span>
                 </a>
-                <a
-                  href={profile.resume}
-                  className="text-bone underline decoration-slate underline-offset-4 hover:decoration-accent"
-                >
+                <a href={profile.resume} className="link text-bone">
                   Résumé (PDF)
                 </a>
               </span>
@@ -163,7 +157,8 @@ export function Contact() {
           <button
             type="submit"
             disabled={status === 'sending'}
-            className="rounded-full bg-bone px-5 py-2.5 text-sm font-medium text-void transition-opacity hover:opacity-85 disabled:opacity-50"
+            aria-busy={status === 'sending'}
+            className="btn rounded-full bg-bone px-5 py-2.5 text-sm font-medium text-void hover:opacity-85 disabled:opacity-50"
           >
             {status === 'sending' ? 'Sending…' : 'Send message'}
           </button>
@@ -175,7 +170,7 @@ export function Contact() {
             {status === 'error' && (
               <span className="text-ember">
                 {error}{' '}
-                <a href={`mailto:${profile.email}`} className="underline underline-offset-4">
+                <a href={`mailto:${profile.email}`} className="link">
                   Email me instead
                 </a>
                 .

@@ -222,6 +222,164 @@ try {
     await page.close()
   }
 
+  section('Links, buttons and section reveals (5.3)')
+  {
+    const page = await browser.newPage()
+    const errors = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    // CLS over a full read of the page, reveals included.
+    await page.evaluateOnNewDocument(() => {
+      window.__cls = 0
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) if (!e.hadRecentInput) window.__cls += e.value
+      }).observe({ type: 'layout-shift', buffered: true })
+    })
+    await page.setViewport({ width: 1440, height: 900 })
+    await page.goto(`${preview.base}/?tier=low`, { waitUntil: 'networkidle0', timeout: 60_000 })
+    await sleep(1500)
+
+    const hiddenAtLoad = await page.evaluate(
+      () =>
+        [...document.querySelectorAll('.reveal')]
+          .filter((el) => el.getBoundingClientRect().top < innerHeight)
+          .filter((el) => Number(getComputedStyle(el).opacity) < 0.99).length,
+    )
+    check('nothing in the first viewport waits for a reveal', hiddenAtLoad === 0, `${hiddenAtLoad}`)
+
+    // Read the page top to bottom, in viewport steps.
+    const height = await page.evaluate(() => document.documentElement.scrollHeight)
+    for (let y = 0; y < height; y += 700) {
+      await page.evaluate((y) => window.scrollTo(0, y), y)
+      await sleep(250)
+    }
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await sleep(800)
+    const count = await page.$$eval('.reveal', (els) => els.length)
+    let settled = 0
+    for (let i = 0; i < count; i++) {
+      await page.evaluate((i) => {
+        const el = document.querySelectorAll('.reveal')[i]
+        const r = el.getBoundingClientRect()
+        // Its top a third of the way down: well past the reveal's end range.
+        window.scrollTo(0, r.top + scrollY - innerHeight / 3)
+      }, i)
+      // Polled: under software GL a layer mounting as its article arrives can
+      // hold the main thread long enough to delay the scroll timeline's update.
+      for (let t = 0; t < 25; t++) {
+        await sleep(200)
+        const opacity = await page.evaluate(
+          (i) => Number(getComputedStyle(document.querySelectorAll('.reveal')[i]).opacity),
+          i,
+        )
+        if (opacity > 0.99) {
+          settled += 1
+          break
+        }
+      }
+    }
+    const reveals = { all: count, settled }
+    check(
+      'every section and article reveals fully once in view',
+      reveals.all > 0 && reveals.settled === reveals.all,
+      `${reveals.settled}/${reveals.all}`,
+    )
+    const cls = await page.evaluate(() => window.__cls)
+    check('reading the whole page shifts no layout (CLS < 0.05)', cls < 0.05, cls.toFixed(3))
+
+    // Links: an underline at rest, the accent rule drawn in on hover.
+    const link = '#contact a.link[href^="mailto:"]'
+    await page.$eval(link, (el) => el.scrollIntoView({ block: 'center' }))
+    await sleep(300)
+    const size = () =>
+      page.$eval(link, (el) => getComputedStyle(el).backgroundSize.split(',')[0].trim())
+    const rest = await size()
+    await page.hover(link)
+    await sleep(600)
+    const hover = await size()
+    check(
+      'a text link draws its accent underline in on hover',
+      rest.startsWith('0%') && hover.startsWith('100%'),
+      `${rest} → ${hover}`,
+    )
+    const ruled = await page.evaluate(() =>
+      [...document.querySelectorAll('main a.link')].every((a) =>
+        /linear-gradient/.test(getComputedStyle(a).backgroundImage),
+      ),
+    )
+    check('every text link is underlined at rest, not by colour alone', ruled)
+
+    // The contact form's states, against a stand-in for the form service.
+    await page.setRequestInterception(true)
+    let respond = null
+    page.on('request', (r) => {
+      if (!r.url().includes('api.web3forms.com')) return r.continue()
+      respond = (ok) =>
+        r.respond({
+          status: 200,
+          contentType: 'application/json',
+          // Cross-origin: without this the browser rejects the stand-in response.
+          headers: { 'Access-Control-Allow-Origin': '*' },
+          body: JSON.stringify(
+            ok ? { success: true } : { success: false, message: 'Test failure' },
+          ),
+        })
+    })
+    const fill = async () => {
+      await page.$eval('#contact form', (f) => f.scrollIntoView({ block: 'center' }))
+      await page.type('#name', 'Test')
+      await page.type('#email', 'test@example.com')
+      await page.type('#message', 'Hello')
+      await page.click('#contact button[type="submit"]')
+      for (let i = 0; i < 40 && !respond; i++) await sleep(100)
+    }
+    const button = () =>
+      page.$eval('#contact button[type="submit"]', (b) => ({
+        disabled: b.disabled,
+        busy: b.getAttribute('aria-busy'),
+        text: b.textContent,
+      }))
+    const live = () => page.$eval('#contact [aria-live]', (el) => el.textContent ?? '')
+
+    await fill()
+    const sending = await button()
+    check(
+      'submit: disabled and marked busy while sending',
+      sending.disabled && sending.busy === 'true' && /Sending/.test(sending.text),
+      JSON.stringify(sending),
+    )
+    respond?.(true)
+    respond = null
+    await sleep(500)
+    check('submit: success is announced', /reached my inbox/.test(await live()))
+    check('submit: the button is usable again', !(await button()).disabled)
+
+    await fill()
+    respond?.(false)
+    respond = null
+    await sleep(500)
+    check(
+      'submit: a failure is announced, with email as the way out',
+      /Test failure/.test(await live()) && /Email me instead/.test(await live()),
+    )
+    check('5.3: no page errors', !errors.length, errors.slice(0, 2).join(' | '))
+    await page.close()
+  }
+
+  {
+    const page = await browser.newPage()
+    await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
+    await page.setViewport({ width: 1440, height: 900 })
+    await page.goto(`${preview.base}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
+    const animated = await page.evaluate(
+      () =>
+        [...document.querySelectorAll('.reveal')].filter(
+          (el) => getComputedStyle(el).animationName !== 'none',
+        ).length,
+    )
+    check('reduced motion: no section reveals', animated === 0, `${animated} animated`)
+    await page.close()
+  }
+
   section('404')
   {
     const page = await browser.newPage()

@@ -16,9 +16,9 @@ export function Footer() {
               href={profile.links.github}
               target="_blank"
               rel="noreferrer noopener"
-              className="hover:text-bone"
+              className="link hover:text-bone"
             >
-              Source on GitHub ↗
+              Source on GitHub <span className="link-arrow">↗</span>
             </a>
           </p>
         </div>

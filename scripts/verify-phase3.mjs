@@ -120,14 +120,21 @@ const luminance = ([r, g, b]) => {
 }
 const ratio = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
 
-/** Makes text (and photos) in `regions` transparent, leaving scrims and the canvas. */
+/**
+ * Makes text (and photos) in `regions` transparent, leaving scrims and the canvas.
+ * At once: a link's colour transition would otherwise still be fading out when
+ * the screenshot is taken under software GL.
+ */
 const hideText = (page, regions) =>
   page.addStyleTag({
     content: regions
       .map(
         (r) =>
-          `${r}, ${r} * { color: transparent !important; text-decoration-color: transparent !important }` +
-          ` ${r} img { visibility: hidden }`,
+          `${r}, ${r} * { color: transparent !important; text-decoration-color: transparent !important; transition: none !important }` +
+          ` ${r} img { visibility: hidden }` +
+          // Link underlines are drawn as background lines (.link); they are
+          // decoration like text-decoration, not the ground the text sits on.
+          ` ${r} .link { background-image: none !important }`,
       )
       .join(' '),
   })
@@ -193,6 +200,9 @@ async function worstContrast(page, regions) {
   // it in place, the text beneath it cannot change between the two shots.
   await page.evaluate(() => document.querySelector('[data-debug]')?.remove())
   const lines = await page.evaluate((regions) => {
+    // A colour still mid-transition (a link that was just hovered, or text the
+    // previous measurement hid) would be read as its in-between value.
+    for (const a of document.getAnimations()) if (a instanceof CSSTransition) a.finish()
     const out = []
     const range = document.createRange()
     // Text is over the canvas unless some element between it and its region has
@@ -650,7 +660,10 @@ try {
         if (moves) {
           const debug = await browser.newPage()
           await debug.setViewport({ width: 1440, height: 900 })
-          await debug.goto(`${preview.base}/?debug=1`, {
+          // Pinned tier: under software GL the detected tier soon steps itself
+          // down, and the shader recompile that follows freezes every frame for
+          // about a second — long enough to look like stopped packets.
+          await debug.goto(`${preview.base}/?debug=1&tier=low`, {
             waitUntil: 'networkidle0',
             timeout: 60_000,
           })
@@ -666,8 +679,13 @@ try {
               return Number(new RegExp(`${effect}\\s+(\\d+)`).exec(text)?.[1] ?? -1)
             }, moves.effect)
           const first = await read()
-          await sleep(1500)
-          const second = await read()
+          // Several reads, since the value wraps: one pair a whole lap apart
+          // would read as still.
+          let second = first
+          for (let i = 0; i < 4 && second === first; i++) {
+            await sleep(750)
+            second = await read()
+          }
           check(
             `1440 px: ${moves.label} keep moving`,
             first >= 0 && second >= 0 && first !== second,

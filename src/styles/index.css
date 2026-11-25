@@ -109,7 +109,11 @@ body {
     .reveal {
       animation: reveal-in linear both;
       animation-timeline: view();
-      animation-range: entry 5% cover 26%;
+      /* Measured on entry, not cover: cover scales with the element's height,
+         so the 5300 px Work section took 1600 px of scroll to reach full
+         opacity and dimmed the first project article inside it. Entry is at
+         most a viewport long, whatever the section's height. */
+      animation-range: entry 5% entry 45%;
     }
   }
 }
@@ -167,4 +171,52 @@ body {
   .glare:hover::after {
     opacity: 1;
   }
+}
+
+/* Text links (5.3). Always underlined, so a link never relies on colour alone
+   (WCAG 1.4.1): a quiet slate rule at rest, and an accent rule that draws in
+   from the left on hover or keyboard focus. Two background lines rather than
+   text-decoration, which cannot animate its length. Transforms and backgrounds
+   only, so nothing reflows; reduced motion gets the end state at once (the
+   global rule above). */
+.link {
+  background:
+    linear-gradient(var(--color-accent), var(--color-accent)) 0 100% / 0% 1px no-repeat,
+    linear-gradient(var(--color-slate), var(--color-slate)) 0 100% / 100% 1px no-repeat;
+  padding-bottom: 3px;
+  transition:
+    background-size 0.35s cubic-bezier(0.2, 0.7, 0.2, 1),
+    color 0.2s;
+}
+.link:hover,
+.link:focus-visible {
+  background-size:
+    100% 1px,
+    100% 1px;
+}
+
+/* The ↗ on links that leave the site nudges toward where it goes. */
+.link-arrow {
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+a:hover > .link-arrow,
+a:focus-visible > .link-arrow {
+  transform: translate(2px, -2px);
+}
+
+/* Buttons (5.3): one set of states. Pressed sits 1 px down; focus uses the
+   global ring; disabled is dimmed and inert to hover. */
+.btn {
+  transition:
+    opacity 0.2s,
+    color 0.2s,
+    border-color 0.2s,
+    translate 0.1s;
+}
+.btn:active:not(:disabled) {
+  translate: 0 1px;
+}
+.btn:disabled {
+  cursor: progress;
 }

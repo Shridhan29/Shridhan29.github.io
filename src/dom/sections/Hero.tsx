@@ -31,7 +31,7 @@ export function Hero() {
             <a
               ref={primary}
               href="#work"
-              className="rounded-full bg-bone px-5 py-2.5 text-sm font-medium text-void transition-opacity hover:opacity-85"
+              className="btn rounded-full bg-bone px-5 py-2.5 text-sm font-medium text-void hover:opacity-85"
             >
               See the work
             </a>
@@ -40,14 +40,11 @@ export function Hero() {
               href={profile.links.playStore}
               target="_blank"
               rel="noreferrer noopener"
-              className="rounded-full border border-slate px-5 py-2.5 text-sm text-bone transition-colors hover:border-accent hover:text-accent"
+              className="btn rounded-full border border-slate px-5 py-2.5 text-sm text-bone hover:border-accent hover:text-accent"
             >
-              TRUUNA on Google Play ↗
+              TRUUNA on Google Play <span className="link-arrow">↗</span>
             </a>
-            <a
-              href={profile.resume}
-              className="px-2 py-2.5 text-sm text-mist underline underline-offset-4 transition-colors hover:text-bone"
-            >
+            <a href={profile.resume} className="link mx-2 my-2.5 text-sm text-mist hover:text-bone">
               Résumé (PDF)
             </a>
           </div>

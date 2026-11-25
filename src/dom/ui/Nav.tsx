@@ -47,7 +47,7 @@ export function Nav() {
           <li>
             <a
               href={profile.resume}
-              className="rounded-full border border-slate px-4 py-1.5 text-sm text-bone transition-colors hover:border-accent hover:text-accent"
+              className="btn rounded-full border border-slate px-4 py-1.5 text-sm text-bone hover:border-accent hover:text-accent"
             >
               Résumé
             </a>

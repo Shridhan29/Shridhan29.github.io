@@ -125,13 +125,13 @@ function ProjectBlock({ project }: { project: Project }) {
           <p className="mt-1.5 text-sm text-accent">{project.tagline}</p>
           <p className="mt-4 text-[0.95rem] leading-relaxed text-mist">{project.hook}</p>
 
-          <dl className="mt-6 space-y-2 font-mono text-xs text-mist/80">
+          <dl className="mt-6 space-y-2 font-mono text-xs text-mist">
             <div className="flex gap-3">
-              <dt className="w-14 shrink-0 text-mist/80">Period</dt>
+              <dt className="w-14 shrink-0">Period</dt>
               <dd>{project.period}</dd>
             </div>
             <div className="flex gap-3">
-              <dt className="w-14 shrink-0 text-mist/80">Role</dt>
+              <dt className="w-14 shrink-0">Role</dt>
               <dd>{project.role}</dd>
             </div>
           </dl>
@@ -155,9 +155,9 @@ function ProjectBlock({ project }: { project: Project }) {
                     href={l.href}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="text-sm text-bone underline decoration-slate underline-offset-4 transition-colors hover:decoration-accent"
+                    className="link text-sm text-bone"
                   >
-                    {l.label} ↗
+                    {l.label} <span className="link-arrow">↗</span>
                   </a>
                 </li>
               ))}
