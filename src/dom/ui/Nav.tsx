@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { profile } from '@/data/profile'
 
 // `always` links stay visible on phones, where there is no room for the full
@@ -16,6 +16,20 @@ const CURRENT_AT = 0.35
 export function Nav() {
   const [scrolled, setScrolled] = useState(false)
   const [current, setCurrent] = useState('')
+  const list = useRef<HTMLUListElement>(null)
+  // The highlight behind the current link: one element that slides between
+  // links rather than a background that jumps from one to the next.
+  const [pill, setPill] = useState<{ left: number; width: number } | null>(null)
+
+  useLayoutEffect(() => {
+    const place = () => {
+      const a = list.current?.querySelector<HTMLElement>('a[aria-current]')
+      setPill(a ? { left: a.offsetLeft, width: a.offsetWidth } : null)
+    }
+    place()
+    window.addEventListener('resize', place)
+    return () => window.removeEventListener('resize', place)
+  }, [current])
 
   useEffect(() => {
     const onScroll = () => {
@@ -52,13 +66,18 @@ export function Nav() {
             .
           </span>
         </a>
-        <ul className="flex items-center gap-1 text-sm text-mist sm:gap-2">
+        <ul ref={list} className="relative flex items-center gap-1 text-sm text-mist sm:gap-2">
+          <li
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 h-8 -translate-y-1/2 rounded-full bg-white/[0.08] transition-[left,width,opacity] duration-300 ease-out"
+            style={{ left: pill?.left ?? 0, width: pill?.width ?? 0, opacity: pill ? 1 : 0 }}
+          />
           {LINKS.map((l) => (
             <li key={l.href} className={l.always ? '' : 'hidden sm:block'}>
               <a
                 href={l.href}
                 aria-current={current === l.href ? 'location' : undefined}
-                className="rounded-full px-3 py-1.5 transition-colors hover:bg-white/[0.06] hover:text-bone aria-[current]:bg-white/[0.06] aria-[current]:text-bone"
+                className="relative rounded-full px-3 py-1.5 transition-colors hover:text-bone aria-[current]:text-bone"
               >
                 {l.label}
               </a>

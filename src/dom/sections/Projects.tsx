@@ -155,12 +155,6 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
       <Showcase project={project} />
 
       <div className="mt-10 border-t border-line pt-8">
-        <h4 className="mb-5 flex items-center justify-between font-mono text-xs tracking-[0.16em] text-mist uppercase">
-          Screens
-          <span className="tracking-normal normal-case">
-            {project.shots.length} · select to enlarge
-          </span>
-        </h4>
         <Gallery project={project} />
       </div>
     </article>
@@ -169,7 +163,12 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
 
 export function Projects() {
   return (
-    <Section id="work" label="Work" title="Four things I built and shipped.">
+    <Section
+      id="work"
+      label="Work"
+      title="Four things I built and shipped."
+      accent="built and shipped."
+    >
       <div className="space-y-8 md:space-y-12">
         {projects.map((p, i) => (
           <ProjectCard key={p.id} project={p} index={i} />

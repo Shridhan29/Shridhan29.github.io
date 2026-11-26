@@ -3,7 +3,7 @@ import { Section } from '@/dom/ui/Section'
 
 export function Skills() {
   return (
-    <Section id="skills" label="Toolkit" title="What I reach for.">
+    <Section id="skills" label="Toolkit" title="What I reach for." accent="reach for.">
       {/* Seven groups: two columns, then four, where the odd last card spans
           two columns rather than stretching across a whole row. */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-5">

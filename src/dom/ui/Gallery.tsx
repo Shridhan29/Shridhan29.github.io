@@ -18,136 +18,248 @@ function offShape(shot: Shot) {
 const caption = 'text-[0.8rem] leading-snug text-mist'
 
 /**
- * Every screenshot of a project, at its true proportions: nothing is cropped.
- *
- * Phone screens sit in a row of handset frames (a sideways scroller on narrow
- * screens). Web screens sit in browser frames, two to a row, large enough to
- * read. Any of them opens full size in a lightbox.
+ * Every screenshot of a project, at its true proportions, in one horizontal
+ * strip: nothing is cropped. Phone screens sit in handset frames, web screens in
+ * browser frames. The strip snaps, drags with a mouse, swipes on touch, scrolls
+ * with the arrow keys when focused, and has round previous/next buttons. Any
+ * screenshot opens full size in the lightbox.
  */
 export function Gallery({ project }: { project: Project }) {
   const [open, setOpen] = useState<number | null>(null)
   const phone = project.shots[0]?.kind === 'phone'
+  const strip = useRef<HTMLUListElement>(null)
+  const { canPrev, canNext, page, dragged } = useStrip(strip)
 
   return (
     <>
-      {phone ? (
-        <PhoneRow project={project} onOpen={setOpen} />
-      ) : (
-        <WebGrid project={project} onOpen={setOpen} />
-      )}
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <h4 className="font-mono text-xs tracking-[0.16em] text-mist uppercase">
+          Screens
+          <span className="ml-3 tracking-normal normal-case">
+            {project.shots.length}
+            <span className="hidden sm:inline"> · select to enlarge</span>
+          </span>
+        </h4>
+        {(canPrev || canNext) && (
+          <div className="flex gap-2">
+            <StripButton label="Scroll screens back" disabled={!canPrev} onClick={() => page(-1)}>
+              <Chevron flip />
+            </StripButton>
+            <StripButton label="Scroll screens forward" disabled={!canNext} onClick={() => page(1)}>
+              <Chevron />
+            </StripButton>
+          </div>
+        )}
+      </div>
+      <ul
+        ref={strip}
+        className="gallery-scroller -mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pt-1 pb-4 md:gap-6 data-[dragging]:cursor-grabbing data-[dragging]:snap-none"
+        // A row that scrolls sideways must be reachable without a pointer: focus
+        // it and the arrow keys scroll it (6.5, axe scrollable-region-focusable).
+        tabIndex={0}
+        aria-label={`${project.name} screens, scrollable`}
+      >
+        {project.shots.map((shot, i) => {
+          // A drag that ends on a screenshot is not a click on it.
+          const openShot = () => !dragged() && setOpen(i)
+          return phone ? (
+            <PhoneItem key={shot.slug} project={project} shot={shot} onOpen={openShot} />
+          ) : (
+            <WebItem key={shot.slug} project={project} shot={shot} onOpen={openShot} />
+          )
+        })}
+      </ul>
       <Lightbox project={project} index={open} onChange={setOpen} />
     </>
   )
 }
 
-type RowProps = { project: Project; onOpen: (i: number) => void }
+/**
+ * Arrow state, paging and mouse drag for a horizontal strip. Touch and
+ * trackpads scroll it natively; only a mouse needs dragging added.
+ */
+function useStrip(ref: React.RefObject<HTMLUListElement | null>) {
+  const [ends, setEnds] = useState({ canPrev: false, canNext: false })
+  const moved = useRef(0)
 
-function PhoneRow({ project, onOpen }: RowProps) {
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const update = () =>
+      setEnds({
+        canPrev: el.scrollLeft > 4,
+        canNext: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+      })
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+
+    let start: { x: number; left: number } | null = null
+    const down = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return
+      start = { x: e.clientX, left: el.scrollLeft }
+      moved.current = 0
+    }
+    const move = (e: PointerEvent) => {
+      if (!start) return
+      const dx = e.clientX - start.x
+      moved.current = Math.max(moved.current, Math.abs(dx))
+      if (moved.current > 5) {
+        el.dataset.dragging = ''
+        el.scrollLeft = start.left - dx
+      }
+    }
+    const up = () => {
+      if (!start) return
+      start = null
+      // Snapping resumes from where the drag left the strip. The click that
+      // follows this pointerup has been dispatched by the next task, so the
+      // drag distance is cleared then, ready for a keyboard Enter.
+      delete el.dataset.dragging
+      setTimeout(() => (moved.current = 0))
+    }
+    el.addEventListener('pointerdown', down)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    // Images drag as files by default, which would end the drag at once.
+    const noNativeDrag = (e: DragEvent) => e.preventDefault()
+    el.addEventListener('dragstart', noNativeDrag)
+    return () => {
+      el.removeEventListener('scroll', update)
+      observer.disconnect()
+      el.removeEventListener('pointerdown', down)
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      el.removeEventListener('dragstart', noNativeDrag)
+    }
+  }, [ref])
+
+  const page = useCallback(
+    (d: number) => {
+      const el = ref.current
+      if (!el) return
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+      el.scrollBy({ left: d * el.clientWidth * 0.8, behavior: reduce ? 'auto' : 'smooth' })
+    },
+    [ref],
+  )
+
+  return { ...ends, page, dragged: () => moved.current > 5 }
+}
+
+function StripButton({
+  label,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string
+  disabled: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
   return (
-    <ul
-      className="gallery-scroller -mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pt-1 pb-4 md:gap-6 lg:grid lg:grid-cols-5 lg:overflow-visible lg:pb-1"
-      // A row that scrolls sideways must be reachable without a pointer: focus
-      // it and the arrow keys scroll it (6.5, axe scrollable-region-focusable).
-      tabIndex={0}
-      aria-label={`${project.name} screens, scrollable`}
+    <button
+      type="button"
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className="grid size-11 place-items-center rounded-full border border-line-strong bg-accent text-white transition hover:shadow-[0_0_0_4px_rgb(77_124_255/0.2)] disabled:cursor-default disabled:border-line disabled:bg-white/[0.03] disabled:text-mist disabled:shadow-none"
     >
-      {project.shots.map((shot, i) => (
-        // `relative` keeps anything absolutely positioned inside the scroller,
-        // so nothing escapes overflow-x and widens the page on phones.
-        <li
-          key={shot.slug}
-          className="relative w-[46vw] max-w-[200px] shrink-0 snap-start lg:w-auto lg:max-w-none"
-        >
-          <figure className="group">
-            <button
-              type="button"
-              onClick={() => onOpen(i)}
-              aria-label={`Enlarge: ${shot.alt}`}
-              className="shot-frame block w-full rounded-[1.4rem] p-1.5"
-            >
-              <Picture
-                base={`/img/${project.dir}/${shot.slug}`}
-                widths={project.widths}
-                width={sizeOf(shot)[0]}
-                height={sizeOf(shot)[1]}
-                alt={shot.alt}
-                sizes="(max-width: 1024px) 46vw, 18vw"
-                className="aspect-[1080/1920] w-full rounded-[1.05rem] bg-ink object-contain"
-              />
-            </button>
-            <figcaption className={`mt-3 px-1 ${caption}`}>{shot.alt}</figcaption>
-          </figure>
-        </li>
-      ))}
-    </ul>
+      {children}
+    </button>
   )
 }
 
-function WebGrid({ project, onOpen }: RowProps) {
+type ItemProps = { project: Project; shot: Shot; onOpen: () => void }
+
+function PhoneItem({ project, shot, onOpen }: ItemProps) {
   return (
-    <ul className="grid gap-5 sm:grid-cols-2 lg:gap-6">
-      {project.shots.map((shot, i) => {
-        const [w, h] = sizeOf(shot)
-        return (
-          <li key={shot.slug}>
-            <figure className="group flex h-full flex-col">
-              {/* The frame holds the browser bar and the button; the bar sits
-                  outside the button so its address is not read as part of the
-                  button's name. */}
-              <div className="shot-frame flex w-full flex-1 flex-col overflow-hidden rounded-xl">
-                <span
-                  aria-hidden
-                  className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-line px-3 py-2"
-                >
-                  <span className="flex gap-1.5">
-                    <span className="size-2 rounded-full bg-line-strong" />
-                    <span className="size-2 rounded-full bg-line-strong" />
-                    <span className="size-2 rounded-full bg-line-strong" />
-                  </span>
-                  {project.host && (
-                    <span className="justify-self-center truncate rounded-md bg-white/[0.04] px-3 py-0.5 font-mono text-[0.68rem] text-mist">
-                      {project.host}
-                    </span>
-                  )}
-                  <span className="w-[2.6rem]" />
-                </span>
-                {/* Never cropped: the frame keeps the common browser shape, and a
-                    screenshot of another shape fits inside it over a blurred copy
-                    of itself rather than over bare bars. */}
-                <button
-                  type="button"
-                  onClick={() => onOpen(i)}
-                  aria-label={`Enlarge: ${shot.alt}`}
-                  className="relative my-auto block w-full cursor-zoom-in overflow-hidden bg-ink"
-                >
-                  {offShape(shot) && (
-                    // An <img>, not a CSS background, so it loads lazily like the
-                    // screenshot itself; decorative, so presentation and no alt.
-                    <img
-                      src={`/img/${project.dir}/${shot.slug}-${project.widths[0]}.avif`}
-                      role="presentation"
-                      loading="lazy"
-                      decoding="async"
-                      className="absolute inset-0 size-full scale-110 object-cover opacity-40 blur-2xl"
-                    />
-                  )}
-                  <Picture
-                    base={`/img/${project.dir}/${shot.slug}`}
-                    widths={project.widths}
-                    width={w}
-                    height={h}
-                    alt={shot.alt}
-                    sizes="(max-width: 640px) 92vw, 44vw"
-                    className="relative aspect-[1600/828] h-auto w-full object-contain"
-                  />
-                </button>
-              </div>
-              <figcaption className={`mt-3 px-0.5 ${caption}`}>{shot.alt}</figcaption>
-            </figure>
-          </li>
-        )
-      })}
-    </ul>
+    // `relative` keeps anything absolutely positioned inside the scroller, so
+    // nothing escapes overflow-x and widens the page on phones.
+    <li className="relative w-[46vw] max-w-[220px] shrink-0 snap-start sm:w-[220px] xl:w-[240px] xl:max-w-[240px]">
+      <figure className="group">
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-label={`Enlarge: ${shot.alt}`}
+          className="shot-frame block w-full rounded-[1.4rem] p-1.5"
+        >
+          <Picture
+            base={`/img/${project.dir}/${shot.slug}`}
+            widths={project.widths}
+            width={sizeOf(shot)[0]}
+            height={sizeOf(shot)[1]}
+            alt={shot.alt}
+            sizes="(max-width: 640px) 46vw, 240px"
+            className="pointer-events-none aspect-[1080/1920] w-full rounded-[1.05rem] bg-ink object-contain"
+          />
+        </button>
+        <figcaption className={`mt-3 px-1 ${caption}`}>{shot.alt}</figcaption>
+      </figure>
+    </li>
+  )
+}
+
+function WebItem({ project, shot, onOpen }: ItemProps) {
+  const [w, h] = sizeOf(shot)
+  return (
+    <li className="relative w-[86%] shrink-0 snap-start sm:w-[70%] lg:w-[46%]">
+      <figure className="group flex h-full flex-col">
+        {/* The frame holds the browser bar and the button; the bar sits outside
+            the button so its address is not read as part of the button's name. */}
+        <div className="shot-frame flex w-full flex-1 flex-col overflow-hidden rounded-xl">
+          <span
+            aria-hidden
+            className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-line px-3 py-2"
+          >
+            <span className="flex gap-1.5">
+              <span className="size-2 rounded-full bg-line-strong" />
+              <span className="size-2 rounded-full bg-line-strong" />
+              <span className="size-2 rounded-full bg-line-strong" />
+            </span>
+            {project.host && (
+              <span className="justify-self-center truncate rounded-md bg-white/[0.04] px-3 py-0.5 font-mono text-[0.68rem] text-mist">
+                {project.host}
+              </span>
+            )}
+            <span className="w-[2.6rem]" />
+          </span>
+          {/* Never cropped: the frame keeps the common browser shape, and a
+              screenshot of another shape fits inside it over a blurred copy of
+              itself rather than over bare bars. */}
+          <button
+            type="button"
+            onClick={onOpen}
+            aria-label={`Enlarge: ${shot.alt}`}
+            className="relative my-auto block w-full cursor-zoom-in overflow-hidden bg-ink"
+          >
+            {offShape(shot) && (
+              // An <img>, not a CSS background, so it loads lazily like the
+              // screenshot itself; decorative, so presentation and no alt.
+              <img
+                src={`/img/${project.dir}/${shot.slug}-${project.widths[0]}.avif`}
+                role="presentation"
+                loading="lazy"
+                decoding="async"
+                className="pointer-events-none absolute inset-0 size-full scale-110 object-cover opacity-40 blur-2xl"
+              />
+            )}
+            <Picture
+              base={`/img/${project.dir}/${shot.slug}`}
+              widths={project.widths}
+              width={w}
+              height={h}
+              alt={shot.alt}
+              sizes="(max-width: 640px) 86vw, (max-width: 1024px) 60vw, 40vw"
+              className="pointer-events-none relative aspect-[1600/828] h-auto w-full object-contain"
+            />
+          </button>
+        </div>
+        <figcaption className={`mt-3 px-0.5 ${caption}`}>{shot.alt}</figcaption>
+      </figure>
+    </li>
   )
 }
 

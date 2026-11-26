@@ -57,6 +57,12 @@
   letter-spacing: -0.02em;
 }
 
+.t-statement {
+  font-size: clamp(1.9rem, 4.4vw, 4.4rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
 .t-project {
   font-size: clamp(1.6rem, 2.4vw, 2.6rem);
   line-height: 1.1;
@@ -132,6 +138,144 @@ body {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------ motion
+   The scroll-driven redesign (SCROLL_IMPLEMENTATION_PLAN.md). Every rule
+   outside the @supports/@media blocks below is the finished, readable state:
+   it is what Firefox, reduced-motion visitors and the Static tier get. */
+
+/* Second tone of a two-tone heading. The text keeps a real colour (the light
+   accent), so contrast checks, forced colours and browsers without relative
+   colour syntax all see solid text. The gradient is derived from that colour,
+   hue-shifted either side of it, so making the text transparent (as the
+   contrast and scene-bounds checks do) makes the gradient transparent too. */
+.t-accent {
+  color: var(--color-accent-soft);
+}
+@supports (color: oklch(from red l c h)) {
+  .t-accent {
+    background-image: linear-gradient(
+      100deg,
+      currentColor 0%,
+      oklch(from currentColor calc(l - 0.02) calc(c + 0.04) calc(h + 40)) 55%,
+      oklch(from currentColor calc(l + 0.04) c calc(h - 45)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* A pinned section: a tall track whose child sticks for the extra height. The
+   height only exists where the scrubbed animation does. */
+.pin-sticky {
+  position: relative;
+}
+
+/* WordScrub's words; visible by default. */
+.scrub-word {
+  display: inline;
+}
+
+/* The Experience timeline line, drawn by default. */
+.draw-y {
+  transform-origin: top;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .pin-track {
+      height: var(--pin-height, 220vh);
+      view-timeline-name: --pin;
+      view-timeline-axis: block;
+    }
+    .pin-sticky {
+      position: sticky;
+      top: 0;
+      height: 100dvh;
+    }
+
+    /* Each word lights up in turn across the pinned scroll. --n is the word
+       count and --i the word's index, set inline by WordScrub. */
+    .pin-track .scrub-word {
+      animation: word-on linear both;
+      animation-timeline: --pin;
+      animation-range: contain calc(5% + (var(--i) / var(--n)) * 70%) contain
+        calc(5% + ((var(--i) + 1.5) / var(--n)) * 70%);
+    }
+
+    .draw-y {
+      animation: draw-y linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 60%;
+    }
+
+    /* The hero's scroll cue fades over the first 160 px of scroll. */
+    .cue {
+      animation: fade-away linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 160px;
+    }
+  }
+}
+
+@keyframes word-on {
+  from {
+    opacity: 0.16;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes draw-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes fade-away {
+  to {
+    opacity: 0;
+  }
+}
+
+/* One-shot load intro, staggered by --i. Time-based, not scrubbed: it plays as
+   the page paints and never waits on scroll. */
+@media (prefers-reduced-motion: no-preference) {
+  .intro-rise {
+    animation: intro-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(0.1s + var(--i, 0) * 0.08s);
+  }
+}
+@keyframes intro-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(6px);
+  }
+}
+
+/* The hero's scroll cue: a dot sliding down a short track. */
+@media (prefers-reduced-motion: no-preference) {
+  .cue-dot {
+    animation: cue 1.8s ease-in-out infinite;
+  }
+}
+@keyframes cue {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(18px);
+    opacity: 0;
   }
 }
 
@@ -356,14 +500,16 @@ a:focus-visible > .link-arrow {
   }
 }
 
-/* Form fields. */
+/* Form fields: a single underline rather than a box, lighter on the page. The
+   underline is #5b6582, over 3:1 against the card (WCAG 1.4.11). */
 .field {
   width: 100%;
-  border: 1px solid var(--color-line);
-  border-radius: 0.75rem;
-  background: rgb(5 6 10 / 0.6);
-  padding: 0.8rem 1rem;
-  font-size: 0.9rem;
+  border: 0;
+  border-bottom: 1px solid #5b6582;
+  border-radius: 0;
+  background: transparent;
+  padding: 0.7rem 0.1rem;
+  font-size: 0.95rem;
   color: var(--color-bone);
   transition:
     border-color 0.2s,
@@ -373,10 +519,10 @@ a:focus-visible > .link-arrow {
   color: color-mix(in oklab, var(--color-mist) 80%, transparent);
 }
 .field:hover {
-  border-color: var(--color-line-strong);
+  border-color: var(--color-mist);
 }
 .field:focus {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgb(77 124 254 / 0.2);
+  box-shadow: 0 1px 0 0 var(--color-accent);
 }

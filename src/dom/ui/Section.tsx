@@ -4,13 +4,17 @@ export function Section({
   id,
   label,
   title,
+  accent,
   children,
 }: {
   id: string
   label: string
   title: string
+  /** The end of `title` drawn in the heading's second tone. */
+  accent?: string
   children: ReactNode
 }) {
+  const lead = accent && title.endsWith(accent) ? title.slice(0, -accent.length) : title
   return (
     <section
       id={id}
@@ -28,7 +32,8 @@ export function Section({
         id={`${id}-heading`}
         className="t-section mb-10 max-w-[20ch] font-semibold text-balance md:mb-16"
       >
-        {title}
+        {lead}
+        {lead !== title && <span className="t-accent">{accent}</span>}
       </h2>
       {children}
     </section>

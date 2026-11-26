@@ -8,6 +8,7 @@ export function About() {
       id="about"
       label="About"
       title="Software that has to survive contact with the real world."
+      accent="the real world."
     >
       <div className="grid gap-10 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] md:gap-16 xl:gap-24">
         <div className="measure space-y-5 text-[0.95rem] leading-relaxed text-mist xl:text-base">

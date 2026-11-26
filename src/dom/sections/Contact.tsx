@@ -53,7 +53,12 @@ export function Contact() {
   const field = 'field'
 
   return (
-    <Section id="contact" label="Contact" title="Building something that has to work in the field?">
+    <Section
+      id="contact"
+      label="Contact"
+      title="Building something that has to work in the field?"
+      accent="work in the field?"
+    >
       <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:gap-14 xl:gap-20">
         <div>
           <p className="measure text-base leading-relaxed text-mist md:text-lg">
@@ -66,7 +71,10 @@ export function Contact() {
               <span className="mb-1.5 block font-mono text-xs tracking-[0.16em] text-mist uppercase">
                 Email
               </span>
-              <a href={`mailto:${profile.email}`} className="link text-bone">
+              <a
+                href={`mailto:${profile.email}`}
+                className="link text-lg font-medium break-all text-accent-soft md:text-2xl"
+              >
                 {profile.email}
               </a>
             </li>
@@ -111,9 +119,12 @@ export function Contact() {
           </ul>
         </div>
 
-        <form onSubmit={onSubmit} className="card space-y-5 self-start p-5 sm:p-8">
+        <form onSubmit={onSubmit} className="card space-y-7 self-start p-5 sm:p-8 xl:p-10">
           <div>
-            <label htmlFor="name" className="mb-2 block text-sm font-medium text-bone/90">
+            <label
+              htmlFor="name"
+              className="block font-mono text-xs tracking-[0.14em] text-mist uppercase"
+            >
               Name
             </label>
             <input
@@ -126,7 +137,10 @@ export function Contact() {
             />
           </div>
           <div>
-            <label htmlFor="email" className="mb-2 block text-sm font-medium text-bone/90">
+            <label
+              htmlFor="email"
+              className="block font-mono text-xs tracking-[0.14em] text-mist uppercase"
+            >
               Email
             </label>
             <input
@@ -140,7 +154,10 @@ export function Contact() {
             />
           </div>
           <div>
-            <label htmlFor="message" className="mb-2 block text-sm font-medium text-bone/90">
+            <label
+              htmlFor="message"
+              className="block font-mono text-xs tracking-[0.14em] text-mist uppercase"
+            >
               Message
             </label>
             <textarea
@@ -159,13 +176,13 @@ export function Contact() {
             <input id="company" name="company" type="text" tabIndex={-1} autoComplete="off" />
           </div>
 
-          {/* The status sits beside the button, not in an empty row under it. */}
-          <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:gap-5">
+          {/* Full width, like the fields; the status reads under it. */}
+          <div className="space-y-3 pt-2">
             <button
               type="submit"
               disabled={status === 'sending'}
               aria-busy={status === 'sending'}
-              className="btn btn-primary w-full shrink-0 justify-center disabled:opacity-50 sm:w-auto"
+              className="btn btn-primary w-full justify-center disabled:opacity-50"
             >
               {status === 'sending' ? 'Sending…' : 'Send message'}
             </button>
