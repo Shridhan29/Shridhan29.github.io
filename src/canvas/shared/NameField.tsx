@@ -33,9 +33,13 @@ import { useScrollStore } from '@/store/useScrollStore'
  * particles would be ~240 KB even quantised. It also stays right if the font
  * or the name in `src/data/profile.ts` changes.
  *
- * Placed from measured layout, like the monolith: in the empty band between
- * the header and the hero copy, never under text. Where that band is too short
- * to hold legible letters, nothing is drawn.
+ * Placed from measured layout, like the monolith, never under text. The hero
+ * reserves a fixed-height band for it (`[data-name-band]`) so its size does not
+ * depend on how the headline wraps: with a wider fallback font the free space
+ * above the copy shrank below the minimum and the name vanished. Without that
+ * band (it is hidden on narrow screens) the name falls back to the free space
+ * between the header and the copy. Where there is too little room for legible
+ * letters, nothing is drawn.
  */
 
 /** Below this the letters stop reading as letters. */
@@ -170,11 +174,17 @@ export function NameField({ text, count, layer }: { text: string; count: number;
     const heading = copy?.querySelector('h1')
     if (!copy || !heading) return
 
+    const reserved = document.querySelector<HTMLElement>('[data-name-band]')
+
     const place = () => {
       const scrollY = window.scrollY
-      const top = (header?.getBoundingClientRect().bottom ?? 0) + scrollY + 12
+      const below = (header?.getBoundingClientRect().bottom ?? 0) + scrollY + 12
       const block = copy.getBoundingClientRect()
-      const bottom = block.top + scrollY - 20
+      const slot = reserved?.getBoundingClientRect()
+      const [top, bottom] =
+        slot && slot.height > 0
+          ? [Math.max(below, slot.top + scrollY), slot.bottom + scrollY]
+          : [below, block.top + scrollY - 20]
       const band = bottom - top
       if (band < MIN_BAND_PX) {
         placed.current = false

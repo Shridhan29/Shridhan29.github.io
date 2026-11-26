@@ -15,42 +15,48 @@ export function Hero() {
   return (
     <section id="top" className="flex min-h-dvh flex-col justify-center gap-16 pt-28 pb-10">
       <div className="grid w-full items-center gap-12 md:grid-cols-[minmax(0,1.5fr)_minmax(0,0.85fr)] md:gap-14 xl:gap-24">
-        <div data-hero-copy className="scrim">
-          {/* The same pill as every section label. */}
-          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] px-3 py-1 font-mono text-[0.65rem] tracking-[0.12em] whitespace-nowrap text-accent-soft uppercase sm:text-[0.7rem] sm:tracking-[0.2em]">
-            <span aria-hidden className="size-1.5 rounded-full bg-accent" />
-            <DecodeText text={`${profile.role} · ${profile.location}`} />
-          </p>
+        <div className="min-w-0">
+          {/* Room for the particle name (NameField): a fixed height, so the name
+              does not depend on how the headline wraps in a given font. Outside
+              the copy, so the copy's scrim does not dim it. */}
+          <div data-name-band aria-hidden className="hidden h-24 md:block" />
+          <div data-hero-copy className="scrim">
+            {/* The same pill as every section label. */}
+            <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] px-3 py-1 font-mono text-[0.65rem] tracking-[0.12em] whitespace-nowrap text-accent-soft uppercase sm:text-[0.7rem] sm:tracking-[0.2em]">
+              <span aria-hidden className="size-1.5 rounded-full bg-accent" />
+              <DecodeText text={`${profile.role} · ${profile.location}`} />
+            </p>
 
-          <h1 className="t-hero font-semibold text-balance">{profile.headline}</h1>
+            <h1 className="t-hero font-semibold text-balance">{profile.headline}</h1>
 
-          <p className="measure-tight mt-6 text-base leading-relaxed text-mist md:text-lg xl:text-xl">
-            {profile.subhead}
-          </p>
+            <p className="measure-tight mt-6 text-base leading-relaxed text-mist md:text-lg xl:text-xl">
+              {profile.subhead}
+            </p>
 
-          <div className="mt-9 flex flex-wrap items-center gap-3">
-            <a ref={primary} href="#work" className="btn btn-primary">
-              See the work <span aria-hidden>↓</span>
-            </a>
-            <a
-              ref={store}
-              href={profile.links.playStore}
-              data-goatcounter-click="play-store-hero"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="btn btn-ghost"
-            >
-              TRUUNA on Google Play <span className="link-arrow">↗</span>
-            </a>
-            <a
-              href={profile.resume}
-              data-goatcounter-click="resume-hero"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="btn btn-ghost"
-            >
-              Résumé (PDF) <span className="link-arrow">↗</span>
-            </a>
+            <div className="mt-9 flex flex-wrap items-center gap-3">
+              <a ref={primary} href="#work" className="btn btn-primary">
+                See the work <span aria-hidden>↓</span>
+              </a>
+              <a
+                ref={store}
+                href={profile.links.playStore}
+                data-goatcounter-click="play-store-hero"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="btn btn-ghost"
+              >
+                TRUUNA on Google Play <span className="link-arrow">↗</span>
+              </a>
+              <a
+                href={profile.resume}
+                data-goatcounter-click="resume-hero"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="btn btn-ghost"
+              >
+                Résumé (PDF) <span className="link-arrow">↗</span>
+              </a>
+            </div>
           </div>
         </div>
 

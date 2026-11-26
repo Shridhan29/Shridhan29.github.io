@@ -120,17 +120,32 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
           </h4>
           <Bullets items={project.highlights} tone="accent" />
 
-          <details className="group mt-8 rounded-xl border border-line bg-void/40 px-5 py-4 open:pb-5">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-mono text-xs tracking-[0.14em] text-mist uppercase transition-colors hover:text-bone">
-              Engineering detail
-              <span
-                aria-hidden
-                className="grid size-6 place-items-center rounded-full border border-line text-sm transition-transform group-open:rotate-45"
-              >
-                +
+          <details className="group mt-8 rounded-xl border border-line bg-void/40 transition-colors open:border-line-strong">
+            {/* Says what it does, in words: a rotating + read as a "close" ×. */}
+            <summary className="flex cursor-pointer list-none flex-wrap items-center gap-3 rounded-xl px-5 py-4 transition-colors hover:bg-white/[0.03] [&::-webkit-details-marker]:hidden">
+              <span className="font-mono text-xs tracking-[0.14em] whitespace-nowrap text-bone uppercase">
+                Engineering detail
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs whitespace-nowrap text-accent-soft transition-colors group-hover:border-accent">
+                <span className="group-open:hidden">Show details</span>
+                <span className="hidden group-open:inline">Hide details</span>
+                <svg
+                  aria-hidden
+                  viewBox="0 0 12 12"
+                  className="size-3 transition-transform group-open:rotate-180"
+                >
+                  <path
+                    d="M2.5 4.5 6 8l3.5-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </span>
             </summary>
-            <div className="mt-5">
+            <div className="px-5 pt-1 pb-5">
               <Bullets items={project.depth} tone="muted" />
             </div>
           </details>

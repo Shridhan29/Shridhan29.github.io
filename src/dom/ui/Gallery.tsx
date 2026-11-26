@@ -151,10 +151,18 @@ function WebGrid({ project, onOpen }: RowProps) {
   )
 }
 
+/** The lightbox's round controls: big, filled and outlined, so they read over any screenshot. */
+const control =
+  'grid place-items-center rounded-full border border-white/35 bg-[rgb(30_36_54/0.92)] text-bone shadow-[0_8px_24px_-8px_rgb(0_0_0/0.8)] backdrop-blur-md transition hover:border-accent hover:bg-accent/20 hover:shadow-[0_0_0_4px_rgb(77_124_255/0.18)] focus-visible:border-accent'
+
+/** Horizontal travel, in CSS px, that counts as a swipe rather than a tap. */
+const SWIPE_PX = 48
+
 /**
  * Full-size view on a native <dialog>: focus is trapped and restored, Esc
- * closes it, and the page behind is inert — all by the browser. Arrow keys step
- * through the project's screenshots.
+ * closes it, and the page behind is inert — all by the browser. Arrow keys, the
+ * side buttons, the dots and (on touch screens) a sideways swipe step through
+ * the project's screenshots.
  */
 function Lightbox({
   project,
@@ -167,7 +175,9 @@ function Lightbox({
 }) {
   const ref = useRef<HTMLDialogElement>(null)
   const opener = useRef<HTMLElement | null>(null)
+  const swipe = useRef<{ x: number; y: number } | null>(null)
   const count = project.shots.length
+  const many = count > 1
 
   useEffect(() => {
     const dialog = ref.current
@@ -209,20 +219,39 @@ function Lightbox({
       className="lightbox m-auto max-h-none max-w-none bg-transparent p-0 text-bone"
     >
       {shot && (
-        <div className="flex h-dvh w-screen flex-col items-center justify-center gap-4 p-4 md:p-10">
-          <div className="flex w-full max-w-6xl items-center justify-between font-mono text-xs text-mist">
-            <span>
-              {project.name} · {index! + 1} / {count}
-            </span>
+        <div className="flex h-dvh w-screen flex-col items-center justify-center gap-4 p-4 md:gap-5 md:p-8">
+          <div className="flex w-full max-w-6xl items-center justify-between gap-4">
+            <p className="text-sm text-bone md:text-base">
+              <span className="font-semibold">{project.name}</span>
+              <span className="ml-3 font-mono text-mist" aria-live="polite">
+                {index! + 1} / {count}
+              </span>
+            </p>
             <button
               type="button"
               onClick={() => onChange(null)}
-              className="btn rounded-full border border-line px-3 py-1.5 text-bone hover:border-accent"
+              className={`${control} grid-flow-col gap-2 px-4 py-2 text-sm`}
             >
               Close <span aria-hidden>✕</span>
             </button>
           </div>
-          <div className="flex min-h-0 w-full max-w-6xl flex-1 items-center justify-center">
+
+          <div
+            className="relative flex min-h-0 w-full max-w-6xl flex-1 items-center justify-center md:px-20"
+            // Touch only: a mouse drag is left for selecting text.
+            onPointerDown={(e) => {
+              if (e.pointerType === 'touch') swipe.current = { x: e.clientX, y: e.clientY }
+            }}
+            onPointerUp={(e) => {
+              const start = swipe.current
+              swipe.current = null
+              if (!start || !many) return
+              const dx = e.clientX - start.x
+              if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(e.clientY - start.y))
+                step(dx < 0 ? 1 : -1)
+            }}
+            onPointerCancel={() => (swipe.current = null)}
+          >
             <Picture
               key={shot.slug}
               base={`/img/${project.dir}/${shot.slug}`}
@@ -232,30 +261,79 @@ function Lightbox({
               alt={shot.alt}
               priority
               sizes={phone ? '50vh' : '90vw'}
-              className={`max-h-full w-auto max-w-full rounded-lg border border-line object-contain ${phone ? 'h-full' : ''}`}
+              className={`max-h-full w-auto max-w-full rounded-lg border border-line object-contain select-none ${phone ? 'h-full' : ''}`}
             />
+            {many && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => step(-1)}
+                  aria-label="Previous screenshot"
+                  className={`${control} absolute top-1/2 left-1 size-12 -translate-y-1/2 md:left-0 md:size-14`}
+                >
+                  <Chevron flip />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => step(1)}
+                  aria-label="Next screenshot"
+                  className={`${control} absolute top-1/2 right-1 size-12 -translate-y-1/2 md:right-0 md:size-14`}
+                >
+                  <Chevron />
+                </button>
+              </>
+            )}
           </div>
-          <div className="flex w-full max-w-6xl items-center justify-between gap-4">
-            <button
-              type="button"
-              onClick={() => step(-1)}
-              aria-label="Previous screenshot"
-              className="btn rounded-full border border-line px-4 py-2 text-sm hover:border-accent"
-            >
-              ←
-            </button>
-            <p className="text-center text-sm text-mist">{shot.alt}</p>
-            <button
-              type="button"
-              onClick={() => step(1)}
-              aria-label="Next screenshot"
-              className="btn rounded-full border border-line px-4 py-2 text-sm hover:border-accent"
-            >
-              →
-            </button>
-          </div>
+
+          <p className="max-w-3xl text-center text-sm leading-relaxed text-bone/90 md:text-base">
+            {shot.alt}
+          </p>
+
+          {many && (
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center">
+                {project.shots.map((s, i) => (
+                  <button
+                    key={s.slug}
+                    type="button"
+                    onClick={() => onChange(i)}
+                    aria-label={`Screenshot ${i + 1} of ${count}`}
+                    aria-current={i === index ? 'true' : undefined}
+                    className="group/dot grid h-8 place-items-center px-1.5"
+                  >
+                    <span
+                      className={`block h-2 rounded-full transition-all ${
+                        i === index ? 'w-6 bg-accent' : 'w-2 bg-line-strong group-hover/dot:bg-mist'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+              <p className="font-mono text-xs text-mist pointer-coarse:hidden">
+                ← → to browse · Esc to close
+              </p>
+              <p className="hidden font-mono text-xs text-mist pointer-coarse:block">
+                Swipe to browse
+              </p>
+            </div>
+          )}
         </div>
       )}
     </dialog>
+  )
+}
+
+function Chevron({ flip = false }: { flip?: boolean }) {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" className={`size-6 ${flip ? 'rotate-180' : ''}`}>
+      <path
+        d="M9 5l7 7-7 7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }
