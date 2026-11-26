@@ -11,7 +11,7 @@ export function Footer() {
         </p>
         <div className="flex flex-wrap items-center gap-6">
           <GraphicsToggle />
-          <p className="font-mono">
+          <p>
             <a
               href={profile.links.github}
               target="_blank"

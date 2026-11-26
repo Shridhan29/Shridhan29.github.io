@@ -256,8 +256,27 @@ try {
     // CLS over a full read of the page, reveals included.
     await page.evaluateOnNewDocument(() => {
       window.__cls = 0
+      // The largest shift and what moved, so a failure names its cause.
+      window.__worst = { value: 0, what: '' }
       new PerformanceObserver((list) => {
-        for (const e of list.getEntries()) if (!e.hadRecentInput) window.__cls += e.value
+        for (const e of list.getEntries()) {
+          if (e.hadRecentInput) continue
+          window.__cls += e.value
+          if (e.value > window.__worst.value) {
+            const s = e.sources?.[0]
+            const n = s?.node
+            const name =
+              n?.nodeType === 1
+                ? `${n.tagName.toLowerCase()}.${String(n.className).slice(0, 50)}`
+                : String(n?.nodeName)
+            window.__worst = {
+              value: e.value,
+              what: s
+                ? `${name} y ${Math.round(s.previousRect.y)}→${Math.round(s.currentRect.y)} at scrollY ${Math.round(scrollY)}`
+                : '',
+            }
+          }
+        }
       }).observe({ type: 'layout-shift', buffered: true })
     })
     await page.setViewport({ width: 1440, height: 900 })
@@ -309,8 +328,14 @@ try {
       reveals.all > 0 && reveals.settled === reveals.all,
       `${reveals.settled}/${reveals.all}`,
     )
-    const cls = await page.evaluate(() => window.__cls)
-    check('reading the whole page shifts no layout (CLS < 0.05)', cls < 0.05, cls.toFixed(3))
+    const { cls, worst } = await page.evaluate(() => ({ cls: window.__cls, worst: window.__worst }))
+    check(
+      'reading the whole page shifts no layout (CLS < 0.05)',
+      cls < 0.05,
+      cls < 0.05
+        ? cls.toFixed(3)
+        : `${cls.toFixed(3)}; largest ${worst.value.toFixed(3)}: ${worst.what}`,
+    )
 
     // Links: an underline at rest, the accent rule drawn in on hover.
     const link = '#contact a.link[href^="mailto:"]'

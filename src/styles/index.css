@@ -117,8 +117,9 @@ body {
       /* Measured on entry, not cover: cover scales with the element's height,
          so the 5300 px Work section took 1600 px of scroll to reach full
          opacity and dimmed the first project article inside it. Entry is at
-         most a viewport long, whatever the section's height. */
-      animation-range: entry 5% entry 45%;
+         most a viewport long, whatever the section's height. Done by 30% of
+         entry, so a card is never still fading while it is being read. */
+      animation-range: entry 0% entry 30%;
     }
   }
 }

@@ -29,7 +29,7 @@ export const skills = [
   },
   {
     group: 'Frontend',
-    items: ['React 18', 'React Router', 'HTML5', 'CSS3', 'Tailwind CSS', 'GSAP', 'Framer Motion'],
+    items: ['React', 'React Router', 'HTML5', 'CSS3', 'Tailwind CSS', 'GSAP', 'Framer Motion'],
   },
   {
     group: 'Databases',

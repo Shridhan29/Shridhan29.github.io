@@ -11,7 +11,6 @@ import {
 import type { Layer } from '../layers'
 import { Glow } from '../shared/Glow'
 import { ScreenPlane } from '../shared/ScreenPlane'
-import { KioskScreen } from '../shared/KioskScreen'
 import { useStagedFrame } from '../useStagedFrame'
 
 /**
@@ -22,7 +21,7 @@ import { useStagedFrame } from '../useStagedFrame'
  *
  * - DMS: a countertop point-of-sale terminal showing the real POS screen, with
  *   the Raspberry Pi board that runs it lying beside it.
- * - Urja Dairy Tour: a free-standing kiosk showing the real language chooser.
+ * - Urja Dairy Tour: a free-standing kiosk showing its real language chooser.
  *
  * Grounded, eye-level camera language: both sway only slightly. Warmth comes
  * from amber glows, not real-time lights, which would recompile every lit
@@ -30,9 +29,10 @@ import { useStagedFrame } from '../useStagedFrame'
  * practical — a pool of warm light on the surface under each screen, as a
  * shop counter or a kiosk floor would catch it.
  *
- * The kiosk's screen is the real interface, running (4.5): pick a language and
- * the tour list answers. The POS terminal keeps its screenshot — it is a till,
- * not something to try.
+ * Both screens are real screenshots, the same ones the gallery below shows.
+ * The kiosk once ran a live HTML mock-up through drei's `Html`, but that is a
+ * DOM overlay: it ignored the layer's visibility and stayed on screen, frozen
+ * over the hero, after scrolling back to the top.
  */
 
 const DISTANCE = 6
@@ -195,7 +195,13 @@ export function GroundKiosk({ layer, index }: { layer: Layer; index: number }) {
         <RoundedBox args={[KIOSK_W + 0.12, KIOSK_H + 0.12, 0.09]} radius={0.04}>
           <Housing />
         </RoundedBox>
-        <KioskScreen width={KIOSK_W} />
+        <ScreenPlane
+          url="/img/urja/03-language-1600.webp"
+          width={KIOSK_W}
+          height={KIOSK_H}
+          radius={0.02}
+          position={[0, 0, 0.047]}
+        />
       </group>
       {/* Practical: the floor in front of the kiosk, warm under the visitor's feet. */}
       <Glow

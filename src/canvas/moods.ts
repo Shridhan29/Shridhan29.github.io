@@ -35,7 +35,7 @@ export const MOODS: Mood[] = [
   // L2 Surface: a clean studio, slightly warm white, least saturated.
   { sky: '#0c0e13', key: '#fff2e4', fill: '#99928c', rim: '#8ab4ff', rimSoft: '#ffffff' },
   // L3 Ground: sodium-amber practicals, warm shadows.
-  { sky: '#120801', key: '#ffd3a6', fill: '#80553a', rim: '#ff8a3d', rimSoft: '#ffcf8a' },
+  { sky: '#180a02', key: '#ffd3a6', fill: '#80553a', rim: '#ff8a3d', rimSoft: '#ffcf8a' },
   // L4 Core: the machine room. Neutral steel, the darkest layer; the warm accent
   // stays with Ground (see `layers.ts`), so Core reads cooler beside it.
   { sky: '#06070b', key: '#e8eaf0', fill: '#4a5368', rim: '#e8eaf0', rimSoft: '#9fb0d0' },

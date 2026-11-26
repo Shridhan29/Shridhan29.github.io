@@ -16,8 +16,9 @@ export function Hero() {
     <section id="top" className="flex min-h-dvh flex-col justify-center gap-16 pt-28 pb-10">
       <div className="grid w-full items-center gap-12 md:grid-cols-[minmax(0,1.5fr)_minmax(0,0.85fr)] md:gap-14 xl:gap-24">
         <div data-hero-copy className="scrim">
-          <p className="mb-5 flex items-center gap-2.5 font-mono text-xs tracking-[0.2em] text-mist uppercase">
-            <span aria-hidden className="inline-block size-1.5 rounded-full bg-ember" />
+          {/* The same pill as every section label. */}
+          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] px-3 py-1 font-mono text-[0.65rem] tracking-[0.12em] whitespace-nowrap text-accent-soft uppercase sm:text-[0.7rem] sm:tracking-[0.2em]">
+            <span aria-hidden className="size-1.5 rounded-full bg-accent" />
             <DecodeText text={`${profile.role} · ${profile.location}`} />
           </p>
 
@@ -44,16 +45,21 @@ export function Hero() {
             <a
               href={profile.resume}
               data-goatcounter-click="resume-hero"
-              className="link mx-2 my-2.5 text-sm text-mist hover:text-bone"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="btn btn-ghost"
             >
-              Résumé (PDF)
+              Résumé (PDF) <span className="link-arrow">↗</span>
             </a>
           </div>
         </div>
 
         <div
           data-hero-portrait
-          className="order-first max-w-[260px] md:order-none md:max-w-[420px] md:justify-self-end xl:max-w-[520px]"
+          // `w-full`: right-aligned, the box would otherwise shrink to its
+          // content, which has no width until the photo decodes, so the hero
+          // jumped 70 px when it did.
+          className="order-first w-full max-w-[260px] md:order-none md:max-w-[420px] md:justify-self-end xl:max-w-[520px]"
         >
           <Glare className="rounded-2xl shadow-[0_40px_80px_-40px_rgb(0_0_0/0.9)]">
             <Picture

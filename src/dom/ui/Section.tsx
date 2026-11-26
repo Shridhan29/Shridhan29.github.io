@@ -15,7 +15,7 @@ export function Section({
     <section
       id={id}
       aria-labelledby={`${id}-heading`}
-      className="reveal scroll-mt-24 py-20 md:py-28 xl:py-36"
+      className="reveal scroll-mt-24 py-16 md:py-24 xl:py-28"
     >
       <div className="mb-8 flex items-center gap-4 md:mb-12">
         <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] px-3 py-1 font-mono text-[0.7rem] tracking-[0.2em] text-accent-soft uppercase">

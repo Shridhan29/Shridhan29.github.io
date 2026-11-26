@@ -8,7 +8,9 @@ export function Experience() {
     <Section id="experience" label="Experience" title="Where I've been shipping.">
       {experience.map((job, i) => (
         <article key={job.company} className="card p-5 sm:p-8 md:p-10 xl:p-12">
-          <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:gap-12 xl:grid-cols-[300px_minmax(0,1fr)]">
+          {/* Three columns on wide screens: dates, the entry at a reading measure,
+              and the stack, so the card has no empty right half. */}
+          <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:gap-12 xl:grid-cols-[260px_minmax(0,40rem)_minmax(0,1fr)]">
             <div className="flex flex-col">
               <p className="inline-flex w-fit items-center gap-2 rounded-full border border-line bg-white/[0.03] px-3 py-1 font-mono text-xs text-bone/90">
                 <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-accent" />
@@ -38,18 +40,32 @@ export function Experience() {
                 </a>
               </h3>
               <p className="mt-1.5 text-sm text-mist">{job.note}</p>
-              <p className="measure mt-5 leading-relaxed text-bone/85">{job.summary}</p>
+              <p className="measure mt-5 leading-relaxed text-bone/85 xl:max-w-none">
+                {job.summary}
+              </p>
               <ul className="mt-5 space-y-3">
                 {job.bullets.map((b) => (
                   <li
                     key={b.slice(0, 24)}
-                    className="measure flex gap-3 text-[0.94rem] leading-relaxed text-mist"
+                    className="measure flex gap-3 text-[0.94rem] leading-relaxed text-mist xl:max-w-none"
                   >
                     <span
                       aria-hidden
                       className="mt-[0.6rem] size-1.5 shrink-0 rounded-full bg-accent"
                     />
                     {b}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="md:col-start-2 xl:col-start-auto xl:border-l xl:border-line xl:pl-10">
+              <h4 className="mb-4 font-mono text-xs tracking-[0.16em] text-mist uppercase">
+                Day to day
+              </h4>
+              <ul className="flex flex-wrap gap-2" aria-label="Day-to-day stack">
+                {job.stack.map((s) => (
+                  <li key={s} className="chip">
+                    {s}
                   </li>
                 ))}
               </ul>
@@ -81,6 +97,7 @@ export function Experience() {
             <div key={c.name}>
               <p className="font-medium text-bone">{c.name}</p>
               <p className="mt-1 text-sm text-mist">{c.issuer}</p>
+              <p className="mt-2 font-mono text-xs text-mist">{c.detail}</p>
             </div>
           ))}
         </div>

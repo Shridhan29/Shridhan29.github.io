@@ -20,6 +20,8 @@ export type Project = {
   /** The hard, checkable engineering detail — what a senior reviewer looks for. */
   depth: string[]
   links: { label: string; href: string }[]
+  /** Address shown in the browser frame around web screenshots. */
+  host?: string
   dir: string
   widths: [number, number]
   shots: Shot[]
@@ -89,7 +91,7 @@ export const projects: Project[] = [
     hook: 'A nine-route React SPA for a robotics firm, deployed to Apache shared hosting with no Node and no SMTP available.',
     period: '2024',
     role: 'Sole developer — frontend, contact API, hosting',
-    stack: ['React 18', 'JavaScript', 'PHP', 'CSS3', 'GSAP', 'Framer Motion', 'Apache'],
+    stack: ['React', 'JavaScript', 'PHP', 'CSS3', 'GSAP', 'Framer Motion', 'Apache'],
     highlights: [
       'Nine routes and seventeen components covering the company, its leadership, services, the TRUUNA product line, a help centre, and contact.',
       'A hand-written CSS3 design system — no framework — with GSAP and Framer Motion carrying the motion.',
@@ -101,6 +103,7 @@ export const projects: Project[] = [
       'Domain configuration and deployment handled end to end on Apache shared hosting.',
     ],
     links: [{ label: 'aashman.in', href: 'https://aashman.in/' }],
+    host: 'aashman.in',
     dir: 'aashman.in',
     widths: [800, 1600],
     shots: [
@@ -139,6 +142,8 @@ export const projects: Project[] = [
       'Root-cause work on hardware–software integration across Raspberry Pi and Bluetooth, with fixes and incident history documented under defined SOPs.',
     ],
     links: [],
+    // Served by the Raspberry Pi in the shop, not the internet.
+    host: 'localhost',
     dir: 'dms',
     widths: [800, 1600],
     shots: [
@@ -168,7 +173,7 @@ export const projects: Project[] = [
     stack: ['React', 'Framer Motion', 'Howler.js', 'Tailwind CSS', 'Node.js', 'Raspberry Pi'],
     highlights: [
       'Visitors pick an audience — primary, secondary, or adult — and the tour narration adapts to it.',
-      'Three languages selected on screen two, before any content loads.',
+      'English, Hindi and Marathi, chosen before the tour begins, so every stop plays in the visitor’s language.',
       'Guided stops through the plant with progress indicators and full playback controls.',
     ],
     depth: [
@@ -176,21 +181,23 @@ export const projects: Project[] = [
       'Runs unattended on a Raspberry Pi kiosk, so the UI has to survive being touched by anyone, in any order, all day.',
     ],
     links: [],
+    host: 'localhost',
     dir: 'urja',
     widths: [800, 1600],
     shots: [
+      // In the kiosk's own order.
+      { slug: '02-category', alt: 'Audience selection: primary, secondary, adult', kind: 'web' },
       {
         slug: '03-language',
         alt: 'Language chooser offering English, Hindi and Marathi',
         kind: 'web',
       },
-      { slug: '02-category', alt: 'Audience selection: primary, secondary, adult', kind: 'web' },
+      { slug: '04-tour-options', alt: 'Tour options screen', kind: 'web' },
       {
         slug: '05-tour-progress',
         alt: 'Tour progress showing stops through the dairy plant',
         kind: 'web',
       },
-      { slug: '04-tour-options', alt: 'Tour options screen', kind: 'web' },
     ],
   },
 ]

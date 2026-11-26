@@ -41,6 +41,9 @@ const MAP = {
   urja: {
     widths: [800, 1600],
     order: ['01-splash', '02-category', '03-language', '04-tour-options', '05-tour-progress'],
+    // Two captures include the browser's scrollbar down the right edge. It is
+    // painted out by repeating the column just inside it, which keeps the size.
+    scrollbar: { '03-language': 15, '04-tour-options': 15 },
   },
 }
 
@@ -50,7 +53,23 @@ const exists = (p) =>
     () => false,
   )
 
+// `node scripts/process-screenshots.mjs urja` reprocesses one project only.
+const only = process.argv[2]
+
+/** The source, with any captured scrollbar painted out. */
+async function source(path, scrollbar) {
+  if (!scrollbar) return sharp(path)
+  const { width, height } = await sharp(path).metadata()
+  const inner = await sharp(path)
+    .extract({ left: 0, top: 0, width: width - scrollbar, height })
+    .extend({ right: scrollbar, extendWith: 'copy' })
+    .png()
+    .toBuffer()
+  return sharp(inner)
+}
+
 for (const [project, cfg] of Object.entries(MAP)) {
+  if (only && project !== only) continue
   const srcDir = join(SRC_ROOT, project)
   const outDir = join(OUT_ROOT, project)
   await mkdir(srcDir, { recursive: true })
@@ -70,7 +89,9 @@ for (const [project, cfg] of Object.entries(MAP)) {
   for (let i = 0; i < raw.length; i++) {
     const slug = slugFor(raw[i], i)
     for (const w of cfg.widths) {
-      const base = sharp(join(srcDir, raw[i])).resize(w, null, { withoutEnlargement: true })
+      const base = (await source(join(srcDir, raw[i]), cfg.scrollbar?.[slug])).resize(w, null, {
+        withoutEnlargement: true,
+      })
       await base
         .clone()
         .avif({ quality: 58, effort: 6 })

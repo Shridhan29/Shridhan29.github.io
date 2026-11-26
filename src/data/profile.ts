@@ -13,7 +13,7 @@ export const profile = {
     'Software developer at Aashman Technicals, Pune. An agricultural robotics app live on Google Play, a FastAPI service on Azure behind it, and two Raspberry Pi products running in the field.',
 
   about: [
-    "I've spent the last two years at a robotics and electronics company where the software has to survive contact with the real world — a farm, a dairy plant, a shop floor. That shapes how I build. An app that works on my machine is not finished; an app is finished when it clears Google's production review, runs on a stranger's phone, and someone in the field trusts it.",
+    "Since January 2024 I've worked at a robotics and electronics company where the software has to survive contact with the real world — a farm, a dairy plant, a shop floor. That shapes how I build. An app that works on my machine is not finished; an app is finished when it clears Google's production review, runs on a stranger's phone, and someone in the field trusts it.",
     'I own delivery end to end: requirements, architecture, implementation, release, and the support calls afterwards. In practice that has meant Flutter on Android, Python and FastAPI on the backend, React on the web, Postgres and SQLite for storage, and Azure with GitHub Actions for getting it all out the door.',
     'I like the parts most people skip — release compliance, migrations that do not lose data, logs that never record a phone number, and the root-cause hunt when a Bluetooth link drops on a Raspberry Pi in a dairy.',
   ],

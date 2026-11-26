@@ -394,7 +394,7 @@ try {
     // prettier-ignore
     { title: 'L1 · Device', article: 'truuna', name: 'TRUUNA', dir: 'truuna', stage: 'device', shots: 5, subject: 'the phone is', sequence: true },
     // prettier-ignore
-    { title: 'L2 · Surface', article: 'aashman', name: 'aashman.in', dir: 'aashman.in', stage: 'surface', shots: 6, subject: 'the panes are', runs: { effect: 'ribbons', label: 'the ribbons draw themselves as the stack rises', full: 100, atLeast: 85 } },
+    { title: 'L2 · Surface', article: 'aashman', name: 'aashman.in', dir: 'aashman.in', stage: 'surface', shots: 6, subject: 'the panes are' },
     // prettier-ignore
     { title: 'L3 · Ground (DMS)', article: 'dms', name: 'DMS', dir: 'dms', stage: 'ground-pos', shots: 4, subject: 'the terminal is' },
     // prettier-ignore
@@ -678,41 +678,26 @@ try {
           await debug.close()
         }
 
-        // 4.7: stages light in order as the column rises, read from the layer's
-        // own published count.
-        // 4.5: the kiosk screen is the real interface, and answers a click.
+        // The kiosk screen is a texture, not a DOM overlay: drei's `Html` ignores
+        // the layer's visibility and once stayed frozen over the hero.
         if (live) {
-          const kiosk = await page.evaluate(() => {
-            const el = document.querySelector('[data-kiosk]')
-            if (!el) return null
-            const buttons = [...el.querySelectorAll('button')]
-            return {
-              text: el.innerText.replace(/\s+/g, ' ').trim(),
-              buttons: buttons.length,
-              // Focusable controls inside the aria-hidden canvas would be a
-              // keyboard trap: reachable by Tab, invisible to a screen reader.
-              focusable: buttons.filter((b) => b.tabIndex >= 0).length,
-            }
-          })
-          check('1440 px: the kiosk screen runs the real interface', !!kiosk?.buttons, kiosk?.text)
-          check(
-            '1440 px: nothing in the scene is keyboard-focusable',
-            kiosk?.focusable === 0,
-            `${kiosk?.focusable ?? '?'} focusable controls`,
-          )
-          const after = await page.evaluate(async () => {
-            const buttons = [...document.querySelectorAll('[data-kiosk] button')]
-            buttons[1]?.click()
-            await new Promise((r) => setTimeout(r, 500))
-            return document.querySelector('[data-kiosk]')?.innerText.replace(/\s+/g, ' ').trim()
+          const overlays = await page.evaluate(() => {
+            const scene = document.querySelector('[data-scene-ready]')
+            const canvas = scene?.querySelector('canvas')
+            if (!scene || !canvas) return -1
+            return [...scene.querySelectorAll('*')].filter(
+              (el) => el !== canvas && !el.contains(canvas),
+            ).length
           })
           check(
-            '1440 px: choosing a language changes the kiosk',
-            !!after && !!kiosk?.text && after !== kiosk.text,
-            after?.slice(0, 48),
+            '1440 px: the scene puts no HTML over the page',
+            overlays === 0,
+            `${overlays} elements`,
           )
         }
 
+        // 4.7: stages light in order as the column rises, read from the layer's
+        // own published count.
         if (runs) {
           const debug = await browser.newPage()
           await debug.setViewport({ width: 1440, height: 900 })

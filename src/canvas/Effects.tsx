@@ -21,7 +21,7 @@ import { useScrollStore } from '@/store/useScrollStore'
  * Bloom is selective by brightness, not by object: the threshold sits at 1.0,
  * so nothing a screenshot or the page's palette can produce (at most 1.0) ever
  * blooms. Only light sources pushed past 1 — the monolith's rim, the packets,
- * the ribbons, the pipeline's lit stages — do, which is what `GLOW_GAIN` is for.
+ * the pipeline's lit stages — do, which is what `GLOW_GAIN` is for.
  * The product screens stay sharp, and the copy over them stays readable.
  *
  * The composer renders into a half-float buffer and turns the renderer's own

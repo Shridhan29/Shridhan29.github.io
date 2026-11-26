@@ -84,10 +84,12 @@ export function NameField({ text, count, layer }: { text: string; count: number;
           uMorph: { value: 0 },
           uTime: { value: 0 },
           uDpr: { value: dpr },
-          uPointPx: { value: 1.6 },
+          uPointPx: { value: 2 },
           // Denser tiers draw more particles into the same strokes; scale each
           // one down so every tier lands at the same overall brightness.
-          uOpacity: { value: 0.75 * Math.sqrt(8000 / count) },
+          // Lifted from 0.75 at 1.6 px: at 60 000 particles that left each one so faint
+          // the name read as grain rather than letters.
+          uOpacity: { value: 0.95 * Math.sqrt(8000 / count) },
           uColor: { value: new Color(PALETTE.bone) },
           uAccent: { value: new Color(PALETTE.accent) },
         },

@@ -2,10 +2,20 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Project, Shot } from '@/data/projects'
 import { Picture } from './Picture'
 
+const WEB: [number, number] = [1600, 828]
+
 /** Intrinsic size of a screenshot: its own, or the default for its kind. */
 function sizeOf(shot: Shot): [number, number] {
-  return shot.size ?? (shot.kind === 'phone' ? [1080, 1920] : [1600, 828])
+  return shot.size ?? (shot.kind === 'phone' ? [1080, 1920] : WEB)
 }
+
+/** Whether a web screenshot is a noticeably different shape from its frame. */
+function offShape(shot: Shot) {
+  const [w, h] = sizeOf(shot)
+  return Math.abs(w / h - WEB[0] / WEB[1]) > 0.05
+}
+
+const caption = 'text-[0.8rem] leading-snug text-mist'
 
 /**
  * Every screenshot of a project, at its true proportions: nothing is cropped.
@@ -65,7 +75,7 @@ function PhoneRow({ project, onOpen }: RowProps) {
                 className="aspect-[1080/1920] w-full rounded-[1.05rem] bg-ink object-contain"
               />
             </button>
-            <figcaption className="mt-3 px-1 text-xs leading-snug text-mist">{shot.alt}</figcaption>
+            <figcaption className={`mt-3 px-1 ${caption}`}>{shot.alt}</figcaption>
           </figure>
         </li>
       ))}
@@ -81,23 +91,46 @@ function WebGrid({ project, onOpen }: RowProps) {
         return (
           <li key={shot.slug}>
             <figure className="group flex h-full flex-col">
-              <button
-                type="button"
-                onClick={() => onOpen(i)}
-                aria-label={`Enlarge: ${shot.alt}`}
-                className="shot-frame flex w-full flex-1 flex-col overflow-hidden rounded-xl text-left"
-              >
+              {/* The frame holds the browser bar and the button; the bar sits
+                  outside the button so its address is not read as part of the
+                  button's name. */}
+              <div className="shot-frame flex w-full flex-1 flex-col overflow-hidden rounded-xl">
                 <span
                   aria-hidden
-                  className="flex items-center gap-1.5 border-b border-line px-3 py-2"
+                  className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-line px-3 py-2"
                 >
-                  <span className="size-2 rounded-full bg-line" />
-                  <span className="size-2 rounded-full bg-line" />
-                  <span className="size-2 rounded-full bg-line" />
+                  <span className="flex gap-1.5">
+                    <span className="size-2 rounded-full bg-line-strong" />
+                    <span className="size-2 rounded-full bg-line-strong" />
+                    <span className="size-2 rounded-full bg-line-strong" />
+                  </span>
+                  {project.host && (
+                    <span className="justify-self-center truncate rounded-md bg-white/[0.04] px-3 py-0.5 font-mono text-[0.68rem] text-mist">
+                      {project.host}
+                    </span>
+                  )}
+                  <span className="w-[2.6rem]" />
                 </span>
-                {/* Letterboxed, never cropped: the frame keeps the common browser
-                    shape and a screenshot of any other shape fits inside it. */}
-                <span className="my-auto block bg-ink">
+                {/* Never cropped: the frame keeps the common browser shape, and a
+                    screenshot of another shape fits inside it over a blurred copy
+                    of itself rather than over bare bars. */}
+                <button
+                  type="button"
+                  onClick={() => onOpen(i)}
+                  aria-label={`Enlarge: ${shot.alt}`}
+                  className="relative my-auto block w-full cursor-zoom-in overflow-hidden bg-ink"
+                >
+                  {offShape(shot) && (
+                    // An <img>, not a CSS background, so it loads lazily like the
+                    // screenshot itself; decorative, so presentation and no alt.
+                    <img
+                      src={`/img/${project.dir}/${shot.slug}-${project.widths[0]}.avif`}
+                      role="presentation"
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 size-full scale-110 object-cover opacity-40 blur-2xl"
+                    />
+                  )}
                   <Picture
                     base={`/img/${project.dir}/${shot.slug}`}
                     widths={project.widths}
@@ -105,13 +138,11 @@ function WebGrid({ project, onOpen }: RowProps) {
                     height={h}
                     alt={shot.alt}
                     sizes="(max-width: 640px) 92vw, 44vw"
-                    className="aspect-[1600/828] h-auto w-full object-contain"
+                    className="relative aspect-[1600/828] h-auto w-full object-contain"
                   />
-                </span>
-              </button>
-              <figcaption className="mt-2.5 px-0.5 text-xs leading-snug text-mist">
-                {shot.alt}
-              </figcaption>
+                </button>
+              </div>
+              <figcaption className={`mt-3 px-0.5 ${caption}`}>{shot.alt}</figcaption>
             </figure>
           </li>
         )

@@ -23,20 +23,30 @@ export function GraphicsToggle() {
   if (!SUPPORTS_3D) return null
 
   return (
-    <label className="flex items-center gap-2 font-mono">
+    <label className="flex items-center gap-2.5">
       <span>Graphics</span>
-      <select
-        data-graphics-toggle
-        value={preference}
-        onChange={(e) => setPreference(e.target.value as GraphicsPreference)}
-        className="rounded border border-slate bg-void px-2 py-1 text-bone hover:border-mist focus-visible:outline-2 focus-visible:outline-accent"
-      >
-        {OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      {/* Native, for the keyboard and screen readers; styled as a pill to match
+          the page's buttons, with its own chevron in place of the system one. */}
+      <span className="relative">
+        <select
+          data-graphics-toggle
+          value={preference}
+          onChange={(e) => setPreference(e.target.value as GraphicsPreference)}
+          className="cursor-pointer appearance-none rounded-full border border-line-strong bg-white/[0.02] py-1.5 pr-8 pl-3.5 text-bone transition-colors hover:border-accent"
+        >
+          {OPTIONS.map((o) => (
+            <option key={o.value} value={o.value} className="bg-ink text-bone">
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <span
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[0.6rem] text-mist"
+        >
+          ▾
+        </span>
+      </span>
     </label>
   )
 }

@@ -29,7 +29,7 @@ function Showcase({ project }: { project: Project }) {
       data-stage={stage}
       aria-hidden
       className={`mt-10 hidden lg:block scene-off:hidden ${
-        TALL.has(stage) ? 'h-[min(72vh,680px)] min-h-[500px]' : 'h-[min(58vh,560px)] min-h-[400px]'
+        TALL.has(stage) ? 'h-[min(62vh,580px)] min-h-[460px]' : 'h-[min(50vh,480px)] min-h-[380px]'
       }`}
     />
   )
@@ -37,7 +37,8 @@ function Showcase({ project }: { project: Project }) {
 
 function Bullets({ items, tone }: { items: string[]; tone: 'accent' | 'muted' }) {
   return (
-    <ul className="space-y-3 xl:grid xl:grid-cols-2 xl:gap-x-10 xl:gap-y-4 xl:space-y-0">
+    // One column: two uneven ones zig-zagged the reading order.
+    <ul className="max-w-[72ch] space-y-3">
       {items.map((h) => (
         <li
           key={h.slice(0, 24)}
@@ -74,7 +75,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
         )}
       </header>
 
-      <div className="mt-5 grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.6fr)] lg:gap-14 xl:gap-20">
+      <div className="mt-5 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] lg:gap-14 xl:gap-20">
         <div>
           <h3 className="t-project font-semibold">{project.name}</h3>
           <p className="mt-2 text-[0.95rem] font-medium text-accent-soft">{project.tagline}</p>

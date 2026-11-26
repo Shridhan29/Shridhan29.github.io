@@ -1,6 +1,6 @@
 export const education = [
   {
-    qualification: 'Bachelor of Computer Application (BCA)',
+    qualification: 'Bachelor of Computer Applications (BCA)',
     institution: 'Mudhoji College, Phaltan',
     period: '2021 — 2024',
     detail: 'CGPA 7.45',
@@ -11,5 +11,6 @@ export const certifications = [
   {
     name: 'Full Stack Java Development',
     issuer: 'Seed Infotech',
+    detail: 'Professional certificate',
   },
 ] as const

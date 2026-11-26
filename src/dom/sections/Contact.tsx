@@ -93,10 +93,12 @@ export function Contact() {
                 </a>
                 <a
                   href={profile.resume}
+                  target="_blank"
+                  rel="noreferrer noopener"
                   className="link text-bone"
                   data-goatcounter-click="resume-contact"
                 >
-                  Résumé (PDF)
+                  Résumé (PDF) <span className="link-arrow">↗</span>
                 </a>
               </span>
             </li>
@@ -104,12 +106,12 @@ export function Contact() {
               <span className="mb-1.5 block font-mono text-xs tracking-[0.16em] text-mist uppercase">
                 Based in
               </span>
-              <span className="text-mist">{profile.location}</span>
+              <span className="text-bone">{profile.location}</span>
             </li>
           </ul>
         </div>
 
-        <form onSubmit={onSubmit} className="card space-y-5 p-5 sm:p-8 md:p-10">
+        <form onSubmit={onSubmit} className="card space-y-5 self-start p-5 sm:p-8">
           <div>
             <label htmlFor="name" className="mb-2 block text-sm font-medium text-bone/90">
               Name
@@ -157,31 +159,34 @@ export function Contact() {
             <input id="company" name="company" type="text" tabIndex={-1} autoComplete="off" />
           </div>
 
-          <button
-            type="submit"
-            disabled={status === 'sending'}
-            aria-busy={status === 'sending'}
-            className="btn btn-primary w-full justify-center disabled:opacity-50 sm:w-auto"
-          >
-            {status === 'sending' ? 'Sending…' : 'Send message'}
-          </button>
+          {/* The status sits beside the button, not in an empty row under it. */}
+          <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:gap-5">
+            <button
+              type="submit"
+              disabled={status === 'sending'}
+              aria-busy={status === 'sending'}
+              className="btn btn-primary w-full shrink-0 justify-center disabled:opacity-50 sm:w-auto"
+            >
+              {status === 'sending' ? 'Sending…' : 'Send message'}
+            </button>
 
-          <p aria-live="polite" className="min-h-5 text-sm">
-            {status === 'sent' && (
-              <span className="text-accent-soft">
-                Thanks — that reached my inbox. I'll reply soon.
-              </span>
-            )}
-            {status === 'error' && (
-              <span className="text-ember">
-                {error}{' '}
-                <a href={`mailto:${profile.email}`} className="link">
-                  Email me instead
-                </a>
-                .
-              </span>
-            )}
-          </p>
+            <p aria-live="polite" className="text-sm">
+              {status === 'sent' && (
+                <span className="text-accent-soft">
+                  Thanks — that reached my inbox. I'll reply soon.
+                </span>
+              )}
+              {status === 'error' && (
+                <span className="text-ember">
+                  {error}{' '}
+                  <a href={`mailto:${profile.email}`} className="link">
+                    Email me instead
+                  </a>
+                  .
+                </span>
+              )}
+            </p>
+          </div>
         </form>
       </div>
     </Section>
