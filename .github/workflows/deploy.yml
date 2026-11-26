@@ -3,6 +3,10 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  # A pull request into main runs the same build and every verify suite, so a
+  # branch is tested before it merges. Only main deploys (see the deploy job).
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -10,10 +14,12 @@ permissions:
   pages: write
   id-token: write
 
-# Let a running deploy finish rather than cancelling it mid-publish.
+# Let a running deploy finish rather than cancelling it mid-publish. Pull
+# requests get their own group, so they neither queue behind a deploy nor block
+# one, and a newer push to the same pull request cancels the older run.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.ref) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -84,6 +90,8 @@ jobs:
   deploy:
     # A failing browser suite blocks the deploy, not just the build.
     needs: [build, verify]
+    # Never from a pull request: only main is published.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
