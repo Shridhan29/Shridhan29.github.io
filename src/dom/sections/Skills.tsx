@@ -18,9 +18,9 @@ export function Skills() {
               {s.group}
             </h3>
             <ul className="flex flex-wrap gap-2">
-              {s.items.map((i) => (
-                <li key={i} className="chip">
-                  {i}
+              {s.items.map((item) => (
+                <li key={item} className="chip">
+                  {item}
                 </li>
               ))}
             </ul>

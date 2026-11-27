@@ -122,6 +122,8 @@ function useStrip(ref: React.RefObject<HTMLUListElement | null>) {
     el.addEventListener('pointerdown', down)
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', up)
+    // A cancelled drag (the window lost focus, a context menu opened) ends it too.
+    window.addEventListener('pointercancel', up)
     // Images drag as files by default, which would end the drag at once.
     const noNativeDrag = (e: DragEvent) => e.preventDefault()
     el.addEventListener('dragstart', noNativeDrag)
@@ -131,6 +133,7 @@ function useStrip(ref: React.RefObject<HTMLUListElement | null>) {
       el.removeEventListener('pointerdown', down)
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
       el.removeEventListener('dragstart', noNativeDrag)
     }
   }, [ref])
