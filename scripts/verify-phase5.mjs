@@ -345,8 +345,12 @@ try {
       page.$eval(link, (el) => getComputedStyle(el).backgroundSize.split(',')[0].trim())
     const rest = await size()
     await page.hover(link)
-    await sleep(600)
-    const hover = await size()
+    // The rule draws in over 0.35 s; a busy machine gets up to 3 s to finish it.
+    let hover = await size()
+    for (let t = 0; t < 30 && !hover.startsWith('100%'); t++) {
+      await sleep(100)
+      hover = await size()
+    }
     check(
       'a text link draws its accent underline in on hover',
       rest.startsWith('0%') && hover.startsWith('100%'),
