@@ -28,9 +28,32 @@
   --color-line-strong: #39425a;
   --color-ember: #ff8a3d;
 
-  --font-display: 'Satoshi', system-ui, -apple-system, sans-serif;
+  --font-display: 'Satoshi', 'Satoshi Fallback', system-ui, -apple-system, sans-serif;
   --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+}
+
+/* Headings use Satoshi Bold (Indian Type Foundry, Fontshare free licence),
+   self-hosted as a single 25 KB woff2 and preloaded from index.html. Only the
+   700 weight ships: the headings are semibold, which resolves to it. Until it
+   arrives the headings draw in a local Arial scaled to Satoshi's width and
+   vertical metrics (measured in Chrome), so the swap does not reflow the page. */
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-700.woff2') format('woff2');
+  font-weight: 500 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('Helvetica'), local('Liberation Sans');
+  font-weight: 500 900;
+  size-adjust: 97%;
+  ascent-override: 104%;
+  descent-override: 25%;
+  line-gap-override: 0%;
 }
 
 /* One shell for every section. Grows with the viewport instead of stopping at a
@@ -46,24 +69,28 @@
 /* Fluid type. The clamp middles are vw-based so headings track the shell width
    continuously instead of stepping at each breakpoint. */
 .t-hero {
+  font-family: var(--font-display);
   font-size: clamp(2.35rem, 5.2vw, 5.25rem);
   line-height: 1.03;
   letter-spacing: -0.03em;
 }
 
 .t-section {
+  font-family: var(--font-display);
   font-size: clamp(1.85rem, 3.4vw, 3.4rem);
   line-height: 1.08;
   letter-spacing: -0.02em;
 }
 
 .t-statement {
+  font-family: var(--font-display);
   font-size: clamp(1.9rem, 4.4vw, 4.4rem);
   line-height: 1.12;
   letter-spacing: -0.025em;
 }
 
 .t-project {
+  font-family: var(--font-display);
   font-size: clamp(1.6rem, 2.4vw, 2.6rem);
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -602,4 +629,39 @@ a:focus-visible > .link-arrow {
   outline: none;
   border-color: var(--color-accent);
   box-shadow: 0 1px 0 0 var(--color-accent);
+}
+
+/* The desktop cursor ring (src/dom/ui/Cursor.tsx). Hidden until the mouse moves;
+   it widens over anything clickable and tightens on press. Fixed at the top-left
+   and moved with `translate`, centred by a negative margin. */
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 70;
+  width: 2rem;
+  height: 2rem;
+  margin: -1rem 0 0 -1rem;
+  border: 1.5px solid var(--color-accent-soft);
+  border-radius: 9999px;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.25s ease,
+    scale 0.25s ease,
+    background-color 0.25s ease;
+}
+
+.cursor-ring[data-on] {
+  opacity: 0.55;
+}
+
+.cursor-ring[data-on][data-hot] {
+  scale: 1.7;
+  opacity: 0.8;
+  background-color: rgb(77 124 254 / 0.12);
+}
+
+.cursor-ring[data-on][data-down] {
+  scale: 0.8;
 }

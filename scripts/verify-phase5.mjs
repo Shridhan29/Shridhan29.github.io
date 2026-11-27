@@ -450,6 +450,14 @@ try {
       still.dim === 0,
       `${still.dim} dimmed`,
     )
+    await page.mouse.move(700, 450)
+    await page.mouse.move(720, 470, { steps: 4 })
+    await sleep(400)
+    const ringShown = await page.evaluate(() => {
+      const el = document.querySelector('.cursor-ring')
+      return !!el && Number(getComputedStyle(el).opacity) > 0
+    })
+    check('reduced motion: no cursor ring', !ringShown)
     await page.close()
   }
 
@@ -509,11 +517,19 @@ try {
       start.back === true && start.left <= 4,
       `back ${start.back ? 'disabled' : 'enabled'} at ${Math.round(start.left)} px`,
     )
-    for (let i = 0; i < 6; i++) {
+    // Page forward until the button disables. Each smooth scroll is allowed to
+    // settle first, so a slow machine needs more time, never more luck.
+    for (let i = 0; i < 20 && !(await strip()).next; i++) {
       await page.evaluate(() =>
         document.querySelector('#truuna [aria-label="Scroll screens forward"]')?.click(),
       )
-      await sleep(700)
+      let prev = -1
+      for (let t = 0; t < 30; t++) {
+        await sleep(150)
+        const { left } = await strip()
+        if (Math.abs(left - prev) < 1) break
+        prev = left
+      }
     }
     const end = await strip()
     check(
@@ -521,6 +537,39 @@ try {
       end.left > start.left && end.next === true && end.back === false,
       `scrolled ${Math.round(end.left)} px; forward ${end.next ? 'disabled' : 'enabled'}, back ${end.back ? 'disabled' : 'enabled'}`,
     )
+
+    // The cursor ring: absent until the mouse moves, then trailing it, wider
+    // over a link, and never in the way of a click.
+    const ring = () =>
+      page.evaluate(() => {
+        const el = document.querySelector('.cursor-ring')
+        const cs = el && getComputedStyle(el)
+        return {
+          found: !!el,
+          opacity: cs ? Number(cs.opacity) : 0,
+          hot: !!el?.hasAttribute('data-hot'),
+          inert: cs?.pointerEvents === 'none',
+        }
+      })
+    const before = await ring()
+    check(
+      'cursor ring: present, inert, and hidden before the mouse moves',
+      before.found && before.inert && before.opacity === 0,
+      JSON.stringify(before),
+    )
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.mouse.move(700, 450)
+    await page.mouse.move(720, 470, { steps: 4 })
+    await sleep(400)
+    const moved = await ring()
+    check('cursor ring: shown once the mouse moves', moved.opacity > 0.3, JSON.stringify(moved))
+    const link = await page.$('header a[href="#work"], nav a[href="#work"]')
+    if (link) {
+      await link.hover()
+      await sleep(400)
+    }
+    const over = await ring()
+    check('cursor ring: widens over a link', !!link && over.hot, JSON.stringify(over))
     check('scroll redesign: no page errors', !errors.length, errors.slice(0, 2).join(' | '))
     await page.close()
   }

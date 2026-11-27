@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react'
 import { Nav } from '@/dom/ui/Nav'
 import { LayerNav } from '@/dom/ui/LayerNav'
+import { Cursor } from '@/dom/ui/Cursor'
 import { DebugOverlay } from '@/dom/ui/DebugOverlay'
 import { SceneBoundary } from '@/dom/SceneBoundary'
 import { DEBUG } from '@/debug'
@@ -69,6 +70,7 @@ export default function App() {
       )}
 
       <Nav />
+      <Cursor />
       {canRender3D && <LayerNav />}
 
       <main id="main" className="shell relative z-10">

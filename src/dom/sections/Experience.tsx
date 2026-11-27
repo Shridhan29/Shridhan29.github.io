@@ -38,7 +38,7 @@ export function Experience() {
               )}
             </div>
             <div>
-              <h3 className="text-xl font-semibold tracking-tight md:text-2xl">
+              <h3 className="font-display text-xl font-semibold tracking-tight md:text-2xl">
                 {job.role} ·{' '}
                 <a
                   href={job.href}
