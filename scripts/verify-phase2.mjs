@@ -180,8 +180,13 @@ try {
   await new Promise((r) => setTimeout(r, 800))
   const before = (await readOverlay()).progress
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.6))
-  await new Promise((r) => setTimeout(r, 1500))
-  const after = (await readOverlay()).progress
+  // The scene loads lazily, and a busy machine is slow to start it: poll for up
+  // to 10 s rather than reading once after a fixed pause.
+  let after = before
+  for (let t = 0; t < 40 && !((after ?? 0) > (before ?? 0) + 0.05); t++) {
+    await new Promise((r) => setTimeout(r, 250))
+    after = (await readOverlay()).progress
+  }
   check('scrolling advances progress', (after ?? 0) > (before ?? 0) + 0.05, `${before} → ${after}`)
 
   // Each layer arrives with its content: scrolled to an article, the camera is

@@ -195,8 +195,17 @@ try {
       )
     }
 
-    await sleep(3000)
-    const late = await read()
+    // The role line decodes and the stats count up once in view (1.2 s); a busy
+    // machine gets up to 8 s for both to settle rather than one fixed pause.
+    let late = await read()
+    for (
+      let t = 0;
+      t < 32 && !(late.visibleRole === expectedRole && late.stats.every((s) => s.shown === s.sr));
+      t++
+    ) {
+      await sleep(250)
+      late = await read()
+    }
     check(
       `${label}: the role line settles on the real text`,
       late.visibleRole === expectedRole,
@@ -345,8 +354,12 @@ try {
       page.$eval(link, (el) => getComputedStyle(el).backgroundSize.split(',')[0].trim())
     const rest = await size()
     await page.hover(link)
-    await sleep(600)
-    const hover = await size()
+    // The rule draws in over 0.35 s; a busy machine gets up to 3 s to finish it.
+    let hover = await size()
+    for (let t = 0; t < 30 && !hover.startsWith('100%'); t++) {
+      await sleep(100)
+      hover = await size()
+    }
     check(
       'a text link draws its accent underline in on hover',
       rest.startsWith('0%') && hover.startsWith('100%'),
@@ -428,6 +441,149 @@ try {
         ).length,
     )
     check('reduced motion: no section reveals', animated === 0, `${animated} animated`)
+
+    // The scroll redesign's finished state: no pin adds height, and every
+    // word of a scrubbed sentence is fully drawn.
+    const still = await page.evaluate(() => ({
+      pins: [...document.querySelectorAll('.pin-track')].map((t) => {
+        const sticky = t.querySelector('.pin-sticky')
+        return Math.round(t.getBoundingClientRect().height - (sticky?.offsetHeight ?? 0))
+      }),
+      dim: [...document.querySelectorAll('.scrub-word')].filter(
+        (w) => getComputedStyle(w).opacity !== '1',
+      ).length,
+    }))
+    check(
+      'reduced motion: pinned sections add no scroll height',
+      still.pins.length > 0 && still.pins.every((extra) => extra <= 2),
+      `extra px per pin: ${still.pins.join(', ')}`,
+    )
+    check(
+      'reduced motion: every scrubbed word is fully drawn',
+      still.dim === 0,
+      `${still.dim} dimmed`,
+    )
+    await page.mouse.move(700, 450)
+    await page.mouse.move(720, 470, { steps: 4 })
+    await sleep(400)
+    const ringShown = await page.evaluate(() => {
+      const el = document.querySelector('.cursor-ring')
+      return !!el && Number(getComputedStyle(el).opacity) > 0
+    })
+    check('reduced motion: no cursor ring', !ringShown)
+    await page.close()
+  }
+
+  section('Scroll redesign')
+  {
+    const page = await browser.newPage()
+    const errors = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    await page.setViewport({ width: 1440, height: 900 })
+    await page.goto(`${preview.base}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
+
+    const scrub = await page.evaluate(() =>
+      [...document.querySelectorAll('.scrub-word')]
+        .map((w) => w.closest('[aria-hidden]'))
+        .filter((h, i, all) => h && all.indexOf(h) === i)
+        .map((hidden) => ({
+          drawn: hidden.textContent,
+          // WordScrub's visually hidden copy sits right before the drawn words.
+          read: hidden.previousElementSibling?.matches('.sr-only')
+            ? hidden.previousElementSibling.textContent
+            : null,
+        })),
+    )
+    check(
+      'scrubbed sentences are read once, whole, from a hidden copy',
+      scrub.length > 0 && scrub.every((s) => s.read === s.drawn),
+      `${scrub.length} sentences`,
+    )
+
+    const pin = await page.evaluate(() => {
+      const t = document.querySelector('#statement')
+      return t ? t.getBoundingClientRect().height / innerHeight : 0
+    })
+    check('the statement is pinned for its scroll', pin > 1.5, `${pin.toFixed(2)} viewports tall`)
+
+    // A screenshot strip: focusable, and its arrows page through it and stop at the ends.
+    const strip = async () =>
+      page.evaluate(() => {
+        const u = document.querySelector('#truuna ul[tabindex="0"]')
+        const back = document.querySelector('#truuna [aria-label="Scroll screens back"]')
+        const next = document.querySelector('#truuna [aria-label="Scroll screens forward"]')
+        return {
+          found: !!u && !!back && !!next,
+          left: u?.scrollLeft ?? 0,
+          back: back?.disabled,
+          next: next?.disabled,
+        }
+      })
+    await page.evaluate(() =>
+      document.querySelector('#truuna ul[tabindex="0"]')?.scrollIntoView({ block: 'center' }),
+    )
+    await sleep(600)
+    const start = await strip()
+    check('strip: focusable, with back and forward buttons', start.found)
+    check(
+      'strip: back is disabled at the start',
+      start.back === true && start.left <= 4,
+      `back ${start.back ? 'disabled' : 'enabled'} at ${Math.round(start.left)} px`,
+    )
+    // Page forward until the button disables. Each smooth scroll is allowed to
+    // settle first, so a slow machine needs more time, never more luck.
+    for (let i = 0; i < 20 && !(await strip()).next; i++) {
+      await page.evaluate(() =>
+        document.querySelector('#truuna [aria-label="Scroll screens forward"]')?.click(),
+      )
+      let prev = -1
+      for (let t = 0; t < 30; t++) {
+        await sleep(150)
+        const { left } = await strip()
+        if (Math.abs(left - prev) < 1) break
+        prev = left
+      }
+    }
+    const end = await strip()
+    check(
+      'strip: forward pages it, and is disabled at the end',
+      end.left > start.left && end.next === true && end.back === false,
+      `scrolled ${Math.round(end.left)} px; forward ${end.next ? 'disabled' : 'enabled'}, back ${end.back ? 'disabled' : 'enabled'}`,
+    )
+
+    // The cursor ring: absent until the mouse moves, then trailing it, wider
+    // over a link, and never in the way of a click.
+    const ring = () =>
+      page.evaluate(() => {
+        const el = document.querySelector('.cursor-ring')
+        const cs = el && getComputedStyle(el)
+        return {
+          found: !!el,
+          opacity: cs ? Number(cs.opacity) : 0,
+          hot: !!el?.hasAttribute('data-hot'),
+          inert: cs?.pointerEvents === 'none',
+        }
+      })
+    const before = await ring()
+    check(
+      'cursor ring: present, inert, and hidden before the mouse moves',
+      before.found && before.inert && before.opacity === 0,
+      JSON.stringify(before),
+    )
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.mouse.move(700, 450)
+    await page.mouse.move(720, 470, { steps: 4 })
+    await sleep(400)
+    const moved = await ring()
+    check('cursor ring: shown once the mouse moves', moved.opacity > 0.3, JSON.stringify(moved))
+    const link = await page.$('header a[href="#work"], nav a[href="#work"]')
+    if (link) {
+      await link.hover()
+      await sleep(400)
+    }
+    const over = await ring()
+    check('cursor ring: widens over a link', !!link && over.hot, JSON.stringify(over))
+    check('scroll redesign: no page errors', !errors.length, errors.slice(0, 2).join(' | '))
     await page.close()
   }
 

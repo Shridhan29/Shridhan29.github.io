@@ -1,12 +1,14 @@
 import { Suspense, lazy, useEffect } from 'react'
 import { Nav } from '@/dom/ui/Nav'
 import { LayerNav } from '@/dom/ui/LayerNav'
+import { Cursor } from '@/dom/ui/Cursor'
 import { DebugOverlay } from '@/dom/ui/DebugOverlay'
 import { SceneBoundary } from '@/dom/SceneBoundary'
 import { DEBUG } from '@/debug'
 import { CAN_RENDER_3D, enterPlainView } from '@/tier'
 import { Hero } from '@/dom/sections/Hero'
 import { About } from '@/dom/sections/About'
+import { Statement } from '@/dom/sections/Statement'
 import { Projects } from '@/dom/sections/Projects'
 import { Skills } from '@/dom/sections/Skills'
 import { Experience } from '@/dom/sections/Experience'
@@ -68,10 +70,12 @@ export default function App() {
       )}
 
       <Nav />
+      <Cursor />
       {canRender3D && <LayerNav />}
 
       <main id="main" className="shell relative z-10">
         <Hero />
+        <Statement />
         <Projects />
         <About />
         <Skills />

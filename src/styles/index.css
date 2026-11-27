@@ -28,9 +28,32 @@
   --color-line-strong: #39425a;
   --color-ember: #ff8a3d;
 
-  --font-display: 'Satoshi', system-ui, -apple-system, sans-serif;
+  --font-display: 'Satoshi', 'Satoshi Fallback', system-ui, -apple-system, sans-serif;
   --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+}
+
+/* Headings use Satoshi Bold (Indian Type Foundry, Fontshare free licence),
+   self-hosted as a single 25 KB woff2 and preloaded from index.html. Only the
+   700 weight ships: the headings are semibold, which resolves to it. Until it
+   arrives the headings draw in a local Arial scaled to Satoshi's width and
+   vertical metrics (measured in Chrome), so the swap does not reflow the page. */
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/satoshi-700.woff2') format('woff2');
+  font-weight: 500 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('Helvetica'), local('Liberation Sans');
+  font-weight: 500 900;
+  size-adjust: 97%;
+  ascent-override: 104%;
+  descent-override: 25%;
+  line-gap-override: 0%;
 }
 
 /* One shell for every section. Grows with the viewport instead of stopping at a
@@ -46,18 +69,28 @@
 /* Fluid type. The clamp middles are vw-based so headings track the shell width
    continuously instead of stepping at each breakpoint. */
 .t-hero {
+  font-family: var(--font-display);
   font-size: clamp(2.35rem, 5.2vw, 5.25rem);
   line-height: 1.03;
   letter-spacing: -0.03em;
 }
 
 .t-section {
+  font-family: var(--font-display);
   font-size: clamp(1.85rem, 3.4vw, 3.4rem);
   line-height: 1.08;
   letter-spacing: -0.02em;
 }
 
+.t-statement {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4.4vw, 4.4rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
 .t-project {
+  font-family: var(--font-display);
   font-size: clamp(1.6rem, 2.4vw, 2.6rem);
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -132,6 +165,204 @@ body {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------ motion
+   The scroll-driven redesign (SCROLL_IMPLEMENTATION_PLAN.md). Every rule
+   outside the @supports/@media blocks below is the finished, readable state:
+   it is what Firefox, reduced-motion visitors and the Static tier get. */
+
+/* Second tone of a two-tone heading. The text keeps a real colour (the light
+   accent), so contrast checks, forced colours and browsers without relative
+   colour syntax all see solid text. The gradient is derived from that colour,
+   hue-shifted either side of it, so making the text transparent (as the
+   contrast and scene-bounds checks do) makes the gradient transparent too. */
+.t-accent {
+  color: var(--color-accent-soft);
+}
+@supports (color: oklch(from red l c h)) {
+  .t-accent {
+    background-image: linear-gradient(
+      100deg,
+      currentColor 0%,
+      oklch(from currentColor calc(l - 0.02) calc(c + 0.04) calc(h + 40)) 55%,
+      oklch(from currentColor calc(l + 0.04) c calc(h - 45)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* A pinned section: a tall track whose child sticks for the extra height. The
+   height only exists where the scrubbed animation does. */
+.pin-sticky {
+  position: relative;
+}
+
+/* WordScrub's words; visible by default. */
+.scrub-word {
+  display: inline;
+}
+
+/* The Experience timeline line, drawn by default. */
+.draw-y {
+  transform-origin: top;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .pin-track {
+      height: var(--pin-height, 220vh);
+      view-timeline-name: --pin;
+      view-timeline-axis: block;
+    }
+    .pin-sticky {
+      position: sticky;
+      top: 0;
+      height: 100dvh;
+    }
+
+    /* Each word lights up in turn across the pinned scroll. --n is the word
+       count and --i the word's index, set inline by WordScrub. */
+    .pin-track .scrub-word {
+      animation: word-on linear both;
+      animation-timeline: --pin;
+      animation-range: contain calc(5% + (var(--i) / var(--n)) * 70%) contain
+        calc(5% + ((var(--i) + 1.5) / var(--n)) * 70%);
+    }
+
+    .draw-y {
+      animation: draw-y linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 60%;
+    }
+
+    /* A paragraph that lights up word by word as it rises to the middle of
+       the screen (About). Not pinned, and never darker than 0.32, so a reader
+       who stops early can still read it. */
+    .scrub-view {
+      view-timeline-name: --para;
+      view-timeline-axis: block;
+    }
+    .scrub-view .scrub-word {
+      animation: word-dim linear both;
+      animation-timeline: --para;
+      animation-range: cover calc(12% + (var(--i) / var(--n)) * 32%) cover
+        calc(12% + ((var(--i) + 3) / var(--n)) * 32%);
+    }
+
+    /* Cards rising in as they enter; --d (the card's column) staggers them. */
+    .rise {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry calc(var(--d, 0) * 12%) entry calc(65% + var(--d, 0) * 12%);
+    }
+
+    /* The Work reel grows from a card to the viewport, holds, and its rows
+       drift in opposite directions the whole time it is pinned. */
+    .reel-frame {
+      animation: reel-grow linear both;
+      animation-timeline: --pin;
+      animation-range: contain 0% contain 55%;
+    }
+    .reel-row-a,
+    .reel-row-b {
+      animation: reel-drift linear both;
+      animation-timeline: --pin;
+      animation-range: cover 0% cover 100%;
+    }
+    .reel-row-b {
+      animation-direction: reverse;
+    }
+
+    /* The hero's scroll cue fades over the first 160 px of scroll. */
+    .cue {
+      animation: fade-away linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 160px;
+    }
+  }
+}
+
+@keyframes word-on {
+  from {
+    opacity: 0.16;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes word-dim {
+  from {
+    opacity: 0.32;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes draw-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes reel-grow {
+  from {
+    transform: scale(0.46);
+    border-radius: 2.5rem;
+  }
+}
+@keyframes reel-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-25%);
+  }
+}
+@keyframes fade-away {
+  to {
+    opacity: 0;
+  }
+}
+
+/* One-shot load intro, staggered by --i. Time-based, not scrubbed: it plays as
+   the page paints and never waits on scroll. */
+@media (prefers-reduced-motion: no-preference) {
+  .intro-rise {
+    animation: intro-rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(0.1s + var(--i, 0) * 0.08s);
+  }
+}
+@keyframes intro-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(6px);
+  }
+}
+
+/* The hero's scroll cue: a dot sliding down a short track. */
+@media (prefers-reduced-motion: no-preference) {
+  .cue-dot {
+    animation: cue 1.8s ease-in-out infinite;
+  }
+}
+@keyframes cue {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(18px);
+    opacity: 0;
   }
 }
 
@@ -252,6 +483,23 @@ a:focus-visible > .link-arrow {
   border-color: var(--color-line-strong);
 }
 
+/* Cards that lift and glow on hover. `translate`, not `transform`, so a
+   scroll animation holding `transform` (.rise) cannot cancel the lift. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .card-lift {
+    transition:
+      translate 0.3s ease-out,
+      box-shadow 0.3s ease-out,
+      border-color 0.3s;
+  }
+  .card-lift:hover {
+    translate: 0 -4px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      0 24px 60px -30px rgb(77 124 254 / 0.45);
+  }
+}
+
 /* Tag chips: stack, skills. */
 .chip {
   display: inline-flex;
@@ -356,14 +604,16 @@ a:focus-visible > .link-arrow {
   }
 }
 
-/* Form fields. */
+/* Form fields: a single underline rather than a box, lighter on the page. The
+   underline is #5b6582, over 3:1 against the card (WCAG 1.4.11). */
 .field {
   width: 100%;
-  border: 1px solid var(--color-line);
-  border-radius: 0.75rem;
-  background: rgb(5 6 10 / 0.6);
-  padding: 0.8rem 1rem;
-  font-size: 0.9rem;
+  border: 0;
+  border-bottom: 1px solid #5b6582;
+  border-radius: 0;
+  background: transparent;
+  padding: 0.7rem 0.1rem;
+  font-size: 0.95rem;
   color: var(--color-bone);
   transition:
     border-color 0.2s,
@@ -373,10 +623,45 @@ a:focus-visible > .link-arrow {
   color: color-mix(in oklab, var(--color-mist) 80%, transparent);
 }
 .field:hover {
-  border-color: var(--color-line-strong);
+  border-color: var(--color-mist);
 }
 .field:focus {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgb(77 124 254 / 0.2);
+  box-shadow: 0 1px 0 0 var(--color-accent);
+}
+
+/* The desktop cursor ring (src/dom/ui/Cursor.tsx). Hidden until the mouse moves;
+   it widens over anything clickable and tightens on press. Fixed at the top-left
+   and moved with `translate`, centred by a negative margin. */
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 70;
+  width: 2rem;
+  height: 2rem;
+  margin: -1rem 0 0 -1rem;
+  border: 1.5px solid var(--color-accent-soft);
+  border-radius: 9999px;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.25s ease,
+    scale 0.25s ease,
+    background-color 0.25s ease;
+}
+
+.cursor-ring[data-on] {
+  opacity: 0.55;
+}
+
+.cursor-ring[data-on][data-hot] {
+  scale: 1.7;
+  opacity: 0.8;
+  background-color: rgb(77 124 254 / 0.12);
+}
+
+.cursor-ring[data-on][data-down] {
+  scale: 0.8;
 }

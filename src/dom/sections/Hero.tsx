@@ -1,5 +1,5 @@
 import { profile } from '@/data/profile'
-import { useRef } from 'react'
+import { useRef, type CSSProperties } from 'react'
 import { Picture } from '@/dom/ui/Picture'
 import { CountUp } from '@/dom/motion/CountUp'
 import { DecodeText } from '@/dom/motion/DecodeText'
@@ -11,9 +11,13 @@ export function Hero() {
   const store = useRef<HTMLAnchorElement>(null)
   useMagnet(primary)
   useMagnet(store)
+  const head = profile.headline.slice(0, -profile.headlineAccent.length).trimEnd()
 
   return (
-    <section id="top" className="flex min-h-dvh flex-col justify-center gap-16 pt-28 pb-10">
+    <section
+      id="top"
+      className="relative flex min-h-dvh flex-col justify-center gap-16 pt-28 pb-10 lg:pb-20"
+    >
       <div className="grid w-full items-center gap-12 md:grid-cols-[minmax(0,1.5fr)_minmax(0,0.85fr)] md:gap-14 xl:gap-24">
         <div className="min-w-0">
           {/* Room for the particle name (NameField): a fixed height, so the name
@@ -22,18 +26,32 @@ export function Hero() {
           <div data-name-band aria-hidden className="hidden h-24 md:block" />
           <div data-hero-copy className="scrim">
             {/* The same pill as every section label. */}
-            <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] px-3 py-1 font-mono text-[0.65rem] tracking-[0.12em] whitespace-nowrap text-accent-soft uppercase sm:text-[0.7rem] sm:tracking-[0.2em]">
+            <p
+              style={{ '--i': 0 } as CSSProperties}
+              className="intro-rise mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] px-3 py-1 font-mono text-[0.65rem] tracking-[0.12em] whitespace-nowrap text-accent-soft uppercase sm:text-[0.7rem] sm:tracking-[0.2em]"
+            >
               <span aria-hidden className="size-1.5 rounded-full bg-accent" />
               <DecodeText text={`${profile.role} · ${profile.location}`} />
             </p>
 
-            <h1 className="t-hero font-semibold text-balance">{profile.headline}</h1>
+            <h1
+              style={{ '--i': 1 } as CSSProperties}
+              className="intro-rise t-hero font-semibold text-balance"
+            >
+              {head} <span className="t-accent">{profile.headlineAccent}</span>
+            </h1>
 
-            <p className="measure-tight mt-6 text-base leading-relaxed text-mist md:text-lg xl:text-xl">
+            <p
+              style={{ '--i': 2 } as CSSProperties}
+              className="intro-rise measure-tight mt-6 text-base leading-relaxed text-mist md:text-lg xl:text-xl"
+            >
               {profile.subhead}
             </p>
 
-            <div className="mt-9 flex flex-wrap items-center gap-3">
+            <div
+              style={{ '--i': 3 } as CSSProperties}
+              className="intro-rise mt-9 flex flex-wrap items-center gap-3"
+            >
               <a ref={primary} href="#work" className="btn btn-primary">
                 See the work <span aria-hidden>↓</span>
               </a>
@@ -65,7 +83,8 @@ export function Hero() {
           // `w-full`: right-aligned, the box would otherwise shrink to its
           // content, which has no width until the photo decodes, so the hero
           // jumped 70 px when it did.
-          className="order-first w-full max-w-[260px] md:order-none md:max-w-[420px] md:justify-self-end xl:max-w-[520px]"
+          style={{ '--i': 2 } as CSSProperties}
+          className="intro-rise order-first w-full max-w-[260px] md:order-none md:max-w-[420px] md:justify-self-end xl:max-w-[520px]"
         >
           <Glare className="rounded-2xl shadow-[0_40px_80px_-40px_rgb(0_0_0/0.9)]">
             <Picture
@@ -82,7 +101,10 @@ export function Hero() {
         </div>
       </div>
 
-      <dl className="hidden shrink-0 grid-cols-4 gap-4 lg:grid xl:gap-6">
+      <dl
+        style={{ '--i': 4 } as CSSProperties}
+        className="intro-rise hidden shrink-0 grid-cols-4 gap-4 lg:grid xl:gap-6"
+      >
         {profile.stats.map((s) => (
           <div key={s.label} className="card rounded-2xl px-5 py-4 xl:px-6 xl:py-5">
             <dt className="sr-only">{s.label}</dt>
@@ -96,6 +118,19 @@ export function Hero() {
           </div>
         ))}
       </dl>
+
+      {/* Decorative: says the page goes on, and fades once it has been scrolled. */}
+      <div
+        aria-hidden
+        className="cue absolute bottom-4 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 lg:flex"
+      >
+        <span className="font-mono text-[0.65rem] tracking-[0.3em] text-mist uppercase">
+          Scroll
+        </span>
+        <span className="relative h-6 w-px overflow-hidden bg-line-strong">
+          <span className="cue-dot absolute top-0 left-0 h-2 w-px bg-accent-soft" />
+        </span>
+      </div>
     </section>
   )
 }

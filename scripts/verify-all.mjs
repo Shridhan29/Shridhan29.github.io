@@ -4,6 +4,8 @@
  *   npm run verify              everything local
  *   npm run verify -- --live    also confirm the live site serves this build
  *   npm run verify -- --verbose stream every step's output, not just failures
+ *   npm run verify -- --quick   skip the two slow 3D suites (phase3, phase4)
+ *                               when nothing changed can affect the 3D scene
  *
  * Steps run in order. A step that depends on an earlier one (the browser suite
  * needs the build) is skipped, not run against stale output, when that step
@@ -12,13 +14,69 @@
  * The browser suite needs Chrome or Chromium. If it is not installed in a
  * standard location, set CHROME_PATH to its executable.
  */
-import { spawn } from 'node:child_process'
+import { execSync, spawn } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 
 const args = new Set(process.argv.slice(2))
 const VERBOSE = args.has('--verbose')
 const LIVE = args.has('--live')
+const QUICK = args.has('--quick')
 const LIVE_URL = 'https://shridhan29.github.io/'
+
+/*
+ * --quick. The 3D suites (phase3, phase4) take about ten of the run's thirteen
+ * minutes, because headless Chrome draws every frame on the CPU. They are left
+ * out when every changed file is one that cannot affect the 3D scene. The
+ * changed files are the uncommitted ones (untracked included), or, on a clean
+ * tree, the last commit's. Anything not provably DOM-only runs them, and pull
+ * request CI always runs every suite, so --quick is for local iteration only.
+ */
+const SCENE_PATHS = [
+  /^src\/(canvas|store|hooks|styles)\//,
+  /^src\/(App|main)\.tsx$/,
+  /^src\/(tier|debug)\.ts$/,
+  /^src\/data\/profile\.ts$/, // the particle wordmark reads the name from it
+  /^src\/dom\/SceneBoundary\.tsx$/,
+  /^public\/(img|models)\//,
+  /^(index\.html|package(-lock)?\.json|vite\.config\.ts|tsconfig.*\.json)$/,
+  /^scripts\/(lib\/|verify-phase[34]\.mjs|verify-all\.mjs)/,
+  /^\.github\//,
+]
+
+function changedFiles() {
+  const lines = (cmd) =>
+    execSync(cmd, { encoding: 'utf8' })
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean)
+  const dirty = [
+    ...lines('git diff --name-only HEAD'),
+    ...lines('git ls-files --others --exclude-standard'),
+  ]
+  return dirty.length ? dirty : lines('git diff --name-only HEAD~1 HEAD')
+}
+
+/** The first changed file that can affect the 3D scene, or null when none can. */
+function sceneChange() {
+  let files
+  try {
+    files = changedFiles()
+  } catch {
+    return 'git is unavailable'
+  }
+  for (const f of files) {
+    if (SCENE_PATHS.some((re) => re.test(f))) return f
+    // DOM files that hold a 3D stage (data-stage) decide where the scene draws.
+    if (
+      /^src\/.*\.tsx?$/.test(f) &&
+      existsSync(f) &&
+      readFileSync(f, 'utf8').includes('data-stage')
+    )
+      return f
+  }
+  return null
+}
+const SCENE_REASON = QUICK ? sceneChange() : 'full run'
 
 const c = (code) => (s) => (process.stdout.isTTY ? `\x1b[${code}m${s}\x1b[0m` : s)
 const green = c(32)
@@ -40,7 +98,12 @@ function run(command) {
 
 const results = []
 
-async function step(name, fn, { needs } = {}) {
+async function step(name, fn, { needs, omit } = {}) {
+  if (omit) {
+    results.push({ name, status: 'omit' })
+    console.log(`${dim('OMIT')}  ${name}  ${dim(omit)}`)
+    return
+  }
   const blocker = needs && results.find((r) => r.name === needs && r.status !== 'pass')
   if (blocker) {
     results.push({ name, status: 'skip', detail: `needs "${needs}"` })
@@ -121,11 +184,16 @@ await step('model pipeline (verify:models)', suite('verify:models'), { needs: 'e
 await step('Phase 2 camera + browser (verify:phase2)', suite('verify:phase2'), {
   needs: 'build + bundle and model budgets',
 })
+const omit3D =
+  SCENE_REASON === null ? '--quick: no changed file can affect the 3D scene; CI runs it' : undefined
+if (QUICK && SCENE_REASON) console.log(dim(`--quick: running the 3D suites (${SCENE_REASON})`))
 await step('Phase 3 layers + contrast (verify:phase3)', suite('verify:phase3'), {
   needs: 'build + bundle and model budgets',
+  omit: omit3D,
 })
 await step('Phase 4 tiers + effects (verify:phase4)', suite('verify:phase4'), {
   needs: 'build + bundle and model budgets',
+  omit: omit3D,
 })
 await step('Phase 5 polish (verify:phase5)', suite('verify:phase5'), {
   needs: 'build + bundle and model budgets',
@@ -168,15 +236,17 @@ if (LIVE) {
 
 const failed = results.filter((r) => r.status === 'fail')
 const skipped = results.filter((r) => r.status === 'skip')
-const passed = results.length - failed.length - skipped.length
+const omitted = results.filter((r) => r.status === 'omit')
+const passed = results.length - failed.length - skipped.length - omitted.length
 
 console.log(
   `\n${bold('Summary')}  ${green(`${passed} passed`)}, ` +
     `${failed.length ? red(`${failed.length} failed`) : '0 failed'}, ` +
-    `${skipped.length ? yellow(`${skipped.length} skipped`) : '0 skipped'}`,
+    `${skipped.length ? yellow(`${skipped.length} skipped`) : '0 skipped'}` +
+    (omitted.length ? dim(`, ${omitted.length} left to CI (--quick)`) : ''),
 )
 if (failed.length || skipped.length) {
   for (const r of [...failed, ...skipped]) console.log(`  - ${r.status}: ${r.name}`)
   process.exit(1)
 }
-console.log(green('Everything verified.'))
+console.log(green(omitted.length ? 'Everything run passed.' : 'Everything verified.'))

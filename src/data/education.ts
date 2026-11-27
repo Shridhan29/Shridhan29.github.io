@@ -9,8 +9,12 @@ export const education = [
 
 export const certifications = [
   {
-    name: 'Full Stack Java Development',
-    issuer: 'Seed Infotech',
-    detail: 'Professional certificate',
+    name: 'Full Stack Developer — Java Plus',
+    issuer: 'SEED Infotech Ltd. · NSDC training partner',
+    period: 'July 2024 — July 2025',
+    detail: 'Certificate of Merit, Grade A',
+    modules:
+      'Core Java, JSP and Servlets, Hibernate, Spring, Spring Boot, SQL, MongoDB, HTML5 and CSS3, Angular, React',
+    href: '/certificates/seed-infotech-full-stack-java.pdf',
   },
 ] as const

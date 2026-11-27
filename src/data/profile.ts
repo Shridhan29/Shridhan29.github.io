@@ -9,8 +9,17 @@ export const profile = {
 
   // The one sentence that has to land before anyone scrolls.
   headline: 'I ship software that leaves the laptop.',
+  // The tail of the headline drawn in the accent.
+  headlineAccent: 'leaves the laptop.',
   subhead:
     'Software developer at Aashman Technicals, Pune. An agricultural robotics app live on Google Play, a FastAPI service on Azure behind it, and two Raspberry Pi products running in the field.',
+
+  // The pinned statement between the hero and the work (src/dom/sections/Statement.tsx).
+  // Taken from the first About paragraph; the words from `statementAccentFrom`
+  // on are drawn in the accent.
+  statement:
+    "An app isn't finished when it works on my machine. It's finished when it runs on a stranger's phone and someone in the field trusts it.",
+  statementAccentFrom: 20,
 
   about: [
     "Since January 2024 I've worked at a robotics and electronics company where the software has to survive contact with the real world — a farm, a dairy plant, a shop floor. That shapes how I build. An app that works on my machine is not finished; an app is finished when it clears Google's production review, runs on a stranger's phone, and someone in the field trusts it.",

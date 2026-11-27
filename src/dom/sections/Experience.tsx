@@ -5,9 +5,19 @@ import { CAN_RENDER_3D } from '@/tier'
 
 export function Experience() {
   return (
-    <Section id="experience" label="Experience" title="Where I've been shipping.">
+    <Section
+      id="experience"
+      label="Experience"
+      title="Where I've been shipping."
+      accent="shipping."
+    >
       {experience.map((job, i) => (
-        <article key={job.company} className="card p-5 sm:p-8 md:p-10 xl:p-12">
+        <article key={job.company} className="card relative p-5 sm:p-8 md:p-10 xl:p-12">
+          {/* A timeline rule that draws down the entry as it scrolls past. */}
+          <span
+            aria-hidden
+            className="draw-y absolute top-10 bottom-10 left-0 w-0.5 rounded-full bg-gradient-to-b from-accent via-accent/60 to-transparent"
+          />
           {/* Three columns on wide screens: dates, the entry at a reading measure,
               and the stack, so the card has no empty right half. */}
           <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:gap-12 xl:grid-cols-[260px_minmax(0,40rem)_minmax(0,1fr)]">
@@ -28,7 +38,7 @@ export function Experience() {
               )}
             </div>
             <div>
-              <h3 className="text-xl font-semibold tracking-tight md:text-2xl">
+              <h3 className="font-display text-xl font-semibold tracking-tight md:text-2xl">
                 {job.role} ·{' '}
                 <a
                   href={job.href}
@@ -97,7 +107,19 @@ export function Experience() {
             <div key={c.name}>
               <p className="font-medium text-bone">{c.name}</p>
               <p className="mt-1 text-sm text-mist">{c.issuer}</p>
-              <p className="mt-2 font-mono text-xs text-mist">{c.detail}</p>
+              <p className="mt-2 font-mono text-xs text-mist">
+                {c.period} · {c.detail}
+              </p>
+              <p className="mt-3 text-sm text-mist">{c.modules}</p>
+              <a
+                href={c.href}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="link mt-4 inline-block text-sm text-bone"
+                data-goatcounter-click="certificate"
+              >
+                View certificate (PDF) <span className="link-arrow">↗</span>
+              </a>
             </div>
           ))}
         </div>
