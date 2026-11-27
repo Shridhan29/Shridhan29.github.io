@@ -195,8 +195,17 @@ try {
       )
     }
 
-    await sleep(3000)
-    const late = await read()
+    // The role line decodes and the stats count up once in view (1.2 s); a busy
+    // machine gets up to 8 s for both to settle rather than one fixed pause.
+    let late = await read()
+    for (
+      let t = 0;
+      t < 32 && !(late.visibleRole === expectedRole && late.stats.every((s) => s.shown === s.sr));
+      t++
+    ) {
+      await sleep(250)
+      late = await read()
+    }
     check(
       `${label}: the role line settles on the real text`,
       late.visibleRole === expectedRole,
