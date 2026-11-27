@@ -205,7 +205,7 @@ function PhoneItem({ project, shot, onOpen }: ItemProps) {
 function WebItem({ project, shot, onOpen }: ItemProps) {
   const [w, h] = sizeOf(shot)
   return (
-    <li className="relative w-[86%] shrink-0 snap-start sm:w-[70%] lg:w-[46%]">
+    <li className="relative w-[86%] shrink-0 snap-start sm:w-[70%] lg:w-[80%] 2xl:w-[62%]">
       <figure className="group flex h-full flex-col">
         {/* The frame holds the browser bar and the button; the bar sits outside
             the button so its address is not read as part of the button's name. */}
@@ -252,7 +252,7 @@ function WebItem({ project, shot, onOpen }: ItemProps) {
               width={w}
               height={h}
               alt={shot.alt}
-              sizes="(max-width: 640px) 86vw, (max-width: 1024px) 60vw, 40vw"
+              sizes="(max-width: 640px) 86vw, (max-width: 1024px) 60vw, 46vw"
               className="pointer-events-none relative aspect-[1600/828] h-auto w-full object-contain"
             />
           </button>

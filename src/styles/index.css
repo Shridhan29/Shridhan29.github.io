@@ -212,6 +212,23 @@ body {
       animation-range: entry 40% cover 60%;
     }
 
+    /* The Work reel grows from a card to the viewport, holds, and its rows
+       drift in opposite directions the whole time it is pinned. */
+    .reel-frame {
+      animation: reel-grow linear both;
+      animation-timeline: --pin;
+      animation-range: contain 0% contain 55%;
+    }
+    .reel-row-a,
+    .reel-row-b {
+      animation: reel-drift linear both;
+      animation-timeline: --pin;
+      animation-range: cover 0% cover 100%;
+    }
+    .reel-row-b {
+      animation-direction: reverse;
+    }
+
     /* The hero's scroll cue fades over the first 160 px of scroll. */
     .cue {
       animation: fade-away linear both;
@@ -235,6 +252,20 @@ body {
   }
   to {
     transform: scaleY(1);
+  }
+}
+@keyframes reel-grow {
+  from {
+    transform: scale(0.46);
+    border-radius: 2.5rem;
+  }
+}
+@keyframes reel-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-25%);
   }
 }
 @keyframes fade-away {
