@@ -212,6 +212,27 @@ body {
       animation-range: entry 40% cover 60%;
     }
 
+    /* A paragraph that lights up word by word as it rises to the middle of
+       the screen (About). Not pinned, and never darker than 0.32, so a reader
+       who stops early can still read it. */
+    .scrub-view {
+      view-timeline-name: --para;
+      view-timeline-axis: block;
+    }
+    .scrub-view .scrub-word {
+      animation: word-dim linear both;
+      animation-timeline: --para;
+      animation-range: cover calc(12% + (var(--i) / var(--n)) * 32%) cover
+        calc(12% + ((var(--i) + 3) / var(--n)) * 32%);
+    }
+
+    /* Cards rising in as they enter; --d (the card's column) staggers them. */
+    .rise {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry calc(var(--d, 0) * 12%) entry calc(65% + var(--d, 0) * 12%);
+    }
+
     /* The Work reel grows from a card to the viewport, holds, and its rows
        drift in opposite directions the whole time it is pinned. */
     .reel-frame {
@@ -241,6 +262,14 @@ body {
 @keyframes word-on {
   from {
     opacity: 0.16;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes word-dim {
+  from {
+    opacity: 0.32;
   }
   to {
     opacity: 1;
@@ -425,6 +454,23 @@ a:focus-visible > .link-arrow {
 }
 .card:hover {
   border-color: var(--color-line-strong);
+}
+
+/* Cards that lift and glow on hover. `translate`, not `transform`, so a
+   scroll animation holding `transform` (.rise) cannot cancel the lift. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .card-lift {
+    transition:
+      translate 0.3s ease-out,
+      box-shadow 0.3s ease-out,
+      border-color 0.3s;
+  }
+  .card-lift:hover {
+    translate: 0 -4px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      0 24px 60px -30px rgb(77 124 254 / 0.45);
+  }
 }
 
 /* Tag chips: stack, skills. */

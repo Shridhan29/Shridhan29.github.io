@@ -1,5 +1,6 @@
 import { profile } from '@/data/profile'
 import { Section } from '@/dom/ui/Section'
+import { WordScrub } from '@/dom/motion/WordScrub'
 import { CAN_RENDER_3D } from '@/tier'
 
 export function About() {
@@ -12,7 +13,11 @@ export function About() {
     >
       <div className="grid gap-10 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] md:gap-16 xl:gap-24">
         <div className="measure space-y-5 text-[0.95rem] leading-relaxed text-mist xl:text-base">
-          {profile.about.map((p) => (
+          {/* The opening paragraph lights up word by word as it is read. */}
+          <p className="scrub-view text-base text-bone/90 xl:text-lg">
+            <WordScrub text={profile.about[0]} />
+          </p>
+          {profile.about.slice(1).map((p) => (
             <p key={p.slice(0, 24)}>{p}</p>
           ))}
         </div>

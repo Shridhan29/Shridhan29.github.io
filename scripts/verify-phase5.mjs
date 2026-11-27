@@ -428,6 +428,100 @@ try {
         ).length,
     )
     check('reduced motion: no section reveals', animated === 0, `${animated} animated`)
+
+    // The scroll redesign's finished state: no pin adds height, and every
+    // word of a scrubbed sentence is fully drawn.
+    const still = await page.evaluate(() => ({
+      pins: [...document.querySelectorAll('.pin-track')].map((t) => {
+        const sticky = t.querySelector('.pin-sticky')
+        return Math.round(t.getBoundingClientRect().height - (sticky?.offsetHeight ?? 0))
+      }),
+      dim: [...document.querySelectorAll('.scrub-word')].filter(
+        (w) => getComputedStyle(w).opacity !== '1',
+      ).length,
+    }))
+    check(
+      'reduced motion: pinned sections add no scroll height',
+      still.pins.length > 0 && still.pins.every((extra) => extra <= 2),
+      `extra px per pin: ${still.pins.join(', ')}`,
+    )
+    check(
+      'reduced motion: every scrubbed word is fully drawn',
+      still.dim === 0,
+      `${still.dim} dimmed`,
+    )
+    await page.close()
+  }
+
+  section('Scroll redesign')
+  {
+    const page = await browser.newPage()
+    const errors = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    await page.setViewport({ width: 1440, height: 900 })
+    await page.goto(`${preview.base}/`, { waitUntil: 'networkidle0', timeout: 60_000 })
+
+    const scrub = await page.evaluate(() =>
+      [...document.querySelectorAll('.scrub-word')]
+        .map((w) => w.closest('[aria-hidden]'))
+        .filter((h, i, all) => h && all.indexOf(h) === i)
+        .map((hidden) => ({
+          drawn: hidden.textContent,
+          // WordScrub's visually hidden copy sits right before the drawn words.
+          read: hidden.previousElementSibling?.matches('.sr-only')
+            ? hidden.previousElementSibling.textContent
+            : null,
+        })),
+    )
+    check(
+      'scrubbed sentences are read once, whole, from a hidden copy',
+      scrub.length > 0 && scrub.every((s) => s.read === s.drawn),
+      `${scrub.length} sentences`,
+    )
+
+    const pin = await page.evaluate(() => {
+      const t = document.querySelector('#statement')
+      return t ? t.getBoundingClientRect().height / innerHeight : 0
+    })
+    check('the statement is pinned for its scroll', pin > 1.5, `${pin.toFixed(2)} viewports tall`)
+
+    // A screenshot strip: focusable, and its arrows page through it and stop at the ends.
+    const strip = async () =>
+      page.evaluate(() => {
+        const u = document.querySelector('#truuna ul[tabindex="0"]')
+        const back = document.querySelector('#truuna [aria-label="Scroll screens back"]')
+        const next = document.querySelector('#truuna [aria-label="Scroll screens forward"]')
+        return {
+          found: !!u && !!back && !!next,
+          left: u?.scrollLeft ?? 0,
+          back: back?.disabled,
+          next: next?.disabled,
+        }
+      })
+    await page.evaluate(() =>
+      document.querySelector('#truuna ul[tabindex="0"]')?.scrollIntoView({ block: 'center' }),
+    )
+    await sleep(600)
+    const start = await strip()
+    check('strip: focusable, with back and forward buttons', start.found)
+    check(
+      'strip: back is disabled at the start',
+      start.back === true && start.left <= 4,
+      `back ${start.back ? 'disabled' : 'enabled'} at ${Math.round(start.left)} px`,
+    )
+    for (let i = 0; i < 6; i++) {
+      await page.evaluate(() =>
+        document.querySelector('#truuna [aria-label="Scroll screens forward"]')?.click(),
+      )
+      await sleep(700)
+    }
+    const end = await strip()
+    check(
+      'strip: forward pages it, and is disabled at the end',
+      end.left > start.left && end.next === true && end.back === false,
+      `scrolled ${Math.round(end.left)} px; forward ${end.next ? 'disabled' : 'enabled'}, back ${end.back ? 'disabled' : 'enabled'}`,
+    )
+    check('scroll redesign: no page errors', !errors.length, errors.slice(0, 2).join(' | '))
     await page.close()
   }
 
