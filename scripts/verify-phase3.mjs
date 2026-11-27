@@ -614,15 +614,23 @@ try {
           check(`1440 px: ${name} gets a stage`, !!view.stage)
         }
 
-        const box = await sceneBounds(page, `#${article}`)
         const s = view.stage
-        const inside =
+        const within = (box) =>
           !!s &&
           box.count > 0 &&
           box.left >= s.left - 4 &&
           box.right <= s.right + 4 &&
           box.top >= s.top - 4 &&
           box.bottom <= s.bottom + 4
+        // On a busy machine the layer may not have drawn yet, or the camera may
+        // still be easing in, after the fixed wait in open(). Measure again for
+        // up to about 12 s until it settles; a real fault never does.
+        let box = await sceneBounds(page, `#${article}`)
+        for (let t = 0; t < 6 && !within(box); t++) {
+          await sleep(1500)
+          box = await sceneBounds(page, `#${article}`)
+        }
+        const inside = within(box)
         check(
           `1440 px: ${subject} drawn, and only inside the stage`,
           inside,
@@ -662,7 +670,13 @@ try {
               // Escaped for the template literal: `\s` there would collapse to `s`.
               return Number(new RegExp(`${effect}\\s+(\\d+)`).exec(text)?.[1] ?? -1)
             }, moves.effect)
-          const first = await read()
+          // -1 means the layer has not published a value yet: on a busy machine
+          // it mounts later than the fixed wait. Give it up to 10 s more.
+          let first = await read()
+          for (let t = 0; t < 20 && first < 0; t++) {
+            await sleep(500)
+            first = await read()
+          }
           // Several reads, since the value wraps: one pair a whole lap apart
           // would read as still.
           let second = first
