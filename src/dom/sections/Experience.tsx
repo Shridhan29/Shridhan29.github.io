@@ -107,7 +107,19 @@ export function Experience() {
             <div key={c.name}>
               <p className="font-medium text-bone">{c.name}</p>
               <p className="mt-1 text-sm text-mist">{c.issuer}</p>
-              <p className="mt-2 font-mono text-xs text-mist">{c.detail}</p>
+              <p className="mt-2 font-mono text-xs text-mist">
+                {c.period} · {c.detail}
+              </p>
+              <p className="mt-3 text-sm text-mist">{c.modules}</p>
+              <a
+                href={c.href}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="link mt-4 inline-block text-sm text-bone"
+                data-goatcounter-click="certificate"
+              >
+                View certificate (PDF) <span className="link-arrow">↗</span>
+              </a>
             </div>
           ))}
         </div>
